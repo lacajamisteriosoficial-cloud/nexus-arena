@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>NEXUS ARENA — Torneos Privados de Videojuegos</title>
+<meta name="description" content="Torneos privados de videojuegos en Villa de Mayo. Wild Rift, PUBG, Fortnite, FIFA, Gang Beasts y más. Entrada desde $5.000.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Barlow+Condensed:wght@400;600;700&family=Barlow:wght@300;400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+
+<!-- NAV -->
+<nav class="nav" id="nav">
+  <div class="logo">NEXUS<span>ARENA</span></div>
+  <ul class="nav-links">
+    <li><a href="#torneos">Torneos</a></li>
+    <li><a href="#como-funciona">Cómo funciona</a></li>
+    <li><a href="#reglas">Reglas</a></li>
+  </ul>
+  <button class="nav-cta" onclick="scrollTo('torneos')">Ver torneos</button>
+</nav>
+
+<!-- HERO -->
+<section class="hero">
+  <div class="hero-bg"></div>
+  <div class="hero-grid"></div>
+  <div class="hero-visual">GG</div>
+  <div class="hero-content">
+    <div class="hero-badge">Torneos privados — Villa de Mayo, Buenos Aires</div>
+    <h1>COMPETÍ.<br><span class="line-accent">GANÁ.</span><br><span class="line-stroke">DOMINÁ.</span></h1>
+    <p class="hero-sub">Torneos competitivos online y presenciales de los mejores videojuegos. <strong>Entrada desde $5.000.</strong> El mejor se lleva todo.</p>
+    <div class="hero-actions">
+      <button class="btn-primary" onclick="scrollTo('torneos')">Ver torneos activos</button>
+      <button class="btn-secondary" onclick="scrollTo('como-funciona')">¿Cómo funciona?</button>
+    </div>
+    <div class="hero-stats">
+      <div class="stat-item"><span class="stat-num">$5K</span><span class="stat-label">Entrada mínima</span></div>
+      <div class="stat-item"><span class="stat-num" id="statTorneos">—</span><span class="stat-label">Torneos activos</span></div>
+      <div class="stat-item"><span class="stat-num" id="statInscrip">—</span><span class="stat-label">Inscriptos totales</span></div>
+      <div class="stat-item"><span class="stat-num">100%</span><span class="stat-label">Premio al ganador</span></div>
+    </div>
+  </div>
+</section>
+
+<!-- TICKER -->
+<div class="ticker">
+  <div class="ticker-inner">
+    <span>Wild Rift</span><span>PUBG Mobile</span><span>Fortnite</span><span>FIFA 23</span>
+    <span>Gang Beasts</span><span>Rocket League</span><span>Fall Guys</span><span>Warzone</span>
+    <span>Wild Rift</span><span>PUBG Mobile</span><span>Fortnite</span><span>FIFA 23</span>
+    <span>Gang Beasts</span><span>Rocket League</span><span>Fall Guys</span><span>Warzone</span>
+  </div>
+</div>
+
+<!-- TORNEOS -->
+<section id="torneos">
+  <div class="section-label">Calendario</div>
+  <h2 class="section-title">TORNEOS <span>ACTIVOS</span></h2>
+
+  <div class="filter-bar">
+    <button class="filter-btn active" data-filter="all">Todos</button>
+    <button class="filter-btn" data-filter="mobile">Mobile</button>
+    <button class="filter-btn" data-filter="console">Consola</button>
+    <button class="filter-btn" data-filter="pc">PC / Cross</button>
+    <button class="filter-btn" data-filter="presencial">Presencial</button>
+  </div>
+
+  <!-- Estado de carga -->
+  <div id="loadingState" class="loading-state">
+    <div class="spinner"></div>
+    <p>Cargando torneos...</p>
+  </div>
+
+  <!-- Sin torneos -->
+  <div id="emptyState" class="empty-state" style="display:none">
+    <p>🎮 No hay torneos activos en este momento.<br>Seguinos en Instagram para enterarte de los próximos.</p>
+  </div>
+
+  <!-- Grilla de torneos (se llena dinámicamente) -->
+  <div class="tournaments-grid" id="tournamentsGrid" style="display:none"></div>
+
+  <!-- Info premio -->
+  <div class="prize-banner">
+    <div class="prize-amount">$5.000</div>
+    <div class="prize-details">
+      <h3>La entrada más accesible del barrio</h3>
+      <p>Todos ponen su cuota. Cobro 20% por organizar y el resto va al pozo. Torneo de 16 jugadores = pozo de <strong>$64.000</strong>.</p>
+    </div>
+    <div class="prize-breakdown">
+      <div class="prize-rank"><div class="rank-badge gold">1°</div><span class="rank-prize">60% del pozo</span></div>
+      <div class="prize-rank"><div class="rank-badge silver">2°</div><span class="rank-prize">25% del pozo</span></div>
+      <div class="prize-rank"><div class="rank-badge bronze">3°</div><span class="rank-prize">15% del pozo</span></div>
+    </div>
+  </div>
+</section>
+
+<!-- CÓMO FUNCIONA -->
+<section id="como-funciona" class="section-dark">
+  <div class="section-label">El proceso</div>
+  <h2 class="section-title">¿CÓMO <span>FUNCIONA?</span></h2>
+  <div class="steps-grid">
+    <div class="step">
+      <div class="step-num">01</div>
+      <div class="step-icon">🗓</div>
+      <div class="step-title">Elegí tu torneo</div>
+      <div class="step-text">Revisá el calendario, elegí el juego que más manejás y fijate cuántos cupos quedan.</div>
+      <div class="step-accent"></div>
+    </div>
+    <div class="step">
+      <div class="step-num">02</div>
+      <div class="step-icon">📝</div>
+      <div class="step-title">Completá el formulario</div>
+      <div class="step-text">Ponés tu gamertag y datos de contacto. Te llega confirmación por WhatsApp.</div>
+      <div class="step-accent"></div>
+    </div>
+    <div class="step">
+      <div class="step-num">03</div>
+      <div class="step-icon">💸</div>
+      <div class="step-title">Pagás la entrada</div>
+      <div class="step-text">$5.000 por transferencia o efectivo. Sin pago, no hay cupo reservado.</div>
+      <div class="step-accent"></div>
+    </div>
+    <div class="step">
+      <div class="step-num">04</div>
+      <div class="step-icon">🏆</div>
+      <div class="step-title">Competís y cobrás</div>
+      <div class="step-text">Se arma el bracket, jugás las rondas, y el ganador cobra el mismo día.</div>
+      <div class="step-accent"></div>
+    </div>
+  </div>
+</section>
+
+<!-- REGLAS -->
+<section id="reglas">
+  <div class="section-label">Reglamento</div>
+  <h2 class="section-title">REGLAS <span>DEL JUEGO</span></h2>
+  <div class="rules-grid">
+    <div class="rule-item">
+      <div class="rule-num">01</div>
+      <div class="rule-title">Pago previo obligatorio</div>
+      <div class="rule-text">La inscripción se confirma únicamente con el pago de los $5.000. Sin pago no hay cupo, aunque hayas llenado el formulario.</div>
+    </div>
+    <div class="rule-item">
+      <div class="rule-num">02</div>
+      <div class="rule-title">No se aceptan devoluciones</div>
+      <div class="rule-text">Una vez confirmada la inscripción y cerrado el torneo, no se devuelve la entrada. Podés ceder tu lugar antes de la fecha límite.</div>
+    </div>
+    <div class="rule-item">
+      <div class="rule-num">03</div>
+      <div class="rule-title">Puntualidad</div>
+      <div class="rule-text">Tenés 10 minutos de gracia. Pasado ese tiempo, perdés la ronda por W/O. En presenciales la sede abre 30 min antes.</div>
+    </div>
+    <div class="rule-item">
+      <div class="rule-num">04</div>
+      <div class="rule-title">Juego limpio</div>
+      <div class="rule-text">Cero tolerancia con hacks o cheats. Si se detecta trampa, el jugador queda eliminado sin devolución de entrada.</div>
+    </div>
+    <div class="rule-item">
+      <div class="rule-num">05</div>
+      <div class="rule-title">Formato del bracket</div>
+      <div class="rule-text">El formato se publica con el torneo. El árbol se sortea el día del evento y es definitivo.</div>
+    </div>
+    <div class="rule-item">
+      <div class="rule-num">06</div>
+      <div class="rule-title">Premio en efectivo</div>
+      <div class="rule-text">Los premios se pagan el mismo día al terminar. Transferencia o efectivo según prefiera el ganador.</div>
+    </div>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer>
+  <div class="footer-top">
+    <div class="footer-brand">
+      <div class="logo">NEXUS<span>ARENA</span></div>
+      <p class="footer-tagline">Torneos privados de videojuegos. Online y presencial. Villa de Mayo, Buenos Aires.</p>
+    </div>
+    <div class="footer-links">
+      <h4>Navegación</h4>
+      <ul>
+        <li><a href="#torneos">Torneos</a></li>
+        <li><a href="#como-funciona">Cómo funciona</a></li>
+        <li><a href="#reglas">Reglas</a></li>
+      </ul>
+    </div>
+    <div class="footer-links">
+      <h4>Contacto</h4>
+      <ul>
+        <li><a href="https://wa.me/5491100000000" target="_blank">WhatsApp</a></li>
+        <li><a href="https://instagram.com/nexusarena" target="_blank">Instagram</a></li>
+        <li><a href="#">Villa de Mayo, GBA</a></li>
+      </ul>
+    </div>
+  </div>
+  <div class="footer-bottom">
+    <p class="footer-copy">© 2025 NexusArena</p>
+    <p class="footer-note">Evento privado. No afiliado a ninguna desarrolladora. Los premios provienen de las inscripciones de los participantes.</p>
+  </div>
+</footer>
+
+<!-- MODAL INSCRIPCIÓN -->
+<div class="modal-overlay" id="modalOverlay">
+  <div class="modal" id="modal">
+    <div class="modal-header">
+      <span class="modal-title" id="modalTitle">INSCRIPCIÓN</span>
+      <button class="modal-close" id="modalClose">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-info">
+        <p>Torneo: <strong id="modalGame">—</strong></p>
+        <p>Fecha: <strong id="modalDate">—</strong></p>
+        <p>Modalidad: <strong id="modalMode">—</strong></p>
+        <span class="price-highlight">$5.000</span>
+        <p class="form-note">El pago confirma tu cupo. Se coordina por WhatsApp después de enviar el formulario.</p>
+      </div>
+      <div id="formError" class="form-error" style="display:none"></div>
+      <div class="form-group">
+        <label class="form-label">Nombre o apodo</label>
+        <input type="text" class="form-input" id="inputNombre" placeholder="¿Cómo te conocen?">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Gamertag / ID de jugador</label>
+        <input type="text" class="form-input" id="inputGamertag" placeholder="Tu nombre en el juego">
+      </div>
+      <div class="form-group">
+        <label class="form-label">WhatsApp o Instagram</label>
+        <input type="text" class="form-input" id="inputContacto" placeholder="Para confirmar pago y enviarte info">
+      </div>
+      <button class="btn-submit" id="btnSubmit">CONFIRMAR INSCRIPCIÓN →</button>
+    </div>
+  </div>
+</div>
+
+<script type="module" src="js/app.js"></script>
+</body>
+</html>
