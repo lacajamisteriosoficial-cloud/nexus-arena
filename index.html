@@ -4,25 +4,26 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>NEXUS ARENA — Torneos Privados de Videojuegos</title>
-<meta name="description" content="Torneos privados de videojuegos en Villa de Mayo. Wild Rift, PUBG, Fortnite, FIFA, Gang Beasts y más. Entrada desde $5.000.">
+<meta name="description" content="Torneos privados de videojuegos en Villa de Mayo. Wild Rift, PUBG, Fortnite, FIFA, Gang Beasts y más.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Barlow+Condensed:wght@400;600;700&family=Barlow:wght@300;400;500&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="css/styles.css">
+<link rel="stylesheet" href="css/public.css">
 </head>
 <body>
 
-<!-- NAV -->
 <nav class="nav" id="nav">
   <div class="logo">NEXUS<span>ARENA</span></div>
   <ul class="nav-links">
+    <li><a href="#juegos">Juegos</a></li>
     <li><a href="#torneos">Torneos</a></li>
+    <li><a href="#galardones">Galardones</a></li>
+    <li><a href="#resenas">Reseñas</a></li>
     <li><a href="#como-funciona">Cómo funciona</a></li>
-    <li><a href="#reglas">Reglas</a></li>
   </ul>
-  <button class="nav-cta" onclick="scrollTo('torneos')">Ver torneos</button>
+  <button class="nav-cta" onclick="scrollToId('torneos')">Ver torneos</button>
 </nav>
 
-<!-- HERO -->
 <section class="hero">
   <div class="hero-bg"></div>
   <div class="hero-grid"></div>
@@ -30,35 +31,48 @@
   <div class="hero-content">
     <div class="hero-badge">Torneos privados — Villa de Mayo, Buenos Aires</div>
     <h1>COMPETÍ.<br><span class="line-accent">GANÁ.</span><br><span class="line-stroke">DOMINÁ.</span></h1>
-    <p class="hero-sub">Torneos competitivos online y presenciales de los mejores videojuegos. <strong>Entrada desde $5.000.</strong> El mejor se lleva todo.</p>
+    <p class="hero-sub">Torneos competitivos online y presenciales. <strong>Premios reales, rivales reales.</strong></p>
     <div class="hero-actions">
-      <button class="btn-primary" onclick="scrollTo('torneos')">Ver torneos activos</button>
-      <button class="btn-secondary" onclick="scrollTo('como-funciona')">¿Cómo funciona?</button>
+      <button class="btn-primary" onclick="scrollToId('torneos')">Ver torneos activos</button>
+      <button class="btn-secondary" onclick="scrollToId('como-funciona')">Cómo funciona</button>
     </div>
     <div class="hero-stats">
-      <div class="stat-item"><span class="stat-num">$5K</span><span class="stat-label">Entrada mínima</span></div>
       <div class="stat-item"><span class="stat-num" id="statTorneos">—</span><span class="stat-label">Torneos activos</span></div>
-      <div class="stat-item"><span class="stat-num" id="statInscrip">—</span><span class="stat-label">Inscriptos totales</span></div>
-      <div class="stat-item"><span class="stat-num">100%</span><span class="stat-label">Premio al ganador</span></div>
+      <div class="stat-item"><span class="stat-num" id="statInscrip">—</span><span class="stat-label">Competidores</span></div>
+      <div class="stat-item"><span class="stat-num" id="statGanadores">—</span><span class="stat-label">Campeones</span></div>
+      <div class="stat-item"><span class="stat-num">48hs</span><span class="stat-label">Pago máximo</span></div>
     </div>
   </div>
 </section>
 
-<!-- TICKER -->
 <div class="ticker">
   <div class="ticker-inner">
     <span>Wild Rift</span><span>PUBG Mobile</span><span>Fortnite</span><span>FIFA 23</span>
-    <span>Gang Beasts</span><span>Rocket League</span><span>Fall Guys</span><span>Warzone</span>
+    <span>Gang Beasts</span><span>Rocket League</span><span>Fall Guys</span><span>Free Fire</span>
     <span>Wild Rift</span><span>PUBG Mobile</span><span>Fortnite</span><span>FIFA 23</span>
-    <span>Gang Beasts</span><span>Rocket League</span><span>Fall Guys</span><span>Warzone</span>
+    <span>Gang Beasts</span><span>Rocket League</span><span>Fall Guys</span><span>Free Fire</span>
   </div>
 </div>
 
+<!-- PROMO CAROUSEL -->
+<div id="promoCarousel" style="display:none">
+  <div class="promo-label">🔥 INSCRIPCIONES ABIERTAS AHORA</div>
+  <div class="promo-track" id="promoTrack"></div>
+  <div class="promo-dots" id="promoDots"></div>
+</div>
+
+<!-- JUEGOS -->
+<section id="juegos">
+  <div class="section-label">Catálogo</div>
+  <h2 class="section-title">JUEGOS <span>DISPONIBLES</span></h2>
+  <p class="section-sub">Hacé clic en un juego para ver si hay torneos activos.</p>
+  <div class="games-grid" id="gamesGrid"></div>
+</section>
+
 <!-- TORNEOS -->
-<section id="torneos">
+<section id="torneos" class="section-dark">
   <div class="section-label">Calendario</div>
   <h2 class="section-title">TORNEOS <span>ACTIVOS</span></h2>
-
   <div class="filter-bar">
     <button class="filter-btn active" data-filter="all">Todos</button>
     <button class="filter-btn" data-filter="mobile">Mobile</button>
@@ -66,108 +80,81 @@
     <button class="filter-btn" data-filter="pc">PC / Cross</button>
     <button class="filter-btn" data-filter="presencial">Presencial</button>
   </div>
-
-  <!-- Estado de carga -->
-  <div id="loadingState" class="loading-state">
-    <div class="spinner"></div>
-    <p>Cargando torneos...</p>
-  </div>
-
-  <!-- Sin torneos -->
-  <div id="emptyState" class="empty-state" style="display:none">
-    <p>🎮 No hay torneos activos en este momento.<br>Seguinos en Instagram para enterarte de los próximos.</p>
-  </div>
-
-  <!-- Grilla de torneos (se llena dinámicamente) -->
+  <div id="loadingState" class="loading-state"><div class="spinner"></div><p>Cargando torneos...</p></div>
+  <div id="emptyState" class="empty-state" style="display:none"><p>🎮 No hay torneos activos ahora.<br>Seguinos en Instagram para los próximos.</p></div>
   <div class="tournaments-grid" id="tournamentsGrid" style="display:none"></div>
-
-  <!-- Info premio -->
-  <div class="prize-banner">
-    <div class="prize-amount">$5.000</div>
-    <div class="prize-details">
-      <h3>La entrada más accesible del barrio</h3>
-      <p>Todos ponen su cuota. Cobro 20% por organizar y el resto va al pozo. Torneo de 16 jugadores = pozo de <strong>$64.000</strong>.</p>
-    </div>
-    <div class="prize-breakdown">
-      <div class="prize-rank"><div class="rank-badge gold">1°</div><span class="rank-prize">60% del pozo</span></div>
-      <div class="prize-rank"><div class="rank-badge silver">2°</div><span class="rank-prize">25% del pozo</span></div>
-      <div class="prize-rank"><div class="rank-badge bronze">3°</div><span class="rank-prize">15% del pozo</span></div>
-    </div>
+  <div class="pago-info-banner">
+    <div class="pago-info-item"><span class="pago-icon">💸</span><div><strong>Transferencia</strong><p>Acreditación hasta 48hs hábiles</p></div></div>
+    <div class="pago-info-item"><span class="pago-icon">💵</span><div><strong>Efectivo</strong><p>Según disponibilidad. Consultá antes.</p></div></div>
+    <div class="pago-info-item"><span class="pago-icon">🏆</span><div><strong>Premio</strong><p>Se determina al cerrar inscripciones.</p></div></div>
   </div>
 </section>
 
-<!-- CÓMO FUNCIONA -->
-<section id="como-funciona" class="section-dark">
+<!-- GALARDONES -->
+<section id="galardones">
+  <div class="section-label">Hall of Fame</div>
+  <h2 class="section-title">CAMPEONES <span>NEXUS</span></h2>
+  <p class="section-sub">Los que llegaron a lo más alto. Su nombre queda grabado para siempre.</p>
+  <div id="galardonesLoading" class="loading-state"><div class="spinner"></div><p>Cargando...</p></div>
+  <div id="galardonesGrid" class="galardones-grid" style="display:none"></div>
+  <div id="galardonesEmpty" class="empty-state" style="display:none"><p>🏆 Los primeros campeones están por llegar.<br>¿Vas a ser el primero?</p></div>
+</section>
+
+<!-- RESEÑAS -->
+<section id="resenas" class="section-dark">
+  <div class="section-label">Comunidad</div>
+  <h2 class="section-title">RESEÑAS <span>DE JUGADORES</span></h2>
+  <p class="section-sub">Lo que dice la comunidad.</p>
+  <div id="resenasGrid" class="resenas-grid"></div>
+  <div style="text-align:center;margin-top:40px">
+    <button class="btn-secondary" onclick="openReseñaModal()">+ Dejá tu reseña</button>
+  </div>
+</section>
+
+<!-- STREAMING COMING SOON -->
+<section style="padding:40px 6vw;background:var(--dark2)">
+  <div class="streaming-coming">
+    <div class="streaming-icon">📺</div>
+    <div>
+      <div class="section-label" style="margin-bottom:4px">Próximamente</div>
+      <h3 style="font-family:'Bebas Neue',sans-serif;font-size:2rem;letter-spacing:2px;color:#fff;margin-bottom:6px">STREAMING EN VIVO</h3>
+      <p style="color:var(--muted);font-size:0.9rem">Seguí los torneos en tiempo real desde la página. YouTube y Twitch.</p>
+    </div>
+    <div class="streaming-badge">COMING SOON</div>
+  </div>
+</section>
+
+<!-- COMO FUNCIONA -->
+<section id="como-funciona">
   <div class="section-label">El proceso</div>
-  <h2 class="section-title">¿CÓMO <span>FUNCIONA?</span></h2>
+  <h2 class="section-title">CÓMO <span>FUNCIONA</span></h2>
   <div class="steps-grid">
-    <div class="step">
-      <div class="step-num">01</div>
-      <div class="step-icon">🗓</div>
-      <div class="step-title">Elegí tu torneo</div>
-      <div class="step-text">Revisá el calendario, elegí el juego que más manejás y fijate cuántos cupos quedan.</div>
-      <div class="step-accent"></div>
-    </div>
-    <div class="step">
-      <div class="step-num">02</div>
-      <div class="step-icon">📝</div>
-      <div class="step-title">Completá el formulario</div>
-      <div class="step-text">Ponés tu gamertag y datos de contacto. Te llega confirmación por WhatsApp.</div>
-      <div class="step-accent"></div>
-    </div>
-    <div class="step">
-      <div class="step-num">03</div>
-      <div class="step-icon">💸</div>
-      <div class="step-title">Pagás la entrada</div>
-      <div class="step-text">$5.000 por transferencia o efectivo. Sin pago, no hay cupo reservado.</div>
-      <div class="step-accent"></div>
-    </div>
-    <div class="step">
-      <div class="step-num">04</div>
-      <div class="step-icon">🏆</div>
-      <div class="step-title">Competís y cobrás</div>
-      <div class="step-text">Se arma el bracket, jugás las rondas, y el ganador cobra el mismo día.</div>
-      <div class="step-accent"></div>
-    </div>
+    <div class="step"><div class="step-num">01</div><div class="step-icon">🗓</div><div class="step-title">Elegí tu torneo</div><div class="step-text">Revisá el calendario, elegí el juego y fijate cuántos cupos quedan.</div><div class="step-accent"></div></div>
+    <div class="step"><div class="step-num">02</div><div class="step-icon">📝</div><div class="step-title">Completá el formulario</div><div class="step-text">Poné tu gamertag y contacto. Te llega confirmación por WhatsApp.</div><div class="step-accent"></div></div>
+    <div class="step"><div class="step-num">03</div><div class="step-icon">💸</div><div class="step-title">Pagás la entrada</div><div class="step-text">Por transferencia o efectivo (según disponibilidad). Sin pago no hay cupo.</div><div class="step-accent"></div></div>
+    <div class="step"><div class="step-num">04</div><div class="step-icon">🏆</div><div class="step-title">Competís y cobrás</div><div class="step-text">Se arma el bracket. El ganador cobra dentro de las 48hs hábiles.</div><div class="step-accent"></div></div>
   </div>
 </section>
 
 <!-- REGLAS -->
-<section id="reglas">
+<section id="reglas" class="section-dark">
   <div class="section-label">Reglamento</div>
   <h2 class="section-title">REGLAS <span>DEL JUEGO</span></h2>
   <div class="rules-grid">
-    <div class="rule-item">
-      <div class="rule-num">01</div>
-      <div class="rule-title">Pago previo obligatorio</div>
-      <div class="rule-text">La inscripción se confirma únicamente con el pago de los $5.000. Sin pago no hay cupo, aunque hayas llenado el formulario.</div>
-    </div>
-    <div class="rule-item">
-      <div class="rule-num">02</div>
-      <div class="rule-title">No se aceptan devoluciones</div>
-      <div class="rule-text">Una vez confirmada la inscripción y cerrado el torneo, no se devuelve la entrada. Podés ceder tu lugar antes de la fecha límite.</div>
-    </div>
-    <div class="rule-item">
-      <div class="rule-num">03</div>
-      <div class="rule-title">Puntualidad</div>
-      <div class="rule-text">Tenés 10 minutos de gracia. Pasado ese tiempo, perdés la ronda por W/O. En presenciales la sede abre 30 min antes.</div>
-    </div>
-    <div class="rule-item">
-      <div class="rule-num">04</div>
-      <div class="rule-title">Juego limpio</div>
-      <div class="rule-text">Cero tolerancia con hacks o cheats. Si se detecta trampa, el jugador queda eliminado sin devolución de entrada.</div>
-    </div>
-    <div class="rule-item">
-      <div class="rule-num">05</div>
-      <div class="rule-title">Formato del bracket</div>
-      <div class="rule-text">El formato se publica con el torneo. El árbol se sortea el día del evento y es definitivo.</div>
-    </div>
-    <div class="rule-item">
-      <div class="rule-num">06</div>
-      <div class="rule-title">Premio en efectivo</div>
-      <div class="rule-text">Los premios se pagan el mismo día al terminar. Transferencia o efectivo según prefiera el ganador.</div>
-    </div>
+    <div class="rule-item"><div class="rule-num">01</div><div class="rule-title">Pago previo obligatorio</div><div class="rule-text">La inscripción se confirma únicamente con el pago. Sin pago no hay cupo.</div></div>
+    <div class="rule-item"><div class="rule-num">02</div><div class="rule-title">Sin devoluciones</div><div class="rule-text">Una vez confirmada la inscripción no se devuelve. Podés ceder tu lugar antes del cierre.</div></div>
+    <div class="rule-item"><div class="rule-num">03</div><div class="rule-title">Puntualidad</div><div class="rule-text">10 minutos de gracia. Pasado ese tiempo perdés la ronda por W/O.</div></div>
+    <div class="rule-item"><div class="rule-num">04</div><div class="rule-title">Juego limpio</div><div class="rule-text">Cero tolerancia con hacks. Si se detecta trampa, eliminado sin devolución.</div></div>
+    <div class="rule-item"><div class="rule-num">05</div><div class="rule-title">Premio a confirmar</div><div class="rule-text">El monto final se determina al cerrar inscripciones según total de participantes.</div></div>
+    <div class="rule-item"><div class="rule-num">06</div><div class="rule-title">Acreditación hasta 48hs</div><div class="rule-text">Los premios se pagan en hasta 48hs hábiles. Efectivo según stock, consultá antes.</div></div>
   </div>
+</section>
+
+<!-- ENCUESTAS -->
+<section id="encuestas">
+  <div class="section-label">Tu opinión importa</div>
+  <h2 class="section-title">ENCUESTAS <span>ACTIVAS</span></h2>
+  <div id="encuestasContainer"><div class="loading-state"><div class="spinner"></div><p>Cargando...</p></div></div>
 </section>
 
 <!-- FOOTER -->
@@ -175,61 +162,102 @@
   <div class="footer-top">
     <div class="footer-brand">
       <div class="logo">NEXUS<span>ARENA</span></div>
-      <p class="footer-tagline">Torneos privados de videojuegos. Online y presencial. Villa de Mayo, Buenos Aires.</p>
+      <p class="footer-tagline">Torneos privados de videojuegos. Online y presencial. Villa de Mayo, GBA.</p>
     </div>
-    <div class="footer-links">
-      <h4>Navegación</h4>
-      <ul>
-        <li><a href="#torneos">Torneos</a></li>
-        <li><a href="#como-funciona">Cómo funciona</a></li>
-        <li><a href="#reglas">Reglas</a></li>
-      </ul>
-    </div>
-    <div class="footer-links">
-      <h4>Contacto</h4>
-      <ul>
-        <li><a href="https://wa.me/5491100000000" target="_blank">WhatsApp</a></li>
-        <li><a href="https://instagram.com/nexusarena" target="_blank">Instagram</a></li>
-        <li><a href="#">Villa de Mayo, GBA</a></li>
-      </ul>
-    </div>
+    <div class="footer-links"><h4>Secciones</h4><ul>
+      <li><a href="#juegos">Juegos</a></li><li><a href="#torneos">Torneos</a></li>
+      <li><a href="#galardones">Galardones</a></li><li><a href="#resenas">Reseñas</a></li>
+    </ul></div>
+    <div class="footer-links"><h4>Contacto</h4><ul>
+      <li><a href="https://wa.me/5491157687215" target="_blank">WhatsApp</a></li>
+      <li><a href="https://instagram.com/nexusarena" target="_blank">Instagram</a></li>
+    </ul></div>
   </div>
   <div class="footer-bottom">
     <p class="footer-copy">© 2025 NexusArena</p>
-    <p class="footer-note">Evento privado. No afiliado a ninguna desarrolladora. Los premios provienen de las inscripciones de los participantes.</p>
+    <p class="footer-note">Evento privado. Premios según inscripciones. Acreditación hasta 48hs hábiles.</p>
   </div>
 </footer>
 
 <!-- MODAL INSCRIPCIÓN -->
 <div class="modal-overlay" id="modalOverlay">
-  <div class="modal" id="modal">
-    <div class="modal-header">
-      <span class="modal-title" id="modalTitle">INSCRIPCIÓN</span>
-      <button class="modal-close" id="modalClose">✕</button>
-    </div>
+  <div class="modal">
+    <div class="modal-header"><span class="modal-title" id="modalTitle">INSCRIPCIÓN</span><button class="modal-close" id="modalClose">✕</button></div>
     <div class="modal-body">
       <div class="form-info">
         <p>Torneo: <strong id="modalGame">—</strong></p>
         <p>Fecha: <strong id="modalDate">—</strong></p>
         <p>Modalidad: <strong id="modalMode">—</strong></p>
-        <span class="price-highlight">$5.000</span>
-        <p class="form-note">El pago confirma tu cupo. Se coordina por WhatsApp después de enviar el formulario.</p>
+        <div class="prize-reveal"><span class="prize-reveal-label">💰 Premio total (se confirma al cierre)</span><span class="prize-reveal-value" id="modalPrize">A confirmar</span></div>
+        <div class="entrada-reveal"><span class="entrada-label">Entrada:</span><span class="entrada-value" id="modalEntrada">—</span></div>
+        <p class="form-note">Transferencia o efectivo (según disponibilidad). Premio acreditado en hasta 48hs hábiles.</p>
       </div>
       <div id="formError" class="form-error" style="display:none"></div>
-      <div class="form-group">
-        <label class="form-label">Nombre o apodo</label>
-        <input type="text" class="form-input" id="inputNombre" placeholder="¿Cómo te conocen?">
-      </div>
-      <div class="form-group">
-        <label class="form-label">Gamertag / ID de jugador</label>
-        <input type="text" class="form-input" id="inputGamertag" placeholder="Tu nombre en el juego">
-      </div>
-      <div class="form-group">
-        <label class="form-label">WhatsApp o Instagram</label>
-        <input type="text" class="form-input" id="inputContacto" placeholder="Para confirmar pago y enviarte info">
-      </div>
+      <div class="form-group"><label class="form-label">Nombre o apodo</label><input type="text" class="form-input" id="inputNombre" placeholder="¿Cómo te conocen?"></div>
+      <div class="form-group"><label class="form-label">Gamertag / ID de jugador</label><input type="text" class="form-input" id="inputGamertag" placeholder="Tu nombre en el juego"></div>
+      <div class="form-group"><label class="form-label">WhatsApp o Instagram</label><input type="text" class="form-input" id="inputContacto" placeholder="Para confirmar pago y enviarte info"></div>
       <button class="btn-submit" id="btnSubmit">CONFIRMAR INSCRIPCIÓN →</button>
     </div>
+  </div>
+</div>
+
+<!-- MODAL RESEÑA -->
+<div class="modal-overlay" id="reseñaModal">
+  <div class="modal">
+    <div class="modal-header"><span class="modal-title">DEJÁ TU RESEÑA</span><button class="modal-close" onclick="closeReseñaModal()">✕</button></div>
+    <div class="modal-body">
+      <div id="reseñaError" class="form-error" style="display:none"></div>
+      <div class="form-group"><label class="form-label">Tu nombre / gamertag</label><input type="text" class="form-input" id="reseñaNombre" placeholder="¿Cómo te conocen?"></div>
+      <div class="form-group"><label class="form-label">Juego / Torneo</label><input type="text" class="form-input" id="reseñaJuego" placeholder="Ej: FIFA 23, Wild Rift..."></div>
+      <div class="form-group">
+        <label class="form-label">Puntuación</label>
+        <div class="star-rating" id="starRating">
+          <span class="star" data-val="1">★</span><span class="star" data-val="2">★</span>
+          <span class="star" data-val="3">★</span><span class="star" data-val="4">★</span>
+          <span class="star" data-val="5">★</span>
+        </div>
+        <input type="hidden" id="reseñaStars" value="0">
+      </div>
+      <div class="form-group"><label class="form-label">Tu comentario</label><textarea class="form-input form-textarea" id="reseñaTexto" placeholder="Contá tu experiencia..."></textarea></div>
+      <button class="btn-submit" onclick="submitReseña()">ENVIAR RESEÑA →</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL JUEGO -->
+<div class="modal-overlay" id="gameModal">
+  <div class="modal">
+    <div class="modal-header"><span class="modal-title" id="gameModalTitle">—</span><button class="modal-close" onclick="document.getElementById('gameModal').classList.remove('active')">✕</button></div>
+    <div class="modal-body" id="gameModalBody"></div>
+  </div>
+</div>
+
+<!-- CHAT -->
+<div class="chat-bubble-btn" id="chatBubbleBtn" onclick="toggleChat()">
+  <span class="chat-bubble-icon">💬</span>
+  <span class="chat-unread" id="chatUnread" style="display:none">1</span>
+</div>
+<div class="chat-widget" id="chatWidget">
+  <div class="chat-header">
+    <div class="chat-header-info">
+      <div class="chat-avatar">NA</div>
+      <div><div class="chat-title">Nexus Arena</div><div class="chat-status"><span class="chat-dot"></span> En línea</div></div>
+    </div>
+    <button class="chat-close" onclick="toggleChat()">✕</button>
+  </div>
+  <div class="chat-messages" id="chatMessages"></div>
+  <div class="chat-faqs" id="chatFaqs"></div>
+  <div class="chat-input-row">
+    <input type="text" class="chat-input" id="chatInput" placeholder="Escribí tu mensaje..." onkeydown="if(event.key==='Enter')sendChatMsg()">
+    <button class="chat-send" onclick="sendChatMsg()">→</button>
+  </div>
+</div>
+
+<!-- POPUP PROMO -->
+<div class="promo-popup-overlay" id="promoPopup" style="display:none" onclick="closePromoPopup(event)">
+  <div class="promo-popup">
+    <button class="promo-popup-close" onclick="closePromoPopup()">✕</button>
+    <div id="promoPopupInner"></div>
   </div>
 </div>
 

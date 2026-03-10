@@ -43,6 +43,10 @@
       <a href="#" class="sidebar-link" data-section="torneos">🏆 Torneos</a>
       <a href="#" class="sidebar-link" data-section="inscripciones">📋 Inscriptos</a>
       <a href="#" class="sidebar-link" data-section="nuevo-torneo">➕ Nuevo torneo</a>
+      <a href="#" class="sidebar-link" data-section="galardones">🏆 Galardones</a>
+      <a href="#" class="sidebar-link" data-section="resenas">⭐ Reseñas</a>
+      <a href="#" class="sidebar-link" data-section="encuestas">📊 Encuestas</a>
+      <a href="#" class="sidebar-link" data-section="chat">💬 Chat</a>
     </nav>
     <div class="sidebar-footer">
       <a href="index.html" target="_blank" class="sidebar-link">🌐 Ver página pública</a>
@@ -205,7 +209,7 @@
         </div>
         <div class="form-row">
           <div class="form-group">
-            <label class="form-label">Emoji del juego</label>
+            <label class="form-label">Emoji del juego (se muestra si no hay imagen)</label>
             <input type="text" class="form-input" id="tEmoji" placeholder="🎮" maxlength="4">
           </div>
           <div class="form-group">
@@ -218,6 +222,33 @@
             </select>
           </div>
         </div>
+
+        <!-- IMAGEN -->
+        <div class="form-group">
+          <label class="form-label">Imagen de portada (URL) — opcional</label>
+          <div style="display:flex;gap:10px;align-items:center">
+            <input type="text" class="form-input" id="tImagen"
+              placeholder="https://... (URL de una imagen, jpg/png/webp)"
+              oninput="previewImagen(this.value)"
+              style="flex:1">
+            <button type="button" class="btn-admin-secondary" onclick="document.getElementById('tImagen').value='';previewImagen('')" style="white-space:nowrap">✕ Borrar</button>
+          </div>
+          <p style="font-size:0.75rem;color:var(--muted);margin-top:6px">
+            Buscá en Google la portada del juego → clic derecho → "Copiar dirección de imagen" → pegala acá.
+            O usá sitios como <strong style="color:var(--acid)">rawg.io</strong>, <strong style="color:var(--acid)">igdb.com</strong> o Imgur.
+          </p>
+        </div>
+        <div id="imgPreviewWrap" style="display:none;margin-bottom:20px">
+          <label class="form-label">Preview de la imagen</label>
+          <div style="position:relative;width:100%;max-width:400px;height:180px;overflow:hidden;border:1px solid var(--gray)">
+            <img id="imgPreview" src="" alt="preview"
+              style="width:100%;height:100%;object-fit:cover">
+            <div style="position:absolute;inset:0;background:linear-gradient(to top,rgba(0,0,0,0.6),transparent);display:flex;align-items:flex-end;padding:12px">
+              <span id="imgPreviewNombre" style="font-family:'Bebas Neue',sans-serif;font-size:1.4rem;color:#fff;letter-spacing:2px"></span>
+            </div>
+          </div>
+        </div>
+
         <div class="form-group">
           <label class="form-label">Descripción / notas extra</label>
           <textarea class="form-input form-textarea" id="tDescripcion" placeholder="Información adicional sobre el torneo..."></textarea>
@@ -228,6 +259,85 @@
           <button class="btn-admin-primary" id="btnSaveTorneo">Guardar torneo</button>
         </div>
       </div>
+    </section>
+
+
+    <!-- GALARDONES ADMIN -->
+    <section class="admin-section" id="section-galardones">
+      <div class="admin-header">
+        <h1 class="admin-title">Galardones</h1>
+        <button class="btn-admin-primary" onclick="showSection('nuevo-galardon')">+ Agregar campeón</button>
+      </div>
+      <div id="galardonesAdminList"></div>
+    </section>
+
+    <!-- NUEVO GALARDON -->
+    <section class="admin-section" id="section-nuevo-galardon">
+      <div class="admin-header"><h1 class="admin-title" id="formGalardonTitle">Nuevo Campeón</h1></div>
+      <div class="form-card">
+        <input type="hidden" id="editGalardonId">
+        <div class="form-row">
+          <div class="form-group"><label class="form-label">Gamertag del ganador *</label><input type="text" class="form-input" id="gGamertag" placeholder="NombreEnElJuego"></div>
+          <div class="form-group"><label class="form-label">Torneo ganado *</label><input type="text" class="form-input" id="gTorneo" placeholder="Ej: Wild Rift — Marzo 2025"></div>
+        </div>
+        <div class="form-row">
+          <div class="form-group"><label class="form-label">Emoji del juego</label><input type="text" class="form-input" id="gEmoji" placeholder="🎮" maxlength="4"></div>
+          <div class="form-group"><label class="form-label">Fecha del torneo</label><input type="date" class="form-input" id="gFecha"></div>
+        </div>
+        <div class="form-group"><label class="form-label">URL foto del ganador (opcional)</label><input type="text" class="form-input" id="gFoto" placeholder="https://..."></div>
+        <div class="form-group"><label class="form-label">URL imagen de fondo (opcional — portada del juego)</label><input type="text" class="form-input" id="gBg" placeholder="https://..."></div>
+        <div id="formGalardonError" class="form-error" style="display:none"></div>
+        <div class="form-actions">
+          <button class="btn-admin-secondary" onclick="showSection('galardones')">Cancelar</button>
+          <button class="btn-admin-primary" id="btnSaveGalardon">Guardar campeón</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- RESEÑAS ADMIN -->
+    <section class="admin-section" id="section-resenas">
+      <div class="admin-header">
+        <h1 class="admin-title">Reseñas</h1>
+        <span style="font-size:0.8rem;color:var(--muted)">Aprobá las reseñas para que aparezcan en la página</span>
+      </div>
+      <div class="table-wrap">
+        <table class="admin-table">
+          <thead><tr><th>Autor</th><th>Juego</th><th>Estrellas</th><th>Reseña</th><th>Estado</th><th>Acciones</th></tr></thead>
+          <tbody id="resenasAdminBody"><tr><td colspan="6" class="table-loading">Cargando...</td></tr></tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- ENCUESTAS ADMIN -->
+    <section class="admin-section" id="section-encuestas">
+      <div class="admin-header">
+        <h1 class="admin-title">Encuestas</h1>
+        <button class="btn-admin-primary" onclick="showNuevaEncuesta()">+ Nueva encuesta</button>
+      </div>
+      <div id="encuestasAdminList"></div>
+      <div id="nuevaEncuestaForm" style="display:none;margin-top:24px">
+        <div class="form-card">
+          <div class="form-group"><label class="form-label">Pregunta *</label><input type="text" class="form-input" id="encPregunta" placeholder="¿Qué juego querés para el próximo torneo?"></div>
+          <div class="form-group">
+            <label class="form-label">Opciones (una por línea) *</label>
+            <textarea class="form-input form-textarea" id="encOpciones" placeholder="Wild Rift&#10;Fortnite&#10;FIFA 23&#10;PUBG Mobile"></textarea>
+          </div>
+          <div id="encError" class="form-error" style="display:none"></div>
+          <div class="form-actions">
+            <button class="btn-admin-secondary" onclick="document.getElementById('nuevaEncuestaForm').style.display='none'">Cancelar</button>
+            <button class="btn-admin-primary" onclick="saveEncuesta()">Crear encuesta</button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- CHAT ADMIN -->
+    <section class="admin-section" id="section-chat">
+      <div class="admin-header">
+        <h1 class="admin-title">Chat</h1>
+        <span style="font-size:0.8rem;color:var(--muted)">Mensajes sin responder de usuarios</span>
+      </div>
+      <div id="chatAdminList"></div>
     </section>
 
   </main>

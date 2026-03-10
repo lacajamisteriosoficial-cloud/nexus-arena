@@ -281,6 +281,7 @@ async function saveTorneo() {
   const emoji     = document.getElementById('tEmoji').value.trim() || '🎮';
   const estado    = document.getElementById('tEstado').value;
   const desc      = document.getElementById('tDescripcion').value.trim();
+  const imagen    = document.getElementById('tImagen').value.trim();
   const editId    = document.getElementById('editTorneoId').value;
   const errEl     = document.getElementById('formTorneoError');
 
@@ -296,6 +297,7 @@ async function saveTorneo() {
     nombre, subtitulo, plataforma, modalidad, categoria,
     cupos_total: cupos, precio, emoji, estado,
     descripcion: desc,
+    imagen: imagen || '',
     fecha: new Date(fechaVal),
   };
 
@@ -343,6 +345,8 @@ window.editTorneo = async function(id) {
     document.getElementById('tEmoji').value             = t.emoji || '🎮';
     document.getElementById('tEstado').value            = t.estado || 'open';
     document.getElementById('tDescripcion').value       = t.descripcion || '';
+    document.getElementById('tImagen').value             = t.imagen || '';
+    previewImagen(t.imagen || '');
 
     if (t.fecha?.toDate) {
       const d = t.fecha.toDate();
@@ -374,7 +378,7 @@ window.toggleEstado = async function(id, estadoActual) {
 };
 
 window.resetTorneoForm = function() {
-  ['tNombre','tSubtitulo','tFecha','tCupos','tEmoji','tDescripcion'].forEach(id => {
+  ['tNombre','tSubtitulo','tFecha','tCupos','tEmoji','tDescripcion','tImagen'].forEach(id => {
     document.getElementById(id).value = '';
   });
   document.getElementById('tPrecio').value    = '5000';
@@ -413,6 +417,23 @@ document.getElementById('btnConfirmDelete').addEventListener('click', () => {
   if (deleteCallback) deleteCallback();
 });
 
+// ── PREVIEW IMAGEN ──────────────────────────────────────────
+window.previewImagen = function(url) {
+  const wrap  = document.getElementById('imgPreviewWrap');
+  const img   = document.getElementById('imgPreview');
+  const label = document.getElementById('imgPreviewNombre');
+  const nombre = document.getElementById('tNombre').value || 'Torneo';
+
+  if (url) {
+    img.src = url;
+    label.textContent = nombre.toUpperCase();
+    wrap.style.display = 'block';
+    img.onerror = () => { wrap.style.display = 'none'; };
+  } else {
+    wrap.style.display = 'none';
+  }
+};
+
 // ── HELPERS ─────────────────────────────────────────────────
 function badgeEstado(estado) {
   const map = {
@@ -436,3 +457,242 @@ function showToast(msg, isError = false) {
   document.body.appendChild(t);
   setTimeout(() => t.remove(), 3500);
 }
+
+// ============================================================
+//  NUEVAS FUNCIONES ADMIN v2
+// ============================================================
+
+// ── GALARDONES ───────────────────────────────────────────────
+async function loadGalardones() {
+  const container = document.getElementById('galardonesAdminList');
+  container.innerHTML = '<div class="loading-state"><div class="spinner"></div><p>Cargando...</p></div>';
+  try {
+    const snap = await getDocs(query(collection(db, 'galardones'), orderBy('fecha','desc')));
+    const lista = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+    if (lista.length === 0) {
+      container.innerHTML = '<p style="color:var(--muted);padding:20px 0">No hay campeones registrados aún.</p>';
+      return;
+    }
+    container.innerHTML = `<div class="admin-torneos-grid">${lista.map(g => `
+      <div class="admin-torneo-card">
+        <div class="atc-header">
+          <div class="atc-title">${g.juego_emoji||'🏆'} ${g.gamertag}</div>
+        </div>
+        <div class="atc-fecha">🏆 ${g.torneo_nombre}</div>
+        ${g.foto ? `<img src="${g.foto}" style="width:60px;height:60px;border-radius:50%;object-fit:cover;margin:8px 0;border:2px solid var(--acid)">` : ''}
+        <div class="atc-actions">
+          <button class="btn-tbl delete" onclick="confirmDelete('galardon','${g.id}','${g.gamertag}')">🗑 Eliminar</button>
+        </div>
+      </div>
+    `).join('')}</div>`;
+  } catch(err) { container.innerHTML = '<p style="color:var(--red)">Error al cargar.</p>'; }
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+  const btnG = document.getElementById('btnSaveGalardon');
+  if (btnG) btnG.addEventListener('click', saveGalardon);
+});
+
+async function saveGalardon() {
+  const gamertag = document.getElementById('gGamertag').value.trim();
+  const torneo   = document.getElementById('gTorneo').value.trim();
+  const emoji    = document.getElementById('gEmoji').value.trim() || '🎮';
+  const fechaVal = document.getElementById('gFecha').value;
+  const foto     = document.getElementById('gFoto').value.trim();
+  const bg       = document.getElementById('gBg').value.trim();
+  const errEl    = document.getElementById('formGalardonError');
+
+  errEl.style.display = 'none';
+  if (!gamertag || !torneo) { errEl.textContent = 'Completá gamertag y torneo.'; errEl.style.display = 'block'; return; }
+
+  try {
+    await addDoc(collection(db, 'galardones'), {
+      gamertag, torneo_nombre: torneo, juego_emoji: emoji,
+      foto: foto || '', bg_imagen: bg || '',
+      fecha: fechaVal ? new Date(fechaVal) : serverTimestamp(),
+    });
+    showToast('Campeón registrado 🏆');
+    ['gGamertag','gTorneo','gEmoji','gFecha','gFoto','gBg'].forEach(id => document.getElementById(id).value = '');
+    showSection('galardones');
+  } catch(err) { errEl.textContent = 'Error al guardar.'; errEl.style.display = 'block'; }
+}
+
+// ── RESEÑAS ──────────────────────────────────────────────────
+async function loadResenasAdmin() {
+  const tbody = document.getElementById('resenasAdminBody');
+  tbody.innerHTML = '<tr><td colspan="6" class="table-loading">Cargando...</td></tr>';
+  try {
+    const snap = await getDocs(query(collection(db, 'resenas'), orderBy('fecha','desc')));
+    const lista = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+    if (lista.length === 0) { tbody.innerHTML = '<tr><td colspan="6" class="table-loading">Sin reseñas.</td></tr>'; return; }
+    tbody.innerHTML = lista.map(r => `
+      <tr>
+        <td>${r.nombre}</td>
+        <td>${r.juego}</td>
+        <td style="color:#FFD700">${'★'.repeat(r.estrellas||5)}</td>
+        <td style="max-width:200px;font-size:0.8rem;color:var(--muted)">${r.texto?.substring(0,80)}...</td>
+        <td>${r.aprobada ? '<span class="badge badge-confirmado">Aprobada</span>' : '<span class="badge badge-pendiente">Pendiente</span>'}</td>
+        <td><div class="tbl-actions">
+          ${!r.aprobada ? `<button class="btn-tbl confirm" onclick="aprobarResena('${r.id}')">✓ Aprobar</button>` : ''}
+          <button class="btn-tbl delete" onclick="confirmDelete('resena','${r.id}','${r.nombre}')">🗑</button>
+        </div></td>
+      </tr>
+    `).join('');
+  } catch(err) { tbody.innerHTML = '<tr><td colspan="6" class="table-loading" style="color:var(--red)">Error.</td></tr>'; }
+}
+
+window.aprobarResena = async function(id) {
+  try {
+    await updateDoc(doc(db, 'resenas', id), { aprobada: true });
+    showToast('Reseña aprobada ✓');
+    loadResenasAdmin();
+  } catch(err) { showToast('Error', true); }
+};
+
+// ── ENCUESTAS ────────────────────────────────────────────────
+async function loadEncuestasAdmin() {
+  const container = document.getElementById('encuestasAdminList');
+  container.innerHTML = '<div class="loading-state"><div class="spinner"></div><p>Cargando...</p></div>';
+  try {
+    const snap = await getDocs(query(collection(db, 'encuestas'), orderBy('fecha','desc')));
+    const lista = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+    if (lista.length === 0) {
+      container.innerHTML = '<p style="color:var(--muted);padding:20px 0">No hay encuestas. Creá una con el botón de arriba.</p>';
+      return;
+    }
+    container.innerHTML = lista.map(e => {
+      const total = (e.opciones||[]).reduce((s, o) => s + (o.votos||0), 0);
+      return `
+        <div class="admin-torneo-card" style="margin-bottom:2px">
+          <div class="atc-header">
+            <div class="atc-title">${e.pregunta}</div>
+            <span class="badge ${e.activa?'badge-confirmado':'badge-cancelado'}">${e.activa?'Activa':'Inactiva'}</span>
+          </div>
+          ${(e.opciones||[]).map(o => {
+            const pct = total > 0 ? Math.round((o.votos||0)/total*100) : 0;
+            return `<div style="margin:4px 0;font-size:0.85rem;color:var(--muted)">${o.texto} — <span style="color:var(--acid)">${o.votos||0} votos (${pct}%)</span></div>`;
+          }).join('')}
+          <div style="font-size:0.75rem;color:var(--muted);margin:8px 0">${total} votos totales</div>
+          <div class="atc-actions">
+            <button class="btn-tbl" onclick="toggleEncuesta('${e.id}',${e.activa})">${e.activa?'⏸ Desactivar':'▶ Activar'}</button>
+            <button class="btn-tbl delete" onclick="confirmDelete('encuesta','${e.id}','${e.pregunta?.substring(0,30)}')">🗑 Eliminar</button>
+          </div>
+        </div>
+      `;
+    }).join('');
+  } catch(err) { container.innerHTML = '<p style="color:var(--red)">Error al cargar.</p>'; }
+}
+
+window.showNuevaEncuesta = function() {
+  document.getElementById('nuevaEncuestaForm').style.display = 'block';
+};
+
+window.saveEncuesta = async function() {
+  const pregunta = document.getElementById('encPregunta').value.trim();
+  const opcionesRaw = document.getElementById('encOpciones').value.trim();
+  const errEl = document.getElementById('encError');
+  errEl.style.display = 'none';
+
+  if (!pregunta || !opcionesRaw) { errEl.textContent = 'Completá pregunta y opciones.'; errEl.style.display = 'block'; return; }
+
+  const opciones = opcionesRaw.split('\n').filter(l => l.trim()).map(t => ({ texto: t.trim(), votos: 0 }));
+  if (opciones.length < 2) { errEl.textContent = 'Necesitás al menos 2 opciones.'; errEl.style.display = 'block'; return; }
+
+  try {
+    await addDoc(collection(db, 'encuestas'), { pregunta, opciones, activa: true, fecha: serverTimestamp() });
+    showToast('Encuesta creada ✓');
+    document.getElementById('encPregunta').value = '';
+    document.getElementById('encOpciones').value = '';
+    document.getElementById('nuevaEncuestaForm').style.display = 'none';
+    loadEncuestasAdmin();
+  } catch(err) { errEl.textContent = 'Error al guardar.'; errEl.style.display = 'block'; }
+};
+
+window.toggleEncuesta = async function(id, activa) {
+  try {
+    await updateDoc(doc(db, 'encuestas', id), { activa: !activa });
+    showToast(activa ? 'Encuesta desactivada' : 'Encuesta activada ✓');
+    loadEncuestasAdmin();
+  } catch(err) { showToast('Error', true); }
+};
+
+// ── CHAT ADMIN ───────────────────────────────────────────────
+async function loadChatAdmin() {
+  const container = document.getElementById('chatAdminList');
+  container.innerHTML = '<div class="loading-state"><div class="spinner"></div><p>Cargando mensajes...</p></div>';
+  try {
+    const snap = await getDocs(query(collection(db, 'chat_mensajes'), orderBy('fecha','desc')));
+    const lista = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+    if (lista.length === 0) {
+      container.innerHTML = '<p style="color:var(--muted);padding:20px 0">No hay mensajes de usuarios.</p>';
+      return;
+    }
+    container.innerHTML = lista.map(m => `
+      <div class="admin-torneo-card" style="margin-bottom:2px;border-left:3px solid ${m.respondido?'var(--acid)':'var(--orange)'}">
+        <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:8px">
+          <span style="font-family:'Barlow Condensed',sans-serif;font-size:0.75rem;letter-spacing:2px;color:${m.respondido?'var(--acid)':'var(--orange)'}">${m.respondido?'RESPONDIDO':'SIN RESPONDER'}</span>
+          <span style="font-size:0.75rem;color:var(--muted)">${formatFecha(m.fecha)}</span>
+        </div>
+        <div style="color:#fff;margin-bottom:12px;font-size:0.9rem">💬 ${m.texto}</div>
+        ${m.respuesta ? `<div style="color:var(--acid);font-size:0.85rem;margin-bottom:12px">↩ ${m.respuesta}</div>` : ''}
+        ${!m.respondido ? `
+          <div style="display:flex;gap:8px;margin-top:8px">
+            <input type="text" class="form-input" id="resp-${m.id}" placeholder="Escribí tu respuesta..." style="flex:1;clip-path:none">
+            <button class="btn-admin-primary" onclick="responderChat('${m.id}')">Enviar</button>
+          </div>
+        ` : ''}
+        <div class="atc-actions" style="margin-top:8px">
+          <button class="btn-tbl delete" onclick="confirmDelete('chat_mensajes','${m.id}','mensaje')">🗑 Borrar</button>
+        </div>
+      </div>
+    `).join('');
+  } catch(err) { container.innerHTML = '<p style="color:var(--red)">Error al cargar.</p>'; }
+}
+
+window.responderChat = async function(id) {
+  const input = document.getElementById('resp-' + id);
+  const resp  = input?.value.trim();
+  if (!resp) return;
+  try {
+    await updateDoc(doc(db, 'chat_mensajes', id), { respuesta: resp, respondido: true });
+    showToast('Respuesta enviada ✓');
+    loadChatAdmin();
+  } catch(err) { showToast('Error', true); }
+};
+
+// ── PATCH showSection to load new sections ───────────────────
+const _origShowSection = window.showSection;
+window.showSection = function(name) {
+  _origShowSection(name);
+  if (name === 'galardones')    loadGalardones();
+  if (name === 'nuevo-galardon') {}
+  if (name === 'resenas')       loadResenasAdmin();
+  if (name === 'encuestas')     loadEncuestasAdmin();
+  if (name === 'chat')          loadChatAdmin();
+};
+
+// Patch confirmDelete to handle new collections
+const _origConfirmDelete = window.confirmDelete;
+window.confirmDelete = function(tipo, id, nombre) {
+  document.getElementById('deleteTarget').textContent = `"${nombre}"`;
+  document.getElementById('deleteModal').classList.add('active');
+  deleteCallback = async () => {
+    try {
+      const colMap = {
+        torneo: 'torneos', inscripcion: 'inscripciones',
+        galardon: 'galardones', resena: 'resenas',
+        encuesta: 'encuestas', chat_mensajes: 'chat_mensajes',
+      };
+      const colName = colMap[tipo] || tipo;
+      await deleteDoc(doc(db, colName, id));
+      showToast('Eliminado correctamente');
+      closeDeleteModal();
+      if (tipo === 'torneo')       loadAdminTorneos();
+      if (tipo === 'inscripcion')  loadInscripciones();
+      if (tipo === 'galardon')     loadGalardones();
+      if (tipo === 'resena')       loadResenasAdmin();
+      if (tipo === 'encuesta')     loadEncuestasAdmin();
+      if (tipo === 'chat_mensajes') loadChatAdmin();
+    } catch(err) { showToast('Error al eliminar', true); }
+  };
+};
