@@ -268,11 +268,10 @@
     <section class="admin-section" id="section-catalogo">
       <div class="admin-header">
         <h1 class="admin-title">Catálogo de Juegos</h1>
-        <span style="font-size:0.8rem;color:var(--muted)">Editá portada, nombre y emoji de cada juego</span>
+        <button class="btn-admin-primary" onclick="openNuevoJuego()">+ Agregar juego</button>
       </div>
       <p style="color:var(--muted);font-size:0.85rem;margin-bottom:24px">
-        Para agregar una portada: buscá la imagen en Google → clic derecho → "Copiar dirección de imagen" → pegá la URL acá.
-        También podés subir la imagen a <strong style="color:var(--acid)">imgur.com</strong> y usar ese link.
+        Agregá, editá o eliminá juegos. Para la portada pegá una URL de imagen directa (<strong style="color:var(--acid)">imgur.com</strong> es gratuito).
       </p>
       <div id="catalogoGrid" class="admin-torneos-grid"></div>
     </section>
