@@ -10,19 +10,20 @@ import {
 
 const WA_NUMBER = "5491157687215";
 
-// Catálogo fijo de juegos con portadas
-const GAMES_CATALOG = [
-  { id:'wildrift',    nombre:'Wild Rift',     emoji:'⚔️',  imagen:'https://www.riotgames.com/darkroom/1440/d0807e131a84b2b16b9db8f757a9a426:d0238f64a19a82b89d59b4a12ac8c7b0/lol-wild-rift-wallpaper.jpg', plataforma:'mobile' },
-  { id:'pubgmobile',  nombre:'PUBG Mobile',   emoji:'🔫',  imagen:'https://upload.wikimedia.org/wikipedia/en/5/5a/PUBG_Mobile_cover_art.jpg', plataforma:'mobile' },
-  { id:'fortnite',    nombre:'Fortnite',      emoji:'⚡',  imagen:'https://upload.wikimedia.org/wikipedia/en/2/2d/Fortnite_Battle_Royale_key_art.jpg', plataforma:'pc' },
-  { id:'fifa23',      nombre:'FC 24 / FIFA',  emoji:'⚽',  imagen:'https://upload.wikimedia.org/wikipedia/en/f/f1/FC_24_cover_art.jpg', plataforma:'console' },
-  { id:'gangbeasts',  nombre:'Gang Beasts',   emoji:'🥊',  imagen:'https://upload.wikimedia.org/wikipedia/en/a/a2/Gang_Beasts_cover_art.jpg', plataforma:'console' },
-  { id:'rocketleague',nombre:'Rocket League', emoji:'🚗',  imagen:'https://upload.wikimedia.org/wikipedia/en/f/f5/Rocket_League_coverart.jpg', plataforma:'pc' },
-  { id:'fallguys',    nombre:'Fall Guys',     emoji:'🎊',  imagen:'https://upload.wikimedia.org/wikipedia/en/5/5d/Fall_Guys_cover_art.jpg', plataforma:'pc' },
-  { id:'freefire',    nombre:'Free Fire',     emoji:'🔥',  imagen:'https://upload.wikimedia.org/wikipedia/en/b/b4/Garena_Free_Fire_game_logo.png', plataforma:'mobile' },
-  { id:'warzone',     nombre:'Warzone',       emoji:'💥',  imagen:'https://upload.wikimedia.org/wikipedia/en/c/c7/Call_of_Duty_Warzone_2_keyart.jpg', plataforma:'pc' },
-  { id:'mlbb',        nombre:'MLBB',          emoji:'🧙',  imagen:'https://upload.wikimedia.org/wikipedia/en/0/0a/Mobile_Legends_Bang_Bang_cover_art.jpg', plataforma:'mobile' },
+// Catálogo base de juegos (se puede editar desde el admin)
+const GAMES_CATALOG_DEFAULT = [
+  { id:'wildrift',    nombre:'Wild Rift',     emoji:'⚔️',  imagen:'', plataforma:'mobile' },
+  { id:'pubgmobile',  nombre:'PUBG Mobile',   emoji:'🔫',  imagen:'', plataforma:'mobile' },
+  { id:'fortnite',    nombre:'Fortnite',      emoji:'⚡',  imagen:'', plataforma:'pc' },
+  { id:'fifa23',      nombre:'FC 24 / FIFA',  emoji:'⚽',  imagen:'', plataforma:'console' },
+  { id:'gangbeasts',  nombre:'Gang Beasts',   emoji:'🥊',  imagen:'', plataforma:'console' },
+  { id:'rocketleague',nombre:'Rocket League', emoji:'🚗',  imagen:'', plataforma:'pc' },
+  { id:'fallguys',    nombre:'Fall Guys',     emoji:'🎊',  imagen:'', plataforma:'pc' },
+  { id:'freefire',    nombre:'Free Fire',     emoji:'🔥',  imagen:'', plataforma:'mobile' },
+  { id:'warzone',     nombre:'Warzone',       emoji:'💥',  imagen:'', plataforma:'pc' },
+  { id:'mlbb',        nombre:'MLBB',          emoji:'🧙',  imagen:'', plataforma:'mobile' },
 ];
+let GAMES_CATALOG = [...GAMES_CATALOG_DEFAULT];
 
 let torneos = [];
 let galardones = [];
@@ -52,14 +53,24 @@ document.addEventListener('DOMContentLoaded', () => {
 
 async function loadAll() {
   try {
-    const [torneoSnap, galardonSnap, reseñaSnap, encuestaSnap] = await Promise.all([
+    const [torneoSnap, galardonSnap, reseñaSnap, encuestaSnap, juegosSnap] = await Promise.all([
       getDocs(query(collection(db, 'torneos'), orderBy('fecha', 'asc'))),
       getDocs(query(collection(db, 'galardones'), orderBy('fecha', 'desc'))),
-      getDocs(query(collection(db, 'resenas'), orderBy('fecha', 'desc'))),
+      getDocs(query(collection(db, 'resenas'), where('aprobada','==',true), orderBy('fecha', 'desc'))),
       getDocs(query(collection(db, 'encuestas'), where('activa','==',true))),
+      getDocs(collection(db, 'juegos_catalogo')),
     ]);
 
     torneos   = torneoSnap.docs.map(d => ({ id: d.id, ...d.data() }));
+
+    // Aplicar personalizaciones del admin al catálogo
+    const juegosFirebase = {};
+    juegosSnap.docs.forEach(d => { juegosFirebase[d.id] = d.data(); });
+    GAMES_CATALOG = GAMES_CATALOG_DEFAULT.map(g => ({
+      ...g,
+      ...(juegosFirebase[g.id] || {}),
+      id: g.id,
+    }));
     galardones = galardonSnap.docs.map(d => ({ id: d.id, ...d.data() }));
     reseñas   = reseñaSnap.docs.map(d => ({ id: d.id, ...d.data() }));
     encuestas  = encuestaSnap.docs.map(d => ({ id: d.id, ...d.data() }));
@@ -136,7 +147,7 @@ window.openGameModal = function(gameId) {
         <p style="color:var(--muted);margin-bottom:8px">No hay torneos disponibles de <strong style="color:#fff">${game.nombre}</strong> en este momento.</p>
         <p style="color:var(--muted);font-size:0.85rem">Seguinos en Instagram o preguntá en el chat para saber cuándo viene el próximo.</p>
         <div style="margin-top:20px;display:flex;gap:10px;justify-content:center">
-          <a href="https://instagram.com/nexusarena" target="_blank" class="btn-primary" style="text-decoration:none;display:inline-block">Instagram</a>
+          <a href="#" target="_blank" class="btn-primary" style="text-decoration:none;display:inline-block">Instagram</a>
           <button class="btn-secondary" onclick="document.getElementById('gameModal').classList.remove('active');toggleChat()">Chat</button>
         </div>
       </div>

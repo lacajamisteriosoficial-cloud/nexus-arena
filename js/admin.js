@@ -4,7 +4,7 @@
 
 import { db, auth } from './firebase.js';
 import {
-  collection, getDocs, addDoc, doc, updateDoc, deleteDoc,
+  collection, getDocs, addDoc, doc, updateDoc, deleteDoc, setDoc,
   query, orderBy, where, serverTimestamp, getDoc
 } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 import {
@@ -695,4 +695,106 @@ window.confirmDelete = function(tipo, id, nombre) {
       if (tipo === 'chat_mensajes') loadChatAdmin();
     } catch(err) { showToast('Error al eliminar', true); }
   };
+};
+
+// ── CATÁLOGO DE JUEGOS ───────────────────────────────────────
+const JUEGOS_BASE = [
+  { id:'wildrift',     nombre:'Wild Rift',     emoji:'⚔️',  plataforma:'mobile' },
+  { id:'pubgmobile',   nombre:'PUBG Mobile',   emoji:'🔫',  plataforma:'mobile' },
+  { id:'fortnite',     nombre:'Fortnite',      emoji:'⚡',  plataforma:'pc' },
+  { id:'fifa23',       nombre:'FC 24 / FIFA',  emoji:'⚽',  plataforma:'console' },
+  { id:'gangbeasts',   nombre:'Gang Beasts',   emoji:'🥊',  plataforma:'console' },
+  { id:'rocketleague', nombre:'Rocket League', emoji:'🚗',  plataforma:'pc' },
+  { id:'fallguys',     nombre:'Fall Guys',     emoji:'🎊',  plataforma:'pc' },
+  { id:'freefire',     nombre:'Free Fire',     emoji:'🔥',  plataforma:'mobile' },
+  { id:'warzone',      nombre:'Warzone',       emoji:'💥',  plataforma:'pc' },
+  { id:'mlbb',         nombre:'MLBB',          emoji:'🧙',  plataforma:'mobile' },
+];
+
+async function loadCatalogo() {
+  const grid = document.getElementById('catalogoGrid');
+  grid.innerHTML = '<div class="loading-state"><div class="spinner"></div><p>Cargando...</p></div>';
+
+  try {
+    const snap = await getDocs(collection(db, 'juegos_catalogo'));
+    const guardados = {};
+    snap.docs.forEach(d => { guardados[d.id] = d.data(); });
+
+    grid.innerHTML = JUEGOS_BASE.map(juego => {
+      const saved = guardados[juego.id] || {};
+      const nombre = saved.nombre || juego.nombre;
+      const emoji  = saved.emoji  || juego.emoji;
+      const imagen = saved.imagen || '';
+
+      const preview = imagen
+        ? `<img src="${imagen}" alt="${nombre}" style="width:100%;height:100px;object-fit:cover;display:block;margin-bottom:8px;border:1px solid var(--gray)" onerror="this.style.display='none'">`
+        : `<div style="width:100%;height:100px;background:var(--dark);display:flex;align-items:center;justify-content:center;font-size:3rem;margin-bottom:8px;border:1px solid var(--gray)">${emoji}</div>`;
+
+      return `
+        <div class="admin-torneo-card" id="jcard-${juego.id}">
+          ${preview}
+          <div class="atc-title" style="margin-bottom:12px">${nombre}</div>
+          <div class="form-group">
+            <label class="form-label" style="font-size:0.65rem">Nombre</label>
+            <input type="text" class="form-input" id="jnombre-${juego.id}" value="${nombre}" placeholder="${juego.nombre}">
+          </div>
+          <div class="form-group">
+            <label class="form-label" style="font-size:0.65rem">Emoji</label>
+            <input type="text" class="form-input" id="jemoji-${juego.id}" value="${emoji}" maxlength="4" style="width:80px">
+          </div>
+          <div class="form-group">
+            <label class="form-label" style="font-size:0.65rem">URL de portada</label>
+            <input type="text" class="form-input" id="jimagen-${juego.id}" value="${imagen}" placeholder="https://imgur.com/..." oninput="previewJuego('${juego.id}',this.value,'${emoji}')">
+          </div>
+          <div class="form-actions" style="margin-top:8px">
+            <button class="btn-admin-primary" onclick="saveJuego('${juego.id}')">💾 Guardar</button>
+          </div>
+        </div>
+      `;
+    }).join('');
+
+  } catch(err) {
+    grid.innerHTML = '<p style="color:var(--red)">Error al cargar catálogo.</p>';
+    console.error(err);
+  }
+}
+
+window.previewJuego = function(id, url, emoji) {
+  const card = document.getElementById('jcard-' + id);
+  if (!card) return;
+  const existing = card.querySelector('img, div[style*="height:100px"]');
+  if (!existing) return;
+
+  if (url) {
+    existing.outerHTML = `<img src="${url}" alt="" style="width:100%;height:100px;object-fit:cover;display:block;margin-bottom:8px;border:1px solid var(--gray)" onerror="this.style.display='none'">`;
+  } else {
+    existing.outerHTML = `<div style="width:100%;height:100px;background:var(--dark);display:flex;align-items:center;justify-content:center;font-size:3rem;margin-bottom:8px;border:1px solid var(--gray)">${emoji}</div>`;
+  }
+};
+
+window.saveJuego = async function(id) {
+  const nombre = document.getElementById('jnombre-' + id)?.value.trim();
+  const emoji  = document.getElementById('jemoji-'  + id)?.value.trim();
+  const imagen = document.getElementById('jimagen-' + id)?.value.trim();
+
+  try {
+    await updateDoc(doc(db, 'juegos_catalogo', id), { nombre, emoji, imagen }).catch(async () => {
+      // Si no existe el doc, lo crea
+      await addDoc(collection(db, 'juegos_catalogo'), { nombre, emoji, imagen });
+    });
+
+    await setDoc(doc(db, 'juegos_catalogo', id), { nombre, emoji, imagen });
+
+    showToast(`${nombre} guardado ✓`);
+  } catch(err) {
+    console.error(err);
+    showToast('Error al guardar', true);
+  }
+};
+
+// Patch showSection para catalogo
+const _origShowSection2 = window.showSection;
+window.showSection = function(name) {
+  _origShowSection2(name);
+  if (name === 'catalogo') loadCatalogo();
 };
