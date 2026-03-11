@@ -11,19 +11,8 @@ import {
 const WA_NUMBER = "5491157687215";
 
 // Catálogo base de juegos (se puede editar desde el admin)
-const GAMES_CATALOG_DEFAULT = [
-  { id:'wildrift',    nombre:'Wild Rift',     emoji:'⚔️',  imagen:'', plataforma:'mobile' },
-  { id:'pubgmobile',  nombre:'PUBG Mobile',   emoji:'🔫',  imagen:'', plataforma:'mobile' },
-  { id:'fortnite',    nombre:'Fortnite',      emoji:'⚡',  imagen:'', plataforma:'pc' },
-  { id:'fifa23',      nombre:'FC 24 / FIFA',  emoji:'⚽',  imagen:'', plataforma:'console' },
-  { id:'gangbeasts',  nombre:'Gang Beasts',   emoji:'🥊',  imagen:'', plataforma:'console' },
-  { id:'rocketleague',nombre:'Rocket League', emoji:'🚗',  imagen:'', plataforma:'pc' },
-  { id:'fallguys',    nombre:'Fall Guys',     emoji:'🎊',  imagen:'', plataforma:'pc' },
-  { id:'freefire',    nombre:'Free Fire',     emoji:'🔥',  imagen:'', plataforma:'mobile' },
-  { id:'warzone',     nombre:'Warzone',       emoji:'💥',  imagen:'', plataforma:'pc' },
-  { id:'mlbb',        nombre:'MLBB',          emoji:'🧙',  imagen:'', plataforma:'mobile' },
-];
-let GAMES_CATALOG = [...GAMES_CATALOG_DEFAULT];
+// Catálogo 100% desde Firebase — el admin es la única fuente de verdad
+let GAMES_CATALOG = [];
 
 let torneos = [];
 let galardones = [];
@@ -63,14 +52,9 @@ async function loadAll() {
 
     torneos   = torneoSnap.docs.map(d => ({ id: d.id, ...d.data() }));
 
-    // Aplicar personalizaciones del admin al catálogo
-    const juegosFirebase = {};
-    juegosSnap.docs.forEach(d => { juegosFirebase[d.id] = d.data(); });
-    GAMES_CATALOG = GAMES_CATALOG_DEFAULT.map(g => ({
-      ...g,
-      ...(juegosFirebase[g.id] || {}),
-      id: g.id,
-    }));
+    // Catálogo viene directamente de Firebase, ordenado por nombre
+    GAMES_CATALOG = juegosSnap.docs.map(d => ({ id: d.id, ...d.data() }))
+      .sort((a,b) => (a.nombre||'').localeCompare(b.nombre||''));
     galardones = galardonSnap.docs.map(d => ({ id: d.id, ...d.data() }));
     reseñas   = reseñaSnap.docs.map(d => ({ id: d.id, ...d.data() })).filter(r => r.aprobada === true);
     encuestas  = encuestaSnap.docs.map(d => ({ id: d.id, ...d.data() }));
