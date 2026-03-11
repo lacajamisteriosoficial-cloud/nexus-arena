@@ -56,7 +56,7 @@ async function loadAll() {
     const [torneoSnap, galardonSnap, reseñaSnap, encuestaSnap, juegosSnap] = await Promise.all([
       getDocs(query(collection(db, 'torneos'), orderBy('fecha', 'asc'))),
       getDocs(query(collection(db, 'galardones'), orderBy('fecha', 'desc'))),
-      getDocs(query(collection(db, 'resenas'), where('aprobada','==',true), orderBy('fecha', 'desc'))),
+      getDocs(query(collection(db, 'resenas'), orderBy('fecha', 'desc'))),
       getDocs(query(collection(db, 'encuestas'), where('activa','==',true))),
       getDocs(collection(db, 'juegos_catalogo')),
     ]);
@@ -72,7 +72,7 @@ async function loadAll() {
       id: g.id,
     }));
     galardones = galardonSnap.docs.map(d => ({ id: d.id, ...d.data() }));
-    reseñas   = reseñaSnap.docs.map(d => ({ id: d.id, ...d.data() }));
+    reseñas   = reseñaSnap.docs.map(d => ({ id: d.id, ...d.data() })).filter(r => r.aprobada === true);
     encuestas  = encuestaSnap.docs.map(d => ({ id: d.id, ...d.data() }));
 
     const activos = torneos.filter(t => t.estado === 'open' || t.estado === 'soon');
