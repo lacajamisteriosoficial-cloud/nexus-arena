@@ -740,21 +740,21 @@ async function loadCatalogo() {
 }
 
 function buildJuegoCard(j) {
-  const imagen = j.imagen || '';
-  const emoji  = j.emoji  || '🎮';
-  const nombre = j.nombre || 'Sin nombre';
+  const imagen    = j.imagen || '';
+  const emoji     = j.emoji  || '🎮';
+  const nombre    = j.nombre || 'Sin nombre';
+  const posX      = j.posX ?? 50;
+  const posY      = j.posY ?? 50;
+  const zoom      = j.zoom  ?? 100;
 
-  const preview = imagen
-    ? `<img src="${imagen}" alt="${nombre}" style="width:100%;height:120px;object-fit:cover;display:block;border-bottom:1px solid var(--gray)" onerror="this.style.display='none';this.nextSibling.style.display='flex'">`
-    : '';
-  const emojiDiv = `<div style="width:100%;height:120px;background:var(--dark);display:${imagen ? 'none' : 'flex'};align-items:center;justify-content:center;font-size:3.5rem;border-bottom:1px solid var(--gray)">${emoji}</div>`;
+  const previewStyle = imagen
+    ? `background:url('${imagen}') ${posX}% ${posY}% / ${zoom}% auto no-repeat; height:160px; border-bottom:1px solid var(--gray);`
+    : `height:160px; background:var(--dark); display:flex; align-items:center; justify-content:center; font-size:3.5rem; border-bottom:1px solid var(--gray);`;
 
   return `
     <div class="admin-torneo-card" id="jcard-${j.id}" style="padding:0;overflow:hidden">
-      ${preview}${emojiDiv}
+      <div id="jpreview-${j.id}" style="${previewStyle}">${imagen ? '' : emoji}</div>
       <div style="padding:14px">
-        <div class="atc-title" style="margin-bottom:4px">${nombre}</div>
-        <div style="font-size:0.7rem;color:var(--muted);margin-bottom:12px;letter-spacing:1px">${j.plataforma||''} ${j.emoji||''}</div>
         <div class="form-group" style="margin-bottom:8px">
           <label class="form-label" style="font-size:0.6rem">Nombre</label>
           <input type="text" class="form-input" id="jnombre-${j.id}" value="${nombre}">
@@ -774,12 +774,24 @@ function buildJuegoCard(j) {
             </select>
           </div>
         </div>
-        <div class="form-group" style="margin-bottom:12px">
-          <label class="form-label" style="font-size:0.6rem">URL de portada (imgur u otro link directo)</label>
+        <div class="form-group" style="margin-bottom:8px">
+          <label class="form-label" style="font-size:0.6rem">URL de portada</label>
           <input type="text" class="form-input" id="jimagen-${j.id}" value="${imagen}" placeholder="https://i.imgur.com/..."
-            oninput="previewJuego('${j.id}',this.value,'${emoji}')">
+            oninput="livePreviewJuego('${j.id}')">
         </div>
-        <div class="atc-actions">
+        ${imagen ? `
+        <div class="img-editor-controls">
+          <span class="img-editor-label">↔ POS X</span>
+          <input type="range" class="img-slider" id="jposX-${j.id}" min="0" max="100" value="${posX}" oninput="livePreviewJuego('${j.id}')">
+          <span class="img-editor-label">↕ POS Y</span>
+          <input type="range" class="img-slider" id="jposY-${j.id}" min="0" max="100" value="${posY}" oninput="livePreviewJuego('${j.id}')">
+        </div>
+        <div class="img-editor-controls">
+          <span class="img-editor-label">🔍 ZOOM</span>
+          <input type="range" class="img-slider" id="jzoom-${j.id}" min="50" max="200" value="${zoom}" oninput="livePreviewJuego('${j.id}')">
+          <button class="img-editor-btn" onclick="resetImgEditor('${j.id}')">Reset</button>
+        </div>` : ''}
+        <div class="atc-actions" style="margin-top:8px">
           <button class="btn-tbl confirm" onclick="saveJuego('${j.id}')">💾 Guardar</button>
           <button class="btn-tbl delete" onclick="confirmDelete('juego','${j.id}','${nombre}')">🗑 Eliminar</button>
         </div>
@@ -788,30 +800,49 @@ function buildJuegoCard(j) {
   `;
 }
 
-window.previewJuego = function(id, url, emoji) {
-  const card = document.getElementById('jcard-' + id);
-  if (!card) return;
-  const img   = card.querySelector('img');
-  const ediv  = card.querySelector('div[style*="align-items:center"]');
-  if (url) {
-    if (img)  { img.src = url; img.style.display = 'block'; }
-    if (ediv) ediv.style.display = 'none';
+window.livePreviewJuego = function(id) {
+  const img  = document.getElementById('jimagen-' + id)?.value.trim() || '';
+  const posX = document.getElementById('jposX-'   + id)?.value ?? 50;
+  const posY = document.getElementById('jposY-'   + id)?.value ?? 50;
+  const zoom = document.getElementById('jzoom-'   + id)?.value ?? 100;
+  const prev = document.getElementById('jpreview-' + id);
+  if (!prev) return;
+  if (img) {
+    prev.style.cssText = `background:url('${img}') ${posX}% ${posY}% / ${zoom}% auto no-repeat; height:160px; border-bottom:1px solid var(--gray);`;
+    prev.textContent = '';
   } else {
-    if (img)  img.style.display = 'none';
-    if (ediv) ediv.style.display = 'flex';
+    const emoji = document.getElementById('jemoji-' + id)?.value || '🎮';
+    prev.style.cssText = `height:160px; background:var(--dark); display:flex; align-items:center; justify-content:center; font-size:3.5rem; border-bottom:1px solid var(--gray);`;
+    prev.textContent = emoji;
   }
 };
 
+window.resetImgEditor = function(id) {
+  const posX = document.getElementById('jposX-' + id);
+  const posY = document.getElementById('jposY-' + id);
+  const zoom = document.getElementById('jzoom-' + id);
+  if (posX) posX.value = 50;
+  if (posY) posY.value = 50;
+  if (zoom) zoom.value = 100;
+  livePreviewJuego(id);
+};
+
+// previewJuego replaced by livePreviewJuego
+
+
 window.saveJuego = async function(id) {
-  const nombre    = document.getElementById('jnombre-' + id)?.value.trim();
-  const emoji     = document.getElementById('jemoji-'  + id)?.value.trim();
-  const imagen    = document.getElementById('jimagen-' + id)?.value.trim();
-  const plataforma = document.getElementById('jplat-'  + id)?.value;
+  const nombre     = document.getElementById('jnombre-' + id)?.value.trim();
+  const emoji      = document.getElementById('jemoji-'  + id)?.value.trim();
+  const imagen     = document.getElementById('jimagen-' + id)?.value.trim();
+  const plataforma = document.getElementById('jplat-'   + id)?.value;
+  const posX       = parseInt(document.getElementById('jposX-' + id)?.value ?? 50);
+  const posY       = parseInt(document.getElementById('jposY-' + id)?.value ?? 50);
+  const zoom       = parseInt(document.getElementById('jzoom-' + id)?.value ?? 100);
 
   if (!nombre) { showToast('El nombre es obligatorio', true); return; }
 
   try {
-    await setDoc(doc(db, 'juegos_catalogo', id), { nombre, emoji, imagen, plataforma });
+    await setDoc(doc(db, 'juegos_catalogo', id), { nombre, emoji, imagen, plataforma, posX, posY, zoom });
     showToast(`${nombre} guardado ✓`);
     loadCatalogo();
   } catch(err) {
@@ -899,3 +930,33 @@ window.saveNuevoJuego = async function() {
 };
 
 
+
+// ── CONFIG / TICKER ──────────────────────────────────────────
+async function loadConfig() {
+  try {
+    const snap = await getDocs(collection(db, 'config'));
+    const tickerDoc = snap.docs.find(d => d.id === 'ticker');
+    if (tickerDoc) {
+      const items = tickerDoc.data().items || [];
+      const el = document.getElementById('tickerItems');
+      if (el) el.value = items.join('\n');
+    }
+  } catch(err) { console.error(err); }
+}
+
+window.saveTicker = async function() {
+  const raw = document.getElementById('tickerItems')?.value || '';
+  const items = raw.split('\n').map(s => s.trim()).filter(Boolean);
+  if (items.length === 0) { showToast('Agregá al menos un item', true); return; }
+  try {
+    await setDoc(doc(db, 'config', 'ticker'), { items });
+    showToast('Ticker guardado ✓');
+  } catch(err) { showToast('Error al guardar', true); console.error(err); }
+};
+
+// Patch showSection para config
+const _origShowSectionConfig = window.showSection;
+window.showSection = function(name) {
+  _origShowSectionConfig(name);
+  if (name === 'config') loadConfig();
+};

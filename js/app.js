@@ -42,12 +42,13 @@ document.addEventListener('DOMContentLoaded', () => {
 
 async function loadAll() {
   try {
-    const [torneoSnap, galardonSnap, reseñaSnap, encuestaSnap, juegosSnap] = await Promise.all([
+    const [torneoSnap, galardonSnap, reseñaSnap, encuestaSnap, juegosSnap, configSnap] = await Promise.all([
       getDocs(query(collection(db, 'torneos'), orderBy('fecha', 'asc'))),
       getDocs(query(collection(db, 'galardones'), orderBy('fecha', 'desc'))),
       getDocs(query(collection(db, 'resenas'), orderBy('fecha', 'desc'))),
       getDocs(query(collection(db, 'encuestas'), where('activa','==',true))),
       getDocs(collection(db, 'juegos_catalogo')),
+      getDocs(collection(db, 'config')),
     ]);
 
     torneos   = torneoSnap.docs.map(d => ({ id: d.id, ...d.data() }));
@@ -55,6 +56,19 @@ async function loadAll() {
     // Catálogo viene directamente de Firebase, ordenado por nombre
     GAMES_CATALOG = juegosSnap.docs.map(d => ({ id: d.id, ...d.data() }))
       .sort((a,b) => (a.nombre||'').localeCompare(b.nombre||''));
+
+    // Ticker desde Firebase
+    const tickerDoc = configSnap.docs.find(d => d.id === 'ticker');
+    if (tickerDoc) {
+      const items = tickerDoc.data().items || [];
+      if (items.length > 0) {
+        const tickerInner = document.querySelector('.ticker-inner');
+        if (tickerInner) {
+          const html = [...items, ...items].map(t => `<span>${t}</span>`).join('');
+          tickerInner.innerHTML = html;
+        }
+      }
+    }
     galardones = galardonSnap.docs.map(d => ({ id: d.id, ...d.data() }));
     reseñas   = reseñaSnap.docs.map(d => ({ id: d.id, ...d.data() })).filter(r => r.aprobada === true);
     encuestas  = encuestaSnap.docs.map(d => ({ id: d.id, ...d.data() }));
@@ -107,6 +121,7 @@ function renderGamesGrid(torneosActivos) {
         }
         <div class="game-card-emoji" id="gemoji-${game.id}" ${hasImg ? 'style="display:none"' : ''}>${game.emoji}</div>
         <div class="game-card-overlay"></div>
+        <img class="game-card-logo" src="logo.png" alt="Nexus Arena">
         <span class="game-card-badge ${hasTorneo ? 'has-torneo' : 'no-torneo'}">
           ${hasTorneo ? '🔥 Torneo activo' : 'Sin torneo'}
         </span>

@@ -925,3 +925,95 @@
   right: 12px;
   text-shadow: 0 2px 4px rgba(0,0,0,0.8);
 }
+
+/* ── LOGO IMG ── */
+.logo-img {
+  height: 36px;
+  width: auto;
+  display: block;
+  object-fit: contain;
+}
+.logo-img-footer {
+  height: 28px;
+  margin-bottom: 8px;
+}
+
+/* ── LOGO SOBRE PORTADAS DE JUEGOS ── */
+.game-card-logo {
+  position: absolute;
+  bottom: 44px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 70%;
+  max-width: 140px;
+  z-index: 3;
+  filter: drop-shadow(0 2px 8px rgba(0,0,0,0.8));
+  opacity: 0;
+  transition: opacity 0.3s;
+  pointer-events: none;
+}
+.game-card:hover .game-card-logo { opacity: 1; }
+
+/* ── EDITOR DE IMAGEN EN ADMIN ── */
+.img-editor-wrap {
+  position: relative;
+  width: 100%;
+  height: 160px;
+  overflow: hidden;
+  background: var(--dark);
+  border: 1px solid var(--gray);
+  margin-bottom: 8px;
+  cursor: crosshair;
+}
+
+.img-editor-preview {
+  position: absolute;
+  transform-origin: center center;
+  transition: none;
+  user-select: none;
+  -webkit-user-drag: none;
+}
+
+.img-editor-controls {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 8px;
+  flex-wrap: wrap;
+}
+
+.img-editor-btn {
+  background: var(--dark);
+  border: 1px solid var(--gray);
+  color: var(--muted);
+  padding: 4px 10px;
+  font-size: 0.75rem;
+  font-family: 'Barlow Condensed', sans-serif;
+  letter-spacing: 1px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.img-editor-btn:hover { border-color: var(--acid); color: var(--acid); }
+
+.img-editor-label {
+  font-size: 0.65rem;
+  color: var(--muted);
+  letter-spacing: 1px;
+  font-family: 'Barlow Condensed', sans-serif;
+}
+
+input[type="range"].img-slider {
+  -webkit-appearance: none;
+  height: 3px;
+  background: var(--gray);
+  outline: none;
+  flex: 1;
+  min-width: 80px;
+}
+input[type="range"].img-slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 14px; height: 14px;
+  background: var(--acid);
+  border-radius: 50%;
+  cursor: pointer;
+}

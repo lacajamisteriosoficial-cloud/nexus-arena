@@ -8,8 +8,8 @@
 <meta name="robots" content="noindex, nofollow">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Barlow+Condensed:wght@400;600;700&family=Barlow:wght@300;400;500&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="css/styles.css?v=10">
-<link rel="stylesheet" href="css/admin.css?v=10">
+<link rel="stylesheet" href="css/styles.css">
+<link rel="stylesheet" href="css/admin.css">
 </head>
 <body class="admin-body">
 
@@ -36,7 +36,7 @@
 
   <!-- Sidebar -->
   <aside class="sidebar">
-    <div class="sidebar-logo">NEXUS<span>ARENA</span></div>
+    <div class="sidebar-logo"><img src="../logo.png" alt="Nexus Arena" style="width:140px;filter:none" onerror="this.outerHTML='<span>NEXUS<span style=&quot;color:var(--acid)&quot;>ARENA</span></span>'"></div>
     <p class="sidebar-sub">Panel Admin</p>
     <nav class="sidebar-nav">
       <a href="#" class="sidebar-link active" data-section="dashboard">📊 Dashboard</a>
@@ -47,6 +47,7 @@
       <a href="#" class="sidebar-link" data-section="galardones">🏆 Galardones</a>
       <a href="#" class="sidebar-link" data-section="resenas">⭐ Reseñas</a>
       <a href="#" class="sidebar-link" data-section="encuestas">📊 Encuestas</a>
+      <a href="#" class="sidebar-link" data-section="config">⚙️ Configuración</a>
       <a href="#" class="sidebar-link" data-section="chat">💬 Chat</a>
     </nav>
     <div class="sidebar-footer">
@@ -396,6 +397,25 @@
       </div>
     </div>
 
+
+    <!-- CONFIG -->
+    <section class="admin-section" id="section-config">
+      <div class="admin-header">
+        <h1 class="admin-title">Configuración</h1>
+      </div>
+      <div class="form-card" style="max-width:600px">
+        <div class="admin-subtitle">Ticker de juegos</div>
+        <p style="color:var(--muted);font-size:0.85rem;margin-bottom:16px">La barra animada que corre en la parte superior. Un nombre por línea.</p>
+        <div class="form-group">
+          <textarea class="form-input form-textarea" id="tickerItems" style="height:160px;font-family:monospace"
+            placeholder="Wild Rift&#10;PUBG Mobile&#10;Fortnite&#10;FIFA 23"></textarea>
+        </div>
+        <div class="form-actions">
+          <button class="btn-admin-primary" onclick="saveTicker()">💾 Guardar ticker</button>
+        </div>
+      </div>
+    </section>
+
   </main>
 </div>
 
@@ -416,6 +436,6 @@
   </div>
 </div>
 
-<script type="module" src="js/admin.js?v=10"></script>
+<script type="module" src="js/admin.js"></script>
 </body>
 </html>
