@@ -660,15 +660,15 @@ window.responderChat = async function(id) {
   } catch(err) { showToast('Error', true); }
 };
 
-// ── PATCH showSection to load new sections ───────────────────
+// ── PATCH showSection — UN SOLO PATCH para todas las secciones ──
 const _origShowSection = window.showSection;
 window.showSection = function(name) {
   _origShowSection(name);
   if (name === 'galardones')    loadGalardones();
-  if (name === 'nuevo-galardon') {}
   if (name === 'resenas')       loadResenasAdmin();
   if (name === 'encuestas')     loadEncuestasAdmin();
   if (name === 'chat')          loadChatAdmin();
+  if (name === 'catalogo')      loadCatalogo();
 };
 
 // Patch confirmDelete to handle new collections
@@ -711,6 +711,10 @@ async function loadCatalogo() {
     const snap = await getDocs(query(collection(db, 'juegos_catalogo'), orderBy('nombre', 'asc')));
     const juegos = snap.docs.map(d => ({ id: d.id, ...d.data() }));
 
+    // Detectar duplicados por nombre y mostrar botón de limpieza
+    const nombres = juegos.map(j => (j.nombre||'').toLowerCase().trim());
+    const hayDuplicados = nombres.length !== new Set(nombres).size;
+
     if (juegos.length === 0) {
       grid.innerHTML = `
         <div style="grid-column:1/-1;text-align:center;padding:40px 0;color:var(--muted)">
@@ -720,7 +724,14 @@ async function loadCatalogo() {
       return;
     }
 
-    grid.innerHTML = juegos.map(j => buildJuegoCard(j)).join('');
+    let html = juegos.map(j => buildJuegoCard(j)).join('');
+    if (hayDuplicados) {
+      html = `<div style="grid-column:1/-1;background:rgba(255,23,68,0.1);border:1px solid var(--red);padding:16px;margin-bottom:16px;display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap">
+        <div><strong style="color:var(--red)">⚠️ Hay juegos duplicados en Firebase</strong><br><span style="font-size:0.8rem;color:var(--muted)">Esto causa que aparezcan repetidos en la página pública.</span></div>
+        <button class="btn-admin-primary" onclick="limpiarDuplicados()" style="background:var(--red);flex-shrink:0">🗑 Limpiar duplicados</button>
+      </div>` + html;
+    }
+    grid.innerHTML = html;
 
   } catch(err) {
     grid.innerHTML = '<p style="color:var(--red)">Error al cargar catálogo.</p>';
@@ -823,6 +834,40 @@ window.openNuevoJuego = function() {
   document.getElementById('njError').style.display = 'none';
 };
 
+// Limpia duplicados — mantiene el doc con imagen si existe, sino el más reciente
+window.limpiarDuplicados = async function() {
+  if (!confirm('¿Eliminar todos los juegos duplicados? Se mantiene uno por nombre.')) return;
+  try {
+    const snap = await getDocs(collection(db, 'juegos_catalogo'));
+    const juegos = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+    const vistos = {};
+    const aEliminar = [];
+
+    juegos.forEach(j => {
+      const key = (j.nombre||'').toLowerCase().trim();
+      if (!vistos[key]) {
+        vistos[key] = j;
+      } else {
+        // Mantener el que tiene imagen, sino el primero
+        const actual = vistos[key];
+        if (!actual.imagen && j.imagen) {
+          aEliminar.push(actual.id);
+          vistos[key] = j;
+        } else {
+          aEliminar.push(j.id);
+        }
+      }
+    });
+
+    await Promise.all(aEliminar.map(id => deleteDoc(doc(db, 'juegos_catalogo', id))));
+    showToast(`${aEliminar.length} duplicados eliminados ✓`);
+    loadCatalogo();
+  } catch(err) {
+    console.error(err);
+    showToast('Error al limpiar', true);
+  }
+};
+
 window.closeNuevoJuego = function() {
   document.getElementById('nuevoJuegoModal').classList.remove('active');
   document.body.style.overflow = '';
@@ -853,9 +898,4 @@ window.saveNuevoJuego = async function() {
   }
 };
 
-// Patch showSection para catalogo
-const _origShowSection2 = window.showSection;
-window.showSection = function(name) {
-  _origShowSection2(name);
-  if (name === 'catalogo') loadCatalogo();
-};
+
