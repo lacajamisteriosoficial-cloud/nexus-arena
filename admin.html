@@ -355,6 +355,48 @@
       <div id="chatAdminList"></div>
     </section>
 
+
+    <!-- MODAL NUEVO JUEGO -->
+    <div class="modal-overlay" id="nuevoJuegoModal">
+      <div class="modal">
+        <div class="modal-header">
+          <span class="modal-title">AGREGAR JUEGO</span>
+          <button class="modal-close" onclick="closeNuevoJuego()">✕</button>
+        </div>
+        <div class="modal-body">
+          <div id="njError" class="form-error" style="display:none"></div>
+          <div class="form-group">
+            <label class="form-label">Nombre del juego *</label>
+            <input type="text" class="form-input" id="njNombre" placeholder="Ej: EA FC 25, PUBG Mobile, Valorant...">
+          </div>
+          <div style="display:flex;gap:12px">
+            <div class="form-group" style="flex:1">
+              <label class="form-label">Emoji</label>
+              <input type="text" class="form-input" id="njEmoji" placeholder="🎮" maxlength="4">
+            </div>
+            <div class="form-group" style="flex:2">
+              <label class="form-label">Plataforma</label>
+              <select class="form-input form-select" id="njPlat">
+                <option value="mobile">📱 Mobile</option>
+                <option value="console">🎮 Consola</option>
+                <option value="pc">🖥 PC</option>
+                <option value="cross">🌐 Crossplay</option>
+              </select>
+            </div>
+          </div>
+          <div class="form-group">
+            <label class="form-label">URL de portada (opcional)</label>
+            <input type="text" class="form-input" id="njImagen" placeholder="https://i.imgur.com/...">
+            <p style="font-size:0.75rem;color:var(--muted);margin-top:6px">Subí tu imagen en <strong>imgur.com</strong> → clic derecho → copiar dirección de imagen</p>
+          </div>
+          <div class="form-actions">
+            <button class="btn-admin-secondary" onclick="closeNuevoJuego()">Cancelar</button>
+            <button class="btn-admin-primary" onclick="saveNuevoJuego()">Agregar juego</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
   </main>
 </div>
 

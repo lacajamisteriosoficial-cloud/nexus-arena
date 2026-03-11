@@ -867,3 +867,61 @@
   .chat-widget { width: calc(100vw - 32px); right: 16px; }
   .games-grid { grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); }
 }
+
+/* ── GAME MODAL MEJORADO ── */
+.game-modal-empty {
+  text-align: center;
+  padding: 24px 16px;
+}
+
+.game-modal-tag {
+  display: inline-block;
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: 0.7rem;
+  letter-spacing: 3px;
+  text-transform: uppercase;
+  color: var(--acid);
+  border: 1px solid rgba(200,255,0,0.3);
+  padding: 3px 12px;
+  margin-bottom: 12px;
+}
+
+.game-modal-tag-sm {
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: 0.72rem;
+  letter-spacing: 1px;
+  color: var(--muted);
+  border: 1px solid var(--gray);
+  padding: 2px 8px;
+}
+
+.game-modal-torneo-card {
+  background: var(--dark);
+  border: 1px solid var(--gray);
+  border-left: 3px solid var(--acid);
+  padding: 16px;
+  margin-bottom: 10px;
+  transition: border-color 0.2s;
+}
+
+.game-modal-torneo-card:hover {
+  border-color: var(--acid);
+}
+
+/* Modal header con imagen de fondo */
+#gameModal .modal-header {
+  transition: background 0.3s;
+  position: relative;
+}
+
+#gameModal .modal-title {
+  font-size: clamp(1.2rem, 4vw, 1.8rem);
+  text-shadow: 0 2px 8px rgba(0,0,0,0.8);
+}
+
+#gameModal .modal-close {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  text-shadow: 0 2px 4px rgba(0,0,0,0.8);
+}

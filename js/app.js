@@ -136,48 +136,83 @@ window.openGameModal = function(gameId) {
   const game = GAMES_CATALOG.find(g => g.id === gameId);
   if (!game) return;
 
-  const torneoDelJuego = torneos.filter(t =>
-    t.nombre?.toLowerCase().includes(game.id) ||
-    game.nombre.toLowerCase().includes((t.nombre||'').toLowerCase().split(' ')[0])
-  ).filter(t => t.estado === 'open' || t.estado === 'soon');
+  const torneoDelJuego = torneos.filter(t => {
+    const tn = (t.nombre||'').toLowerCase();
+    const gn = game.nombre.toLowerCase();
+    return tn.includes(game.id) || tn.includes(gn.split(' ')[0]) || gn.includes(tn.split(' ')[0]);
+  }).filter(t => t.estado === 'open' || t.estado === 'soon');
 
-  document.getElementById('gameModalTitle').textContent = game.nombre.toUpperCase();
+  const modal    = document.getElementById('gameModal');
+  const titleEl  = document.getElementById('gameModalTitle');
+  const bodyEl   = document.getElementById('gameModalBody');
+
+  // ── Header con imagen de fondo ──
+  titleEl.textContent = game.nombre.toUpperCase();
+
+  // Aplicar imagen de fondo al modal header si existe
+  const modalHeader = modal.querySelector('.modal-header');
+  if (game.imagen) {
+    modalHeader.style.cssText = `
+      background: linear-gradient(to bottom, rgba(0,0,0,0.3) 0%, rgba(0,0,0,0.85) 100%),
+                  url('${game.imagen}') center/cover no-repeat;
+      min-height: 140px;
+      align-items: flex-end;
+      padding-bottom: 20px;
+      border-bottom: 2px solid var(--acid);
+    `;
+  } else {
+    // Sin imagen: fondo degradado con color según plataforma
+    const colorMap = { mobile:'#1a0a2e', console:'#0a1a2e', pc:'#0a2e1a', cross:'#2e1a0a' };
+    const bg = colorMap[game.plataforma] || '#111';
+    modalHeader.style.cssText = `
+      background: linear-gradient(135deg, ${bg}, #111);
+      min-height: 100px;
+      align-items: center;
+      border-bottom: 2px solid var(--acid);
+    `;
+  }
 
   if (torneoDelJuego.length === 0) {
-    document.getElementById('gameModalBody').innerHTML = `
-      <div style="text-align:center;padding:20px">
-        <div style="font-size:4rem;margin-bottom:16px">${game.emoji}</div>
-        <p style="color:var(--muted);margin-bottom:8px">No hay torneos disponibles de <strong style="color:#fff">${game.nombre}</strong> en este momento.</p>
-        <p style="color:var(--muted);font-size:0.85rem">Seguinos en Instagram o preguntá en el chat para saber cuándo viene el próximo.</p>
-        <div style="margin-top:20px;display:flex;gap:10px;justify-content:center">
-          <a href="#" target="_blank" class="btn-primary" style="text-decoration:none;display:inline-block">Instagram</a>
-          <button class="btn-secondary" onclick="document.getElementById('gameModal').classList.remove('active');toggleChat()">Chat</button>
-        </div>
+    bodyEl.innerHTML = `
+      <div class="game-modal-empty">
+        <div class="game-modal-tag">SIN TORNEOS ACTIVOS</div>
+        <p style="color:var(--muted);margin-bottom:6px">No hay torneos de <strong style="color:#fff">${game.nombre}</strong> en este momento.</p>
+        <p style="color:var(--muted);font-size:0.82rem;margin-bottom:20px">Seguinos o escribinos para saber cuándo viene el próximo.</p>
+        <button class="btn-secondary" onclick="document.getElementById('gameModal').classList.remove('active');toggleChat()">💬 Preguntar en el chat</button>
       </div>
     `;
   } else {
-    document.getElementById('gameModalBody').innerHTML = `
-      <p style="color:var(--muted);margin-bottom:20px">Torneos disponibles para <strong style="color:var(--acid)">${game.nombre}</strong>:</p>
+    bodyEl.innerHTML = `
+      <div class="game-modal-tag" style="margin-bottom:16px">🔥 ${torneoDelJuego.length} TORNEO${torneoDelJuego.length>1?'S':''} DISPONIBLE${torneoDelJuego.length>1?'S':''}</div>
       ${torneoDelJuego.map(t => {
         const fechaStr = t.fecha?.toDate
           ? t.fecha.toDate().toLocaleString('es-AR', { weekday:'long', day:'numeric', month:'short', hour:'2-digit', minute:'2-digit' })
           : '';
         const libre = t.cupos_total - (t.cupos_ocupados || 0);
+        const pct   = t.cupos_total > 0 ? (t.cupos_ocupados / t.cupos_total) * 100 : 0;
         return `
-          <div style="background:var(--dark);border:1px solid var(--gray);padding:16px;margin-bottom:10px">
-            <div style="color:var(--acid);font-family:'Barlow Condensed',sans-serif;font-size:0.8rem;letter-spacing:2px;margin-bottom:4px">📅 ${fechaStr}</div>
-            <div style="color:#fff;font-family:'Barlow Condensed',sans-serif;font-size:1.1rem;margin-bottom:8px">${t.subtitulo||''}</div>
-            <div style="display:flex;gap:12px;margin-bottom:12px">
-              <span style="font-size:0.75rem;color:var(--muted);border:1px solid var(--gray);padding:2px 8px;font-family:'Barlow Condensed',sans-serif">${t.modalidad||'online'}</span>
-              <span style="font-size:0.75rem;color:var(--orange);font-family:'Barlow Condensed',sans-serif">${libre} cupos libres</span>
+          <div class="game-modal-torneo-card">
+            <div style="color:var(--acid);font-family:'Barlow Condensed',sans-serif;font-size:0.78rem;letter-spacing:2px;margin-bottom:6px">📅 ${fechaStr}</div>
+            <div style="color:#fff;font-family:'Barlow Condensed',sans-serif;font-size:1.15rem;font-weight:700;margin-bottom:10px">${t.subtitulo||t.nombre}</div>
+            <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px">
+              <span class="game-modal-tag-sm">${t.modalidad==='presencial'?'🏠 Presencial':'🌐 Online'}</span>
+              <span class="game-modal-tag-sm">${t.plataforma||''}</span>
+              <span class="game-modal-tag-sm" style="color:${libre<=3?'var(--red)':'var(--orange)'}">⚡ ${libre} cupos</span>
             </div>
-            <button class="btn-inscribir available" onclick="document.getElementById('gameModal').classList.remove('active');openModal('${t.id}')" style="clip-path:polygon(7px 0%,100% 0%,calc(100% - 7px) 100%,0% 100%);width:100%;padding:10px">INSCRIBIRME</button>
+            <div style="background:rgba(255,255,255,0.05);height:4px;margin-bottom:12px">
+              <div style="height:100%;background:${pct>=87?'var(--red)':pct>=60?'var(--orange)':'var(--acid)'};width:${pct}%;transition:width 0.5s"></div>
+            </div>
+            <button class="btn-inscribir available" onclick="document.getElementById('gameModal').classList.remove('active');openModal('${t.id}')"
+              style="clip-path:polygon(7px 0%,100% 0%,calc(100% - 7px) 100%,0% 100%);width:100%;padding:11px;font-size:0.9rem">
+              INSCRIBIRME →
+            </button>
           </div>
         `;
       }).join('')}
     `;
   }
-  document.getElementById('gameModal').classList.add('active');
+
+  modal.classList.add('active');
 };
 
 // ── PROMO CAROUSEL ───────────────────────────────────────────
