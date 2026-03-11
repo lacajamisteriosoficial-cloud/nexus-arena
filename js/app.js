@@ -114,11 +114,14 @@ function renderGamesGrid(torneosActivos) {
   grid.innerHTML = GAMES_CATALOG.map(game => {
     const torneo = torneosByJuego[game.id];
     const hasTorneo = torneo && (torneo.estado === 'open' || torneo.estado === 'soon');
+    const hasImg = game.imagen && game.imagen.trim() !== '';
     return `
       <div class="game-card" onclick="openGameModal('${game.id}')">
-        <img class="game-card-img" src="${game.imagen}" alt="${game.nombre}"
-          onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">
-        <div class="game-card-emoji" style="display:none;position:absolute;inset:0">${game.emoji}</div>
+        ${hasImg
+          ? `<img class="game-card-img" src="${game.imagen}" alt="${game.nombre}" onerror="this.style.display='none';document.getElementById('gemoji-${game.id}').style.display='flex'">`
+          : ''
+        }
+        <div class="game-card-emoji" id="gemoji-${game.id}" ${hasImg ? 'style="display:none"' : ''}>${game.emoji}</div>
         <div class="game-card-overlay"></div>
         <span class="game-card-badge ${hasTorneo ? 'has-torneo' : 'no-torneo'}">
           ${hasTorneo ? '🔥 Torneo activo' : 'Sin torneo'}
