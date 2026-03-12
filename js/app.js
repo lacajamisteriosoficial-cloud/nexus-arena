@@ -4,7 +4,7 @@
 import { db } from './firebase.js';
 import {
   collection, getDocs, addDoc, doc, updateDoc,
-  query, orderBy, serverTimestamp, increment,
+  serverTimestamp, increment,
   onSnapshot
 } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
@@ -43,15 +43,15 @@ document.addEventListener('DOMContentLoaded', () => {
 async function loadAll() {
   try {
     const [torneoSnap, galardonSnap, reseñaSnap, encuestaSnap, juegosSnap, configSnap] = await Promise.all([
-      getDocs(query(collection(db, 'torneos'), orderBy('fecha', 'asc'))),
-      getDocs(query(collection(db, 'galardones'), orderBy('fecha', 'desc'))),
-      getDocs(query(collection(db, 'resenas'), orderBy('fecha', 'desc'))),
+      getDocs(collection(db, 'torneos')),
+      getDocs(collection(db, 'galardones')),
+      getDocs(collection(db, 'resenas')),
       getDocs(collection(db, 'encuestas')),
       getDocs(collection(db, 'juegos_catalogo')),
       getDocs(collection(db, 'config')),
     ]);
 
-    torneos   = torneoSnap.docs.map(d => ({ id: d.id, ...d.data() }));
+    torneos   = torneoSnap.docs.map(d => ({ id: d.id, ...d.data() })).sort((a,b) => (a.fecha||'').localeCompare(b.fecha||''));
 
     // Catálogo viene directamente de Firebase, ordenado por nombre
     GAMES_CATALOG = juegosSnap.docs.map(d => ({ id: d.id, ...d.data() }))
@@ -69,8 +69,8 @@ async function loadAll() {
         }
       }
     }
-    galardones = galardonSnap.docs.map(d => ({ id: d.id, ...d.data() }));
-    reseñas   = reseñaSnap.docs.map(d => ({ id: d.id, ...d.data() })).filter(r => r.aprobada === true);
+    galardones = galardonSnap.docs.map(d => ({ id: d.id, ...d.data() })).sort((a,b) => (b.fecha||'').localeCompare(a.fecha||''));
+    reseñas   = reseñaSnap.docs.map(d => ({ id: d.id, ...d.data() })).filter(r => r.aprobada === true).sort((a,b) => (b.fecha||'').localeCompare(a.fecha||''));
     encuestas  = encuestaSnap.docs.map(d => ({ id: d.id, ...d.data() })).filter(e => e.activa === true);
 
     const activos = torneos.filter(t => t.estado === 'open' || t.estado === 'soon');
