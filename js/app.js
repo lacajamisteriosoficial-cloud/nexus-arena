@@ -373,10 +373,7 @@ function setupModal() {
 
 window.openModal = function(torneoId) {
   const t = torneos.find(x => x.id === torneoId);
-  if (!t) {
-    console.warn('openModal: torneo no encontrado, id:', torneoId);
-    return;
-  }
+  if (!t) { console.warn('openModal: torneo no encontrado, id:', torneoId); return; }
 
   const libre = t.cupos_total - (t.cupos_ocupados || 0);
   if (t.estado !== 'open' || libre <= 0) {
@@ -389,19 +386,52 @@ window.openModal = function(torneoId) {
   const fechaStr = t.fecha?.toDate
     ? t.fecha.toDate().toLocaleString('es-AR', { weekday: 'long', day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })
     : '';
-  const pozo = Math.round(t.cupos_total * (t.precio || 5000) * 0.8);
+  const premio = t.premio || Math.round(t.cupos_total * (t.precio || 5000) * 0.8);
 
   document.getElementById('modalTitle').textContent   = 'INSCRIPCIÓN — ' + t.nombre.toUpperCase();
   document.getElementById('modalGame').textContent    = t.nombre;
   document.getElementById('modalDate').textContent    = fechaStr;
   document.getElementById('modalMode').textContent    = t.modalidad === 'presencial' ? 'Presencial — Villa de Mayo' : 'Online';
-  document.getElementById('modalPrize').textContent   = `Pozo aprox. $${pozo.toLocaleString('es-AR')} (si se llena)`;
+  document.getElementById('modalPrize').textContent   = `$${premio.toLocaleString('es-AR')}`;
   document.getElementById('modalEntrada').textContent = `$${(t.precio || 5000).toLocaleString('es-AR')}`;
+  document.getElementById('modalPremioTC').textContent = `$${premio.toLocaleString('es-AR')}`;
+  document.getElementById('modalCuposTC').textContent  = t.cupos_total;
 
-  ['inputNombre', 'inputGamertag', 'inputContacto'].forEach(id => {
+  // Alias MP
+  const aliasBlock = document.getElementById('modalAliasBlock');
+  const aliasEl    = document.getElementById('modalAlias');
+  if (aliasBlock && aliasEl) {
+    if (t.alias_mp) {
+      aliasEl.textContent      = t.alias_mp;
+      aliasBlock.style.display = 'block';
+    } else {
+      aliasBlock.style.display = 'none';
+    }
+  }
+
+  // Equipo (solo si hay jugadores_por_equipo > 1)
+  const jpe = t.jugadores_por_equipo || 1;
+  const equipoSection = document.getElementById('equipoSectionTitle');
+  const equipoBlock   = document.getElementById('equipoBlock');
+  if (equipoSection && equipoBlock) {
+    if (jpe > 1) {
+      equipoSection.style.display = 'block';
+      equipoBlock.style.display   = 'block';
+    } else {
+      equipoSection.style.display = 'none';
+      equipoBlock.style.display   = 'none';
+    }
+  }
+
+  // Reset inputs
+  ['inputNombre', 'inputGamertag', 'inputWhatsapp', 'inputMail', 'inputEquipo'].forEach(id => {
     const el = document.getElementById(id);
     if (el) el.value = '';
   });
+  // Reset equipo radio
+  const radioSin = document.querySelector('input[name="equipoOpt"][value="sin"]');
+  if (radioSin) { radioSin.checked = true; toggleEquipoInput('sin'); }
+
   document.getElementById('formError').style.display  = 'none';
   document.getElementById('btnSubmit').disabled       = false;
   document.getElementById('btnSubmit').textContent    = 'CONFIRMAR INSCRIPCIÓN →';
@@ -416,18 +446,43 @@ function closeModal() {
 }
 
 async function submitInscripcion() {
-  const nombre   = document.getElementById('inputNombre').value.trim();
-  const gamertag = document.getElementById('inputGamertag').value.trim();
-  const contacto = document.getElementById('inputContacto').value.trim();
-  const errEl    = document.getElementById('formError');
-  const btn      = document.getElementById('btnSubmit');
+  const nombre    = document.getElementById('inputNombre')?.value.trim();
+  const gamertag  = document.getElementById('inputGamertag')?.value.trim();
+  const whatsapp  = document.getElementById('inputWhatsapp')?.value.trim();
+  const mail      = document.getElementById('inputMail')?.value.trim();
+  // contacto legacy = whatsapp (para compatibilidad con admin existente)
+  const contacto  = whatsapp || document.getElementById('inputContacto')?.value.trim() || '';
+  const errEl     = document.getElementById('formError');
+  const btn       = document.getElementById('btnSubmit');
 
   errEl.style.display = 'none';
 
-  if (!nombre || !gamertag || !contacto) {
+  if (!nombre || !gamertag || !whatsapp || !mail) {
     errEl.textContent = 'Completá todos los campos para continuar.';
     errEl.style.display = 'block';
     return;
+  }
+  if (!mail.includes('@')) {
+    errEl.textContent = 'Ingresá un mail válido.';
+    errEl.style.display = 'block';
+    return;
+  }
+
+  // Equipo
+  const jpe = selectedTorneo?.jugadores_por_equipo || 1;
+  let equipoNombre = null;
+  let equipoOpt    = 'sin';
+  if (jpe > 1) {
+    const radioCon = document.querySelector('input[name="equipoOpt"][value="con"]');
+    equipoOpt = radioCon?.checked ? 'con' : 'sin';
+    if (equipoOpt === 'con') {
+      equipoNombre = document.getElementById('inputEquipo')?.value.trim();
+      if (!equipoNombre) {
+        errEl.textContent = 'Escribí el nombre de tu equipo.';
+        errEl.style.display = 'block';
+        return;
+      }
+    }
   }
 
   if (!selectedTorneo) {
@@ -466,6 +521,10 @@ async function submitInscripcion() {
       nombre,
       gamertag,
       contacto,
+      whatsapp: whatsapp || '',
+      mail:     mail || '',
+      equipo_nombre: equipoNombre || '',
+      equipo_opt:    equipoOpt,
       torneo_id:         torneoId,
       torneo_nombre:     torneoNombre,
       estado:            'pendiente',
@@ -829,4 +888,20 @@ function setupNav() {
 
 window.scrollToId = function(id) {
   document.getElementById(id)?.scrollIntoView({ behavior: 'smooth' });
+};
+
+// ── EQUIPO TOGGLE ────────────────────────────────────────────
+window.toggleEquipoInput = function(val) {
+  const group = document.getElementById('inputEquipoGroup');
+  if (group) group.style.display = val === 'con' ? 'block' : 'none';
+};
+
+// ── COPY ALIAS ───────────────────────────────────────────────
+window.copyAlias = function() {
+  const el = document.getElementById('modalAlias');
+  if (!el) return;
+  navigator.clipboard.writeText(el.textContent).then(() => {
+    const btn = document.querySelector('.modal-alias-copy');
+    if (btn) { btn.textContent = '¡Copiado!'; setTimeout(() => btn.textContent = 'Copiar', 1500); }
+  }).catch(() => {});
 };

@@ -180,21 +180,107 @@
 
 <!-- MODAL INSCRIPCIÓN -->
 <div class="modal-overlay" id="modalOverlay">
-  <div class="modal">
-    <div class="modal-header"><span class="modal-title" id="modalTitle">INSCRIPCIÓN</span><button class="modal-close" id="modalClose">✕</button></div>
+  <div class="modal modal-wide">
+    <div class="modal-header">
+      <span class="modal-title" id="modalTitle">INSCRIPCIÓN</span>
+      <button class="modal-close" id="modalClose">✕</button>
+    </div>
     <div class="modal-body">
-      <div class="form-info">
-        <p>Torneo: <strong id="modalGame">—</strong></p>
-        <p>Fecha: <strong id="modalDate">—</strong></p>
-        <p>Modalidad: <strong id="modalMode">—</strong></p>
-        <div class="prize-reveal"><span class="prize-reveal-label">💰 Premio total (se confirma al cierre)</span><span class="prize-reveal-value" id="modalPrize">A confirmar</span></div>
-        <div class="entrada-reveal"><span class="entrada-label">Entrada:</span><span class="entrada-value" id="modalEntrada">—</span></div>
-        <p class="form-note">Transferencia o efectivo (según disponibilidad). Premio acreditado en hasta 48hs hábiles.</p>
+
+      <!-- INFO TORNEO -->
+      <div class="form-info" id="modalInfoBlock">
+        <div class="modal-info-row">
+          <div class="modal-info-item"><span class="modal-info-label">Torneo</span><span class="modal-info-val" id="modalGame">—</span></div>
+          <div class="modal-info-item"><span class="modal-info-label">Fecha</span><span class="modal-info-val" id="modalDate">—</span></div>
+          <div class="modal-info-item"><span class="modal-info-label">Modalidad</span><span class="modal-info-val" id="modalMode">—</span></div>
+        </div>
+        <div class="modal-prize-block">
+          <div class="modal-prize-left">
+            <span class="modal-prize-label">🏆 PREMIO</span>
+            <span class="modal-prize-val" id="modalPrize">—</span>
+          </div>
+          <div class="modal-prize-right">
+            <span class="modal-entrada-label">Entrada</span>
+            <span class="modal-entrada-val" id="modalEntrada">—</span>
+          </div>
+        </div>
+        <!-- ALIAS MP -->
+        <div class="modal-alias-block" id="modalAliasBlock" style="display:none">
+          <span class="modal-alias-label">💳 Alias Mercado Pago</span>
+          <div class="modal-alias-row">
+            <span class="modal-alias-val" id="modalAlias">—</span>
+            <button class="modal-alias-copy" onclick="copyAlias()">Copiar</button>
+          </div>
+          <span class="modal-alias-note">Realizá la transferencia y adjuntá el comprobante al contactarnos.</span>
+        </div>
+        <!-- GALARDON NOTE -->
+        <div class="modal-galardon-note">
+          🏅 El ganador del torneo será <strong>Galardonado en nuestra sección Hall of Fame</strong>
+        </div>
+        <!-- TERMINOS -->
+        <div class="modal-terminos">
+          * El premio de <span id="modalPremioTC">—</span> se acredita únicamente al llenarse el cupo de <span id="modalCuposTC">—</span> jugadores. Sin cupo completo el monto puede variar. Pago en hasta 48hs hábiles post-torneo.
+        </div>
       </div>
+
       <div id="formError" class="form-error" style="display:none"></div>
-      <div class="form-group"><label class="form-label">Nombre o apodo</label><input type="text" class="form-input" id="inputNombre" placeholder="¿Cómo te conocen?"></div>
-      <div class="form-group"><label class="form-label">Gamertag / ID de jugador</label><input type="text" class="form-input" id="inputGamertag" placeholder="Tu nombre en el juego"></div>
-      <div class="form-group"><label class="form-label">WhatsApp o Instagram</label><input type="text" class="form-input" id="inputContacto" placeholder="Para confirmar pago y enviarte info"></div>
+
+      <!-- DATOS PERSONALES -->
+      <div class="form-section-title">TUS DATOS</div>
+      <div class="form-row-2">
+        <div class="form-group">
+          <label class="form-label">Nombre o apodo *</label>
+          <input type="text" class="form-input" id="inputNombre" placeholder="¿Cómo te conocen?">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Gamertag / ID en el juego *</label>
+          <input type="text" class="form-input" id="inputGamertag" placeholder="Tu nombre en el juego">
+        </div>
+      </div>
+      <div class="form-row-2">
+        <div class="form-group">
+          <label class="form-label">WhatsApp *</label>
+          <input type="tel" class="form-input" id="inputWhatsapp" placeholder="11 1234-5678">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Mail *</label>
+          <input type="email" class="form-input" id="inputMail" placeholder="tu@mail.com">
+        </div>
+      </div>
+
+      <!-- EQUIPO -->
+      <div class="form-section-title" id="equipoSectionTitle" style="display:none">EQUIPO</div>
+      <div id="equipoBlock" style="display:none">
+        <div class="equipo-opciones">
+          <label class="equipo-opcion" id="optConEquipo">
+            <input type="radio" name="equipoOpt" value="con" onchange="toggleEquipoInput(this.value)">
+            <span class="equipo-opcion-box">
+              <span class="equipo-opcion-icon">🤝</span>
+              <span class="equipo-opcion-label">Ya tengo equipo</span>
+              <span class="equipo-opcion-desc">Voy a competir con mi equipo formado</span>
+            </span>
+          </label>
+          <label class="equipo-opcion" id="optSinEquipo">
+            <input type="radio" name="equipoOpt" value="sin" onchange="toggleEquipoInput(this.value)" checked>
+            <span class="equipo-opcion-box">
+              <span class="equipo-opcion-icon">🎲</span>
+              <span class="equipo-opcion-label">Sin equipo</span>
+              <span class="equipo-opcion-desc">Me asignan uno automáticamente</span>
+            </span>
+          </label>
+        </div>
+        <div class="form-group" id="inputEquipoGroup" style="display:none;margin-top:12px">
+          <label class="form-label">Nombre del equipo *</label>
+          <input type="text" class="form-input" id="inputEquipo" placeholder="Ej: Team Nexus, Los Pibes...">
+        </div>
+      </div>
+
+      <!-- FASES DEL TORNEO -->
+      <div class="modal-fases" id="modalFasesBlock" style="display:none">
+        <div class="form-section-title">FORMATO DEL TORNEO</div>
+        <div id="modalFasesContent"></div>
+      </div>
+
       <button class="btn-submit" id="btnSubmit">CONFIRMAR INSCRIPCIÓN →</button>
     </div>
   </div>
@@ -260,6 +346,6 @@
   </div>
 </div>
 
-<script type="module" src="js/app.js?v=16"></script>
+<script type="module" src="js/app.js?v=17"></script>
 </body>
 </html>

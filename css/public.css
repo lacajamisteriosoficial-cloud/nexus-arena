@@ -1017,3 +1017,92 @@ input[type="range"].img-slider::-webkit-slider-thumb {
   border-radius: 50%;
   cursor: pointer;
 }
+
+/* ============================================================
+   NEXUS ARENA — Modal inscripcion v2
+   ============================================================ */
+
+.modal-wide { max-width: 680px; }
+
+.modal-info-row {
+  display: flex; gap: 16px; flex-wrap: wrap;
+  margin-bottom: 12px;
+}
+.modal-info-item {
+  display: flex; flex-direction: column; gap: 2px; flex: 1; min-width: 120px;
+}
+.modal-info-label {
+  font-size: 0.65rem; letter-spacing: 2px; color: var(--muted);
+  font-family: 'Barlow Condensed', sans-serif; text-transform: uppercase;
+}
+.modal-info-val { font-size: 0.9rem; color: #fff; font-weight: 500; }
+
+.modal-prize-block {
+  display: flex; align-items: stretch; gap: 0;
+  margin: 14px 0 10px;
+  border: 1px solid rgba(200,255,0,0.2);
+}
+.modal-prize-left {
+  flex: 1; padding: 14px 18px;
+  background: rgba(200,255,0,0.05);
+  display: flex; flex-direction: column; gap: 4px;
+}
+.modal-prize-label { font-size: 0.65rem; letter-spacing: 2px; color: var(--muted); font-family: 'Barlow Condensed', sans-serif; }
+.modal-prize-val { font-family: 'Bebas Neue', sans-serif; font-size: 1.8rem; color: var(--acid); letter-spacing: 2px; }
+.modal-prize-right {
+  padding: 14px 18px; border-left: 1px solid rgba(200,255,0,0.2);
+  display: flex; flex-direction: column; gap: 4px; align-items: flex-end;
+}
+.modal-entrada-label { font-size: 0.65rem; letter-spacing: 2px; color: var(--muted); font-family: 'Barlow Condensed', sans-serif; }
+.modal-entrada-val { font-family: 'Barlow Condensed', sans-serif; font-size: 1.2rem; color: #fff; font-weight: 700; }
+
+.modal-alias-block {
+  background: rgba(0,0,0,0.3); border: 1px solid var(--gray);
+  padding: 12px 16px; margin: 10px 0;
+}
+.modal-alias-label { font-size: 0.65rem; letter-spacing: 2px; color: var(--muted); font-family: 'Barlow Condensed', sans-serif; display: block; margin-bottom: 8px; }
+.modal-alias-row { display: flex; align-items: center; gap: 10px; margin-bottom: 6px; }
+.modal-alias-val { font-family: 'Barlow Condensed', sans-serif; font-size: 1.3rem; color: var(--acid); letter-spacing: 1px; flex: 1; }
+.modal-alias-copy {
+  background: transparent; border: 1px solid var(--acid); color: var(--acid);
+  padding: 4px 12px; font-size: 0.75rem; cursor: pointer;
+  font-family: 'Barlow Condensed', sans-serif; letter-spacing: 1px;
+  transition: all 0.2s;
+}
+.modal-alias-copy:hover { background: var(--acid); color: #000; }
+.modal-alias-note { font-size: 0.72rem; color: var(--muted); }
+
+.modal-galardon-note {
+  padding: 10px 14px; margin: 10px 0 6px;
+  background: rgba(255,215,0,0.05); border: 1px solid rgba(255,215,0,0.15);
+  font-size: 0.82rem; color: #ffd700;
+}
+.modal-terminos {
+  font-size: 0.7rem; color: rgba(255,255,255,0.3); line-height: 1.5;
+  padding: 8px 0; border-top: 1px dashed rgba(255,255,255,0.08); margin-top: 6px;
+}
+
+.form-section-title {
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: 0.68rem; letter-spacing: 3px; color: var(--acid);
+  margin: 20px 0 12px; text-transform: uppercase;
+}
+.form-row-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+@media (max-width: 500px) { .form-row-2 { grid-template-columns: 1fr; } }
+
+/* Equipos */
+.equipo-opciones { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+@media (max-width: 500px) { .equipo-opciones { grid-template-columns: 1fr; } }
+.equipo-opcion { cursor: pointer; }
+.equipo-opcion input { display: none; }
+.equipo-opcion-box {
+  display: flex; flex-direction: column; gap: 4px;
+  padding: 14px; border: 1px solid var(--gray);
+  transition: all 0.2s;
+}
+.equipo-opcion input:checked + .equipo-opcion-box {
+  border-color: var(--acid); background: rgba(200,255,0,0.05);
+}
+.equipo-opcion-icon { font-size: 1.4rem; }
+.equipo-opcion-label { font-family: 'Barlow Condensed', sans-serif; font-size: 0.95rem; color: #fff; font-weight: 700; }
+.equipo-opcion-desc { font-size: 0.75rem; color: var(--muted); }

@@ -149,7 +149,11 @@ async function loadDashboard() {
         <td>${i.nombre}</td>
         <td><code style="color:var(--acid);font-size:0.8rem">${i.gamertag}</code></td>
         <td>${i.torneo_nombre}</td>
-        <td>${i.contacto}</td>
+        <td>
+            <div style="font-size:0.8rem">${i.whatsapp || i.contacto || ''}</div>
+            <div style="font-size:0.72rem;color:var(--muted)">${i.mail || ''}</div>
+            ${i.equipo_nombre ? `<div style="font-size:0.72rem;color:var(--acid)">${i.equipo_nombre}</div>` : ''}
+          </td>
         <td>${badgeEstado(i.estado)}</td>
         <td>${formatFecha(i.fecha_inscripcion)}</td>
       </tr>`).join('');
@@ -208,6 +212,7 @@ function buildAdminCard(t) {
       </div>
       <div class="atc-actions">
         <button class="btn-tbl" onclick="editTorneo('${t.id}')">✏ Editar</button>
+        <a class="btn-tbl" href="torneo.html?id=${t.id}" target="_blank" style="text-decoration:none;display:inline-block">🔗 Ver</a>
         <button class="btn-tbl" onclick="toggleEstado('${t.id}', '${t.estado}')">🔄 Estado</button>
         <button class="btn-tbl delete" onclick="confirmDelete('torneo', '${t.id}', '${t.nombre}')">🗑 Eliminar</button>
       </div>
@@ -241,7 +246,11 @@ window.loadInscripciones = async function() {
         <td>${i.nombre}</td>
         <td><code style="color:var(--acid);font-size:0.8rem">${i.gamertag}</code></td>
         <td>${i.torneo_nombre}</td>
-        <td>${i.contacto}</td>
+        <td>
+            <div style="font-size:0.8rem">${i.whatsapp || i.contacto || ''}</div>
+            <div style="font-size:0.72rem;color:var(--muted)">${i.mail || ''}</div>
+            ${i.equipo_nombre ? `<div style="font-size:0.72rem;color:var(--acid)">${i.equipo_nombre}</div>` : ''}
+          </td>
         <td>${badgeEstado(i.estado)}</td>
         <td>${formatFecha(i.fecha_inscripcion)}</td>
         <td>
@@ -304,11 +313,18 @@ async function saveTorneo() {
     return;
   }
 
+  const aliasMP  = document.getElementById('tAliasMP')?.value.trim() || '';
+  const premio   = parseInt(document.getElementById('tPremio')?.value) || 0;
+  const jpe      = parseInt(document.getElementById('tJugadoresPorEquipo')?.value) || 1;
+
   const data = {
     nombre, subtitulo, plataforma, modalidad, categoria,
     cupos_total: cupos, precio, emoji, estado,
     descripcion: desc, imagen: imagen || '',
     fecha: new Date(fechaVal),
+    alias_mp:             aliasMP,
+    premio:               premio || Math.round(cupos * precio * 0.8),
+    jugadores_por_equipo: jpe,
   };
 
   const btn = document.getElementById('btnSaveTorneo');
@@ -352,6 +368,12 @@ window.editTorneo = async function(id) {
     document.getElementById('tEstado').value        = t.estado || 'open';
     document.getElementById('tDescripcion').value   = t.descripcion || '';
     document.getElementById('tImagen').value        = t.imagen || '';
+    const aliasEl = document.getElementById('tAliasMP');
+    if (aliasEl) aliasEl.value = t.alias_mp || '';
+    const premioEl = document.getElementById('tPremio');
+    if (premioEl) premioEl.value = t.premio || '';
+    const jpeEl = document.getElementById('tJugadoresPorEquipo');
+    if (jpeEl) jpeEl.value = t.jugadores_por_equipo || 1;
     previewImagen(t.imagen || '');
 
     if (t.fecha?.toDate) {
@@ -387,6 +409,12 @@ window.resetTorneoForm = function() {
   document.getElementById('tPrecio').value    = '5000';
   document.getElementById('tPlatforma').value  = '';
   document.getElementById('tEstado').value    = 'open';
+  const aliasReset = document.getElementById('tAliasMP');
+  if (aliasReset) aliasReset.value = '';
+  const premioReset = document.getElementById('tPremio');
+  if (premioReset) premioReset.value = '';
+  const jpeReset = document.getElementById('tJugadoresPorEquipo');
+  if (jpeReset) jpeReset.value = '1';
   document.getElementById('editTorneoId').value = '';
   document.getElementById('formTorneoTitle').textContent = 'Nuevo Torneo';
   document.getElementById('formTorneoError').style.display = 'none';

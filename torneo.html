@@ -1,0 +1,456 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>NEXUS ARENA — Torneo</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Barlow+Condensed:wght@400;600;700&family=Barlow:wght@300;400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/styles.css?v=17">
+<link rel="stylesheet" href="css/public.css?v=17">
+<style>
+/* ── TORNEO PAGE ── */
+.torneo-hero {
+  min-height: 340px;
+  display: flex;
+  align-items: flex-end;
+  padding: 40px 6vw 36px;
+  position: relative;
+  overflow: hidden;
+  background: var(--dark2);
+  border-bottom: 2px solid var(--acid);
+}
+.torneo-hero-bg {
+  position: absolute; inset: 0;
+  background-size: cover;
+  background-position: center;
+  opacity: 0.18;
+  filter: blur(2px);
+}
+.torneo-hero-overlay {
+  position: absolute; inset: 0;
+  background: linear-gradient(to top, rgba(10,10,10,0.97) 0%, rgba(10,10,10,0.5) 100%);
+}
+.torneo-hero-content { position: relative; z-index: 2; max-width: 900px; }
+.torneo-back {
+  display: inline-flex; align-items: center; gap: 6px;
+  color: var(--muted); font-size: 0.8rem; letter-spacing: 2px;
+  text-decoration: none; margin-bottom: 20px;
+  font-family: 'Barlow Condensed', sans-serif;
+  transition: color 0.2s;
+}
+.torneo-back:hover { color: var(--acid); }
+.torneo-estado-badge {
+  display: inline-block;
+  padding: 3px 12px; font-size: 0.72rem; letter-spacing: 3px;
+  font-family: 'Barlow Condensed', sans-serif; font-weight: 700;
+  margin-bottom: 12px;
+  background: var(--acid); color: #000;
+  clip-path: polygon(6px 0%, 100% 0%, calc(100% - 6px) 100%, 0% 100%);
+}
+.torneo-hero h1 {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: clamp(2.5rem, 7vw, 5rem);
+  letter-spacing: 3px; color: #fff; line-height: 1;
+  margin-bottom: 16px;
+}
+.torneo-hero-meta {
+  display: flex; flex-wrap: wrap; gap: 16px;
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: 0.85rem; color: var(--muted);
+}
+.torneo-hero-meta span { color: #fff; }
+
+/* ── INFO + PRIZE ── */
+.torneo-main {
+  max-width: 1100px; margin: 0 auto;
+  padding: 40px 6vw;
+  display: grid; grid-template-columns: 1fr 340px; gap: 32px;
+}
+@media (max-width: 768px) {
+  .torneo-main { grid-template-columns: 1fr; }
+}
+.torneo-card {
+  background: var(--dark2); border: 1px solid var(--gray);
+  padding: 28px;
+}
+.torneo-card-title {
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: 0.72rem; letter-spacing: 3px; color: var(--acid);
+  margin-bottom: 16px; text-transform: uppercase;
+}
+
+/* Premio */
+.prize-big {
+  text-align: center; padding: 24px;
+  background: linear-gradient(135deg, rgba(200,255,0,0.06), rgba(200,255,0,0.02));
+  border: 1px solid rgba(200,255,0,0.2);
+  margin-bottom: 16px;
+}
+.prize-big-label {
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: 0.72rem; letter-spacing: 3px; color: var(--muted); margin-bottom: 8px;
+}
+.prize-big-amount {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 3rem; color: var(--acid); letter-spacing: 2px;
+}
+.prize-big-note {
+  font-size: 0.75rem; color: var(--muted); margin-top: 6px;
+}
+.prize-entrada {
+  display: flex; justify-content: space-between; align-items: center;
+  padding: 12px 0; border-bottom: 1px solid var(--gray);
+  font-family: 'Barlow Condensed', sans-serif;
+}
+.prize-entrada-label { font-size: 0.8rem; color: var(--muted); letter-spacing: 1px; }
+.prize-entrada-val { font-size: 1.1rem; color: #fff; font-weight: 700; }
+
+/* Alias */
+.alias-block {
+  margin-top: 16px; padding: 14px;
+  background: rgba(0,0,0,0.3); border: 1px solid var(--gray);
+}
+.alias-label { font-size: 0.7rem; color: var(--muted); letter-spacing: 2px; margin-bottom: 8px; }
+.alias-val-row { display: flex; align-items: center; gap: 10px; }
+.alias-val {
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: 1.3rem; color: var(--acid); letter-spacing: 1px; flex: 1;
+}
+.alias-copy-btn {
+  background: transparent; border: 1px solid var(--acid);
+  color: var(--acid); padding: 4px 12px; font-size: 0.75rem;
+  cursor: pointer; letter-spacing: 1px; transition: all 0.2s;
+  font-family: 'Barlow Condensed', sans-serif;
+}
+.alias-copy-btn:hover { background: var(--acid); color: #000; }
+
+/* Terminos */
+.terminos-tc {
+  font-size: 0.72rem; color: var(--muted); line-height: 1.5;
+  padding: 12px; border: 1px dashed rgba(255,255,255,0.08);
+  margin-top: 12px;
+}
+
+/* Galardon note */
+.galardon-note-banner {
+  display: flex; align-items: center; gap: 12px;
+  padding: 12px 16px; margin-top: 12px;
+  background: rgba(255,215,0,0.06); border: 1px solid rgba(255,215,0,0.2);
+  font-size: 0.82rem; color: #ffd700;
+}
+
+/* Cupos bar */
+.cupos-bar-wrap { margin: 20px 0; }
+.cupos-bar-info { display: flex; justify-content: space-between; margin-bottom: 6px; font-size: 0.8rem; color: var(--muted); }
+.cupos-bar-track { height: 6px; background: rgba(255,255,255,0.07); }
+.cupos-bar-fill { height: 100%; background: var(--acid); transition: width 0.5s; }
+
+/* Btn inscribir */
+.btn-inscribir-page {
+  display: block; width: 100%;
+  background: var(--acid); color: #000;
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 1.3rem; letter-spacing: 3px;
+  padding: 16px; border: none; cursor: pointer;
+  clip-path: polygon(10px 0%, 100% 0%, calc(100% - 10px) 100%, 0% 100%);
+  transition: opacity 0.2s; margin-top: 16px;
+}
+.btn-inscribir-page:hover { opacity: 0.85; }
+.btn-inscribir-page:disabled {
+  background: var(--gray); color: var(--muted); cursor: not-allowed;
+}
+
+/* ── BRACKET ── */
+.bracket-section { padding: 0 0 60px; }
+.bracket-section-title {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 2rem; letter-spacing: 3px; color: #fff;
+  padding: 0 6vw; margin-bottom: 8px;
+}
+.bracket-section-title span { color: var(--acid); }
+.bracket-sub { color: var(--muted); font-size: 0.85rem; padding: 0 6vw; margin-bottom: 32px; }
+
+.bracket-wrap {
+  overflow-x: auto;
+  padding: 0 6vw 20px;
+}
+.bracket-grid {
+  display: flex; gap: 0; min-width: 700px;
+}
+.bracket-col {
+  flex: 1; display: flex; flex-direction: column;
+  align-items: center;
+}
+.bracket-col-title {
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: 0.7rem; letter-spacing: 3px; color: var(--acid);
+  margin-bottom: 24px; text-align: center;
+}
+.bracket-matches { display: flex; flex-direction: column; gap: 16px; width: 100%; padding: 0 8px; }
+
+.bracket-match {
+  background: var(--dark2); border: 1px solid var(--gray);
+  overflow: hidden; position: relative;
+}
+.bracket-match.final { border-color: var(--acid); }
+.bracket-team {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 10px 14px; gap: 8px;
+  border-bottom: 1px solid var(--gray);
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: 0.9rem; transition: background 0.2s;
+}
+.bracket-team:last-child { border-bottom: none; }
+.bracket-team.winner { background: rgba(200,255,0,0.08); color: var(--acid); }
+.bracket-team.loser { opacity: 0.4; }
+.bracket-team.tbd { color: var(--muted); font-style: italic; }
+.bracket-team-name { flex: 1; }
+.bracket-team-score {
+  font-size: 1rem; font-weight: 700;
+  min-width: 20px; text-align: right;
+}
+.bracket-connector {
+  display: flex; align-items: center; justify-content: center;
+  color: var(--gray); font-size: 1.5rem; padding: 0 4px;
+  align-self: center; margin-top: 32px;
+}
+
+/* Equipos por fase */
+.fases-wrap { padding: 0 6vw; }
+.fase-block { margin-bottom: 32px; }
+.fase-title {
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: 0.72rem; letter-spacing: 3px; color: var(--acid);
+  margin-bottom: 16px;
+}
+.equipos-grid {
+  display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 16px;
+}
+.equipo-card {
+  background: var(--dark2); border: 1px solid var(--gray); padding: 20px;
+}
+.equipo-card-header {
+  display: flex; align-items: center; gap: 10px;
+  margin-bottom: 14px; padding-bottom: 12px;
+  border-bottom: 1px solid var(--gray);
+}
+.equipo-card-num {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 1.8rem; color: var(--acid); line-height: 1;
+  min-width: 36px;
+}
+.equipo-card-name {
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: 1rem; color: #fff; font-weight: 700; letter-spacing: 1px;
+}
+.equipo-card-players { list-style: none; padding: 0; margin: 0; }
+.equipo-card-players li {
+  padding: 6px 0; border-bottom: 1px solid rgba(255,255,255,0.05);
+  font-size: 0.85rem; color: var(--muted);
+  display: flex; align-items: center; gap: 8px;
+}
+.equipo-card-players li:last-child { border-bottom: none; }
+.equipo-card-players li::before {
+  content: ''; width: 6px; height: 6px;
+  border-radius: 50%; background: var(--acid); flex-shrink: 0;
+}
+.equipo-slot-empty {
+  color: rgba(255,255,255,0.2); font-style: italic;
+}
+.equipo-slot-empty::before { background: rgba(255,255,255,0.1) !important; }
+
+/* loading */
+.torneo-loading {
+  min-height: 60vh; display: flex; align-items: center; justify-content: center;
+  flex-direction: column; gap: 16px; color: var(--muted);
+}
+</style>
+</head>
+<body>
+
+<nav class="nav" id="nav">
+  <div class="logo"><img src="logo.png" alt="Nexus Arena" class="logo-img"></div>
+  <ul class="nav-links">
+    <li><a href="index.html#torneos">Torneos</a></li>
+    <li><a href="index.html#galardones">Galardones</a></li>
+    <li><a href="index.html#como-funciona">Cómo funciona</a></li>
+  </ul>
+  <button class="nav-cta" onclick="window.location='index.html#torneos'">Ver torneos</button>
+</nav>
+
+<!-- HERO -->
+<div id="torneoHero" class="torneo-hero">
+  <div class="torneo-hero-bg" id="torneoHeroBg"></div>
+  <div class="torneo-hero-overlay"></div>
+  <div class="torneo-hero-content">
+    <div class="torneo-loading" id="heroLoading">
+      <div class="spinner"></div><p>Cargando torneo...</p>
+    </div>
+    <div id="heroContent" style="display:none">
+      <a href="index.html#torneos" class="torneo-back">← VOLVER A TORNEOS</a>
+      <div class="torneo-estado-badge" id="heroEstado">OPEN</div>
+      <h1 id="heroNombre">—</h1>
+      <div class="torneo-hero-meta">
+        <div>📅 <span id="heroFecha">—</span></div>
+        <div>📍 <span id="heroModalidad">—</span></div>
+        <div>🎮 <span id="heroPlataforma">—</span></div>
+        <div>👥 <span id="heroCupos">—</span></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- MAIN CONTENT -->
+<div id="torneoMain" style="display:none">
+  <div class="torneo-main">
+    <!-- LEFT: info + fases -->
+    <div>
+      <div class="torneo-card" id="infoCard">
+        <div class="torneo-card-title">Descripción</div>
+        <p id="torneoDesc" style="color:var(--muted);font-size:0.9rem;line-height:1.6">—</p>
+      </div>
+
+      <!-- CUPOS BAR -->
+      <div class="torneo-card" style="margin-top:16px">
+        <div class="torneo-card-title">Cupos</div>
+        <div class="cupos-bar-wrap">
+          <div class="cupos-bar-info">
+            <span id="cuposTexto">— / — inscritos</span>
+            <span id="cuposLibres" style="color:var(--acid)">— libres</span>
+          </div>
+          <div class="cupos-bar-track"><div class="cupos-bar-fill" id="cuposBarFill" style="width:0%"></div></div>
+        </div>
+        <button class="btn-inscribir-page" id="btnInscribirPage" onclick="abrirInscripcion()">INSCRIBIRME AHORA →</button>
+      </div>
+    </div>
+
+    <!-- RIGHT: premio + alias -->
+    <div>
+      <div class="prize-big">
+        <div class="prize-big-label">🏆 PREMIO ESTIMADO</div>
+        <div class="prize-big-amount" id="premioBig">—</div>
+        <div class="prize-big-note">Al llenarse el torneo completo</div>
+      </div>
+
+      <div class="prize-entrada">
+        <span class="prize-entrada-label">ENTRADA</span>
+        <span class="prize-entrada-val" id="precioShow">—</span>
+      </div>
+
+      <div class="alias-block" id="aliasBlock" style="display:none">
+        <div class="alias-label">💳 ALIAS MERCADO PAGO</div>
+        <div class="alias-val-row">
+          <span class="alias-val" id="aliasVal">—</span>
+          <button class="alias-copy-btn" onclick="copyAlias()">📋 Copiar</button>
+        </div>
+      </div>
+
+      <div class="galardon-note-banner">
+        🏅 El ganador será <strong style="margin-left:4px">Galardonado en el Hall of Fame</strong>
+      </div>
+
+      <div class="terminos-tc" id="terminosTC">
+        * El premio se acredita únicamente al llenarse el cupo completo del torneo. Sin cupo completo el monto puede variar proporcionalmente. Premio acreditado en hasta 48hs hábiles post-torneo. Evento privado.
+      </div>
+    </div>
+  </div>
+
+  <!-- BRACKET -->
+  <div class="bracket-section" id="bracketSection" style="display:none">
+    <div style="padding: 0 6vw; margin-bottom: 32px; border-bottom: 1px solid var(--gray); padding-bottom: 24px;">
+      <div class="section-label">Competencia</div>
+      <h2 class="bracket-section-title">BRACKET <span>DEL TORNEO</span></h2>
+      <p class="bracket-sub" style="padding:0">El torneo se juega en fases. Cada ganador de fase avanza a la final.</p>
+    </div>
+
+    <!-- FASES VISUALES -->
+    <div class="bracket-wrap">
+      <div class="bracket-grid" id="bracketGrid"></div>
+    </div>
+
+    <!-- EQUIPOS / JUGADORES -->
+    <div style="margin-top:40px;padding:0 6vw">
+      <div class="section-label">Participantes</div>
+      <h2 class="bracket-section-title" style="padding:0;margin-bottom:8px">EQUIPOS <span>CONFIRMADOS</span></h2>
+      <p style="color:var(--muted);font-size:0.85rem;margin-bottom:28px">Los equipos se forman automáticamente con los inscriptos.</p>
+      <div id="equiposGrid" class="equipos-grid"></div>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL INSCRIPCIÓN (igual que index) -->
+<div class="modal-overlay" id="modalOverlay">
+  <div class="modal modal-wide">
+    <div class="modal-header">
+      <span class="modal-title" id="modalTitle">INSCRIPCIÓN</span>
+      <button class="modal-close" id="modalClose">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-info" id="modalInfoBlock">
+        <div class="modal-info-row">
+          <div class="modal-info-item"><span class="modal-info-label">Torneo</span><span class="modal-info-val" id="modalGame">—</span></div>
+          <div class="modal-info-item"><span class="modal-info-label">Fecha</span><span class="modal-info-val" id="modalDate">—</span></div>
+          <div class="modal-info-item"><span class="modal-info-label">Modalidad</span><span class="modal-info-val" id="modalMode">—</span></div>
+        </div>
+        <div class="modal-prize-block">
+          <div class="modal-prize-left">
+            <span class="modal-prize-label">🏆 PREMIO</span>
+            <span class="modal-prize-val" id="modalPrize">—</span>
+          </div>
+          <div class="modal-prize-right">
+            <span class="modal-entrada-label">Entrada</span>
+            <span class="modal-entrada-val" id="modalEntrada">—</span>
+          </div>
+        </div>
+        <div class="modal-alias-block" id="modalAliasBlock" style="display:none">
+          <span class="modal-alias-label">💳 Alias Mercado Pago</span>
+          <div class="modal-alias-row">
+            <span class="modal-alias-val" id="modalAlias">—</span>
+            <button class="modal-alias-copy" onclick="copyAlias()">Copiar</button>
+          </div>
+          <span class="modal-alias-note">Realizá la transferencia y adjuntá el comprobante al contactarnos.</span>
+        </div>
+        <div class="modal-galardon-note">
+          🏅 El ganador del torneo será <strong>Galardonado en nuestra sección Hall of Fame</strong>
+        </div>
+        <div class="modal-terminos">
+          * El premio de <span id="modalPremioTC">—</span> se acredita únicamente al llenarse el cupo de <span id="modalCuposTC">—</span> jugadores.
+        </div>
+      </div>
+      <div id="formError" class="form-error" style="display:none"></div>
+      <div class="form-section-title">TUS DATOS</div>
+      <div class="form-row-2">
+        <div class="form-group"><label class="form-label">Nombre o apodo *</label><input type="text" class="form-input" id="inputNombre" placeholder="¿Cómo te conocen?"></div>
+        <div class="form-group"><label class="form-label">Gamertag / ID en el juego *</label><input type="text" class="form-input" id="inputGamertag" placeholder="Tu nombre en el juego"></div>
+      </div>
+      <div class="form-row-2">
+        <div class="form-group"><label class="form-label">WhatsApp *</label><input type="tel" class="form-input" id="inputWhatsapp" placeholder="11 1234-5678"></div>
+        <div class="form-group"><label class="form-label">Mail *</label><input type="email" class="form-input" id="inputMail" placeholder="tu@mail.com"></div>
+      </div>
+      <div class="form-section-title" id="equipoSectionTitle" style="display:none">EQUIPO</div>
+      <div id="equipoBlock" style="display:none">
+        <div class="equipo-opciones">
+          <label class="equipo-opcion">
+            <input type="radio" name="equipoOpt" value="con" onchange="toggleEquipoInput(this.value)">
+            <span class="equipo-opcion-box"><span class="equipo-opcion-icon">🤝</span><span class="equipo-opcion-label">Ya tengo equipo</span><span class="equipo-opcion-desc">Voy a competir con mi equipo formado</span></span>
+          </label>
+          <label class="equipo-opcion">
+            <input type="radio" name="equipoOpt" value="sin" onchange="toggleEquipoInput(this.value)" checked>
+            <span class="equipo-opcion-box"><span class="equipo-opcion-icon">🎲</span><span class="equipo-opcion-label">Sin equipo</span><span class="equipo-opcion-desc">Me asignan uno automáticamente</span></span>
+          </label>
+        </div>
+        <div class="form-group" id="inputEquipoGroup" style="display:none;margin-top:12px">
+          <label class="form-label">Nombre del equipo *</label>
+          <input type="text" class="form-input" id="inputEquipo" placeholder="Ej: Team Nexus, Los Pibes...">
+        </div>
+      </div>
+      <button class="btn-submit" id="btnSubmit">CONFIRMAR INSCRIPCIÓN →</button>
+    </div>
+  </div>
+</div>
+
+<script type="module" src="js/torneo.js?v=1"></script>
+</body>
+</html>
