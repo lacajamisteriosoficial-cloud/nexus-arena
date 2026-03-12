@@ -433,7 +433,10 @@ async function submitInscripcion() {
       loadAll();
     }, 300);
   } catch (err) {
-    errEl.textContent = 'Error al guardar. Intentá de nuevo.';
+    console.error('ERROR INSCRIPCION COMPLETO:', err);
+    console.error('codigo:', err.code);
+    console.error('mensaje:', err.message);
+    errEl.textContent = `Error: ${err.code || err.message}`;
     errEl.style.display = 'block';
     btn.disabled = false; btn.textContent = 'CONFIRMAR INSCRIPCIÓN →';
   }
