@@ -1,29 +1,24 @@
 // ============================================================
-//  NEXUS ARENA — app.js v2
+//  NEXUS ARENA — app.js  (versión corregida producción)
 // ============================================================
 import { db } from './firebase.js';
 import {
   collection, getDocs, addDoc, doc, updateDoc,
-  serverTimestamp, increment,
-  onSnapshot
+  serverTimestamp, increment, onSnapshot, getDoc
 } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
 const WA_NUMBER = "5491157687215";
 
-// Catálogo base de juegos (se puede editar desde el admin)
-// Catálogo 100% desde Firebase — el admin es la única fuente de verdad
-let GAMES_CATALOG = [];
-
-let torneos = [];
-let galardones = [];
-let reseñas = [];
-let encuestas = [];
-let activeFilter = 'all';
+let GAMES_CATALOG  = [];
+let torneos        = [];
+let galardones     = [];
+let reseñas        = [];
+let encuestas      = [];
+let activeFilter   = 'all';
 let selectedTorneo = null;
-let promoIndex = 0;
-let promoInterval = null;
-let chatOpen = false;
-let chatInitialized = false;
+let promoIndex     = 0;
+let promoInterval  = null;
+let chatOpen       = false;
 
 // ── INIT ────────────────────────────────────────────────────
 document.addEventListener('DOMContentLoaded', () => {
@@ -36,13 +31,16 @@ document.addEventListener('DOMContentLoaded', () => {
   setTimeout(maybeShowPopup, 2500);
   setupChat();
   setTimeout(() => {
-    document.getElementById('chatUnread').style.display = 'flex';
+    const u = document.getElementById('chatUnread');
+    if (u) u.style.display = 'flex';
   }, 4000);
 });
 
+// ── CARGA DE DATOS ───────────────────────────────────────────
 async function loadAll() {
   try {
     const safe = (p) => p.catch(() => ({ docs: [] }));
+
     const [torneoSnap, galardonSnap, reseñaSnap, encuestaSnap, juegosSnap, configSnap] = await Promise.all([
       safe(getDocs(collection(db, 'torneos'))),
       safe(getDocs(collection(db, 'galardones'))),
@@ -52,31 +50,40 @@ async function loadAll() {
       safe(getDocs(collection(db, 'config'))),
     ]);
 
-    torneos   = torneoSnap.docs.map(d => ({ id: d.id, ...d.data() })).sort((a,b) => (a.fecha?.toDate?.()?.getTime()||0) - (b.fecha?.toDate?.()?.getTime()||0));
+    torneos = torneoSnap.docs
+      .map(d => ({ id: d.id, ...d.data() }))
+      .sort((a, b) => (a.fecha?.toDate?.()?.getTime() || 0) - (b.fecha?.toDate?.()?.getTime() || 0));
 
-    // Catálogo viene directamente de Firebase, ordenado por nombre
-    GAMES_CATALOG = juegosSnap.docs.map(d => ({ id: d.id, ...d.data() }))
-      .sort((a,b) => (a.nombre||'').localeCompare(b.nombre||''));
+    GAMES_CATALOG = juegosSnap.docs
+      .map(d => ({ id: d.id, ...d.data() }))
+      .sort((a, b) => (a.nombre || '').localeCompare(b.nombre || ''));
 
-    // Ticker desde Firebase
     const tickerDoc = configSnap.docs.find(d => d.id === 'ticker');
     if (tickerDoc) {
       const items = tickerDoc.data().items || [];
       if (items.length > 0) {
         const tickerInner = document.querySelector('.ticker-inner');
         if (tickerInner) {
-          const html = [...items, ...items].map(t => `<span>${t}</span>`).join('');
-          tickerInner.innerHTML = html;
+          tickerInner.innerHTML = [...items, ...items].map(t => `<span>${t}</span>`).join('');
         }
       }
     }
-    galardones = galardonSnap.docs.map(d => ({ id: d.id, ...d.data() })).sort((a,b) => (b.fecha?.toDate?.()?.getTime()||0) - (a.fecha?.toDate?.()?.getTime()||0));
-    reseñas   = reseñaSnap.docs.map(d => ({ id: d.id, ...d.data() })).filter(r => r.aprobada === true).sort((a,b) => (b.fecha?.toDate?.()?.getTime()||0) - (a.fecha?.toDate?.()?.getTime()||0));
-    encuestas  = encuestaSnap.docs.map(d => ({ id: d.id, ...d.data() })).filter(e => e.activa === true);
+
+    galardones = galardonSnap.docs
+      .map(d => ({ id: d.id, ...d.data() }))
+      .sort((a, b) => (b.fecha?.toDate?.()?.getTime() || 0) - (a.fecha?.toDate?.()?.getTime() || 0));
+
+    reseñas = reseñaSnap.docs
+      .map(d => ({ id: d.id, ...d.data() }))
+      .filter(r => r.aprobada === true)
+      .sort((a, b) => (b.fecha?.toDate?.()?.getTime() || 0) - (a.fecha?.toDate?.()?.getTime() || 0));
+
+    encuestas = encuestaSnap.docs
+      .map(d => ({ id: d.id, ...d.data() }))
+      .filter(e => e.activa === true);
 
     const activos = torneos.filter(t => t.estado === 'open' || t.estado === 'soon');
     const totalInscrip = torneos.reduce((s, t) => s + (t.cupos_ocupados || 0), 0);
-
     document.getElementById('statTorneos').textContent   = activos.length;
     document.getElementById('statInscrip').textContent   = totalInscrip;
     document.getElementById('statGanadores').textContent = galardones.length;
@@ -89,46 +96,46 @@ async function loadAll() {
     renderEncuestas();
 
   } catch (err) {
-    console.error('Error cargando datos:', err);
-    document.getElementById('loadingState').innerHTML = '<p style="color:var(--muted)">Error al cargar. Recargá la página.</p>';
+    console.error('loadAll error:', err);
+    const el = document.getElementById('loadingState');
+    if (el) el.innerHTML = '<p style="color:var(--muted)">Error al cargar. Recargá la página.</p>';
   }
 }
 
 // ── GAMES GRID ───────────────────────────────────────────────
 function renderGamesGrid(torneosActivos) {
   const grid = document.getElementById('gamesGrid');
+  if (!grid) return;
+
   const torneosByJuego = {};
   torneosActivos.forEach(t => {
-    if (t.juego_id) torneosByJuego[t.juego_id] = t;
-    else {
-      // fallback: match by name
+    if (t.juego_id) {
+      torneosByJuego[t.juego_id] = t;
+    } else {
       const match = GAMES_CATALOG.find(g =>
-        t.nombre?.toLowerCase().includes(g.id) ||
-        g.nombre.toLowerCase().includes((t.nombre||'').toLowerCase().split(' ')[0])
+        (t.nombre || '').toLowerCase().includes(g.id) ||
+        g.nombre.toLowerCase().includes((t.nombre || '').toLowerCase().split(' ')[0])
       );
       if (match) torneosByJuego[match.id] = t;
     }
   });
 
   grid.innerHTML = GAMES_CATALOG.map(game => {
-    const torneo = torneosByJuego[game.id];
+    const torneo    = torneosByJuego[game.id];
     const hasTorneo = torneo && (torneo.estado === 'open' || torneo.estado === 'soon');
-    const hasImg = game.imagen && game.imagen.trim() !== '';
+    const hasImg    = game.imagen && game.imagen.trim() !== '';
     return `
       <div class="game-card" onclick="openGameModal('${game.id}')">
-        ${hasImg
-          ? `<img class="game-card-img" src="${game.imagen}" alt="${game.nombre}" onerror="this.style.display='none';document.getElementById('gemoji-${game.id}').style.display='flex'">`
-          : ''
-        }
-        <div class="game-card-emoji" id="gemoji-${game.id}" ${hasImg ? 'style="display:none"' : ''}>${game.emoji}</div>
+        ${hasImg ? `<img class="game-card-img" src="${game.imagen}" alt="${game.nombre}"
+            onerror="this.style.display='none';document.getElementById('gemoji-${game.id}').style.display='flex'">` : ''}
+        <div class="game-card-emoji" id="gemoji-${game.id}" ${hasImg ? 'style="display:none"' : ''}>${game.emoji || '🎮'}</div>
         <div class="game-card-overlay"></div>
         <img class="game-card-logo" src="logo.png" alt="Nexus Arena">
         <span class="game-card-badge ${hasTorneo ? 'has-torneo' : 'no-torneo'}">
           ${hasTorneo ? '🔥 Torneo activo' : 'Sin torneo'}
         </span>
         <div class="game-card-title">${game.nombre}</div>
-      </div>
-    `;
+      </div>`;
   }).join('');
 }
 
@@ -137,39 +144,31 @@ window.openGameModal = function(gameId) {
   if (!game) return;
 
   const torneoDelJuego = torneos.filter(t => {
-    const tn = (t.nombre||'').toLowerCase();
+    const tn = (t.nombre || '').toLowerCase();
     const gn = game.nombre.toLowerCase();
     return tn.includes(game.id) || tn.includes(gn.split(' ')[0]) || gn.includes(tn.split(' ')[0]);
   }).filter(t => t.estado === 'open' || t.estado === 'soon');
 
-  const modal    = document.getElementById('gameModal');
-  const titleEl  = document.getElementById('gameModalTitle');
-  const bodyEl   = document.getElementById('gameModalBody');
+  const modal   = document.getElementById('gameModal');
+  const titleEl = document.getElementById('gameModalTitle');
+  const bodyEl  = document.getElementById('gameModalBody');
 
-  // ── Header con imagen de fondo ──
   titleEl.textContent = game.nombre.toUpperCase();
 
-  // Aplicar imagen de fondo al modal header si existe
   const modalHeader = modal.querySelector('.modal-header');
   if (game.imagen) {
     modalHeader.style.cssText = `
       background: linear-gradient(to bottom, rgba(0,0,0,0.3) 0%, rgba(0,0,0,0.85) 100%),
                   url('${game.imagen}') center/cover no-repeat;
-      min-height: 140px;
-      align-items: flex-end;
-      padding-bottom: 20px;
-      border-bottom: 2px solid var(--acid);
-    `;
+      min-height: 140px; align-items: flex-end; padding-bottom: 20px;
+      border-bottom: 2px solid var(--acid);`;
   } else {
-    // Sin imagen: fondo degradado con color según plataforma
-    const colorMap = { mobile:'#1a0a2e', console:'#0a1a2e', pc:'#0a2e1a', cross:'#2e1a0a' };
+    const colorMap = { mobile: '#1a0a2e', console: '#0a1a2e', pc: '#0a2e1a', cross: '#2e1a0a' };
     const bg = colorMap[game.plataforma] || '#111';
     modalHeader.style.cssText = `
       background: linear-gradient(135deg, ${bg}, #111);
-      min-height: 100px;
-      align-items: center;
-      border-bottom: 2px solid var(--acid);
-    `;
+      min-height: 100px; align-items: center;
+      border-bottom: 2px solid var(--acid);`;
   }
 
   if (torneoDelJuego.length === 0) {
@@ -179,39 +178,36 @@ window.openGameModal = function(gameId) {
         <p style="color:var(--muted);margin-bottom:6px">No hay torneos de <strong style="color:#fff">${game.nombre}</strong> en este momento.</p>
         <p style="color:var(--muted);font-size:0.82rem;margin-bottom:20px">Seguinos o escribinos para saber cuándo viene el próximo.</p>
         <button class="btn-secondary" onclick="document.getElementById('gameModal').classList.remove('active');toggleChat()">💬 Preguntar en el chat</button>
-      </div>
-    `;
+      </div>`;
   } else {
     bodyEl.innerHTML = `
-      <div class="game-modal-tag" style="margin-bottom:16px">🔥 ${torneoDelJuego.length} TORNEO${torneoDelJuego.length>1?'S':''} DISPONIBLE${torneoDelJuego.length>1?'S':''}</div>
+      <div class="game-modal-tag" style="margin-bottom:16px">🔥 ${torneoDelJuego.length} TORNEO${torneoDelJuego.length > 1 ? 'S' : ''} DISPONIBLE${torneoDelJuego.length > 1 ? 'S' : ''}</div>
       ${torneoDelJuego.map(t => {
         const fechaStr = t.fecha?.toDate
-          ? t.fecha.toDate().toLocaleString('es-AR', { weekday:'long', day:'numeric', month:'short', hour:'2-digit', minute:'2-digit' })
+          ? t.fecha.toDate().toLocaleString('es-AR', { weekday: 'long', day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })
           : '';
         const libre = t.cupos_total - (t.cupos_ocupados || 0);
         const pct   = t.cupos_total > 0 ? (t.cupos_ocupados / t.cupos_total) * 100 : 0;
         return `
           <div class="game-modal-torneo-card">
             <div style="color:var(--acid);font-family:'Barlow Condensed',sans-serif;font-size:0.78rem;letter-spacing:2px;margin-bottom:6px">📅 ${fechaStr}</div>
-            <div style="color:#fff;font-family:'Barlow Condensed',sans-serif;font-size:1.15rem;font-weight:700;margin-bottom:10px">${t.subtitulo||t.nombre}</div>
+            <div style="color:#fff;font-family:'Barlow Condensed',sans-serif;font-size:1.15rem;font-weight:700;margin-bottom:10px">${t.subtitulo || t.nombre}</div>
             <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px">
-              <span class="game-modal-tag-sm">${t.modalidad==='presencial'?'🏠 Presencial':'🌐 Online'}</span>
-              <span class="game-modal-tag-sm">${t.plataforma||''}</span>
-              <span class="game-modal-tag-sm" style="color:${libre<=3?'var(--red)':'var(--orange)'}">⚡ ${libre} cupos</span>
+              <span class="game-modal-tag-sm">${t.modalidad === 'presencial' ? '🏠 Presencial' : '🌐 Online'}</span>
+              <span class="game-modal-tag-sm">${t.plataforma || ''}</span>
+              <span class="game-modal-tag-sm" style="color:${libre <= 3 ? 'var(--red)' : 'var(--orange)'}">⚡ ${libre} cupos</span>
             </div>
             <div style="background:rgba(255,255,255,0.05);height:4px;margin-bottom:12px">
-              <div style="height:100%;background:${pct>=87?'var(--red)':pct>=60?'var(--orange)':'var(--acid)'};width:${pct}%;transition:width 0.5s"></div>
+              <div style="height:100%;background:${pct >= 87 ? 'var(--red)' : pct >= 60 ? 'var(--orange)' : 'var(--acid)'};width:${pct}%;transition:width 0.5s"></div>
             </div>
-            <button class="btn-inscribir available" onclick="document.getElementById('gameModal').classList.remove('active');openModal('${t.id}')"
+            <button class="btn-inscribir available"
+              onclick="document.getElementById('gameModal').classList.remove('active');openModal('${t.id}')"
               style="clip-path:polygon(7px 0%,100% 0%,calc(100% - 7px) 100%,0% 100%);width:100%;padding:11px;font-size:0.9rem">
               INSCRIBIRME →
             </button>
-          </div>
-        `;
-      }).join('')}
-    `;
+          </div>`;
+      }).join('')}`;
   }
-
   modal.classList.add('active');
 };
 
@@ -223,18 +219,19 @@ function renderPromoCarousel() {
   const carousel = document.getElementById('promoCarousel');
   const track    = document.getElementById('promoTrack');
   const dots     = document.getElementById('promoDots');
+  if (!carousel || !track || !dots) return;
 
   carousel.style.display = 'block';
 
   track.innerHTML = abiertos.map(t => {
     const fechaStr = t.fecha?.toDate
-      ? t.fecha.toDate().toLocaleString('es-AR', { weekday:'long', day:'numeric', month:'short', hour:'2-digit', minute:'2-digit' })
+      ? t.fecha.toDate().toLocaleString('es-AR', { weekday: 'long', day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })
       : '';
     const libre = t.cupos_total - (t.cupos_ocupados || 0);
     const imgOrEmoji = t.imagen
-      ? `<img class="promo-slide-img" src="${t.imagen}" alt="${t.nombre}" onerror="this.outerHTML='<div class=\\'promo-slide-emoji\\'>${t.emoji||'🎮'}</div>'">`
-      : `<div class="promo-slide-emoji">${t.emoji||'🎮'}</div>`;
-
+      ? `<img class="promo-slide-img" src="${t.imagen}" alt="${t.nombre}"
+            onerror="this.outerHTML='<div class=\\'promo-slide-emoji\\'>${t.emoji || '🎮'}</div>'">`
+      : `<div class="promo-slide-emoji">${t.emoji || '🎮'}</div>`;
     return `
       <div class="promo-slide">
         ${imgOrEmoji}
@@ -242,18 +239,17 @@ function renderPromoCarousel() {
           <div class="promo-slide-game">${t.nombre}</div>
           <div class="promo-slide-date">📅 ${fechaStr}</div>
           <div class="promo-slide-meta">
-            <span class="promo-meta-tag">${t.modalidad||'online'}</span>
-            <span class="promo-meta-tag">${t.plataforma||''}</span>
+            <span class="promo-meta-tag">${t.modalidad || 'online'}</span>
+            <span class="promo-meta-tag">${t.plataforma || ''}</span>
           </div>
           <button class="promo-slide-btn" onclick="openModal('${t.id}')">INSCRIBIRME AHORA</button>
           <div class="promo-slots">⚡ Solo quedan ${libre} cupos</div>
         </div>
-      </div>
-    `;
+      </div>`;
   }).join('');
 
   dots.innerHTML = abiertos.map((_, i) =>
-    `<div class="promo-dot ${i===0?'active':''}" onclick="goToSlide(${i})"></div>`
+    `<div class="promo-dot ${i === 0 ? 'active' : ''}" onclick="goToSlide(${i})"></div>`
   ).join('');
 
   if (abiertos.length > 1) {
@@ -267,7 +263,8 @@ function renderPromoCarousel() {
 
 window.goToSlide = function(idx) {
   promoIndex = idx;
-  document.getElementById('promoTrack').style.transform = `translateX(-${idx * 100}%)`;
+  const track = document.getElementById('promoTrack');
+  if (track) track.style.transform = `translateX(-${idx * 100}%)`;
   document.querySelectorAll('.promo-dot').forEach((d, i) => d.classList.toggle('active', i === idx));
 };
 
@@ -277,13 +274,22 @@ function renderTorneos() {
   const loading = document.getElementById('loadingState');
   const empty   = document.getElementById('emptyState');
 
-  loading.style.display = 'none';
+  if (loading) loading.style.display = 'none';
+  if (!grid) return;
 
-  if (torneos.length === 0) { empty.style.display = 'block'; return; }
+  if (torneos.length === 0) {
+    if (empty) empty.style.display = 'block';
+    return;
+  }
 
+  // El filtro 'presencial' busca en modalidad, los demás en categoria/plataforma
   const filtered = activeFilter === 'all'
     ? torneos
-    : torneos.filter(t => (t.categoria||'').includes(activeFilter));
+    : torneos.filter(t =>
+        (t.categoria || '').includes(activeFilter) ||
+        (t.plataforma || '').includes(activeFilter) ||
+        (t.modalidad || '').includes(activeFilter)
+      );
 
   if (filtered.length === 0) {
     grid.style.display = 'grid';
@@ -300,15 +306,15 @@ function buildCard(t) {
   const libre = t.cupos_total - (t.cupos_ocupados || 0);
 
   const statusMap = {
-    open:     { cls:'status-open',     label:'Inscripción Abierta' },
-    soon:     { cls:'status-soon',     label:'Próximamente' },
-    full:     { cls:'status-full',     label:'Cupos llenos' },
-    finished: { cls:'status-finished', label:'Finalizado' },
+    open:     { cls: 'status-open',     label: 'Inscripción Abierta' },
+    soon:     { cls: 'status-soon',     label: 'Próximamente' },
+    full:     { cls: 'status-full',     label: 'Cupos llenos' },
+    finished: { cls: 'status-finished', label: 'Finalizado' },
   };
-  const platMap = { mobile:'📱 Mobile', console:'🎮 PS5', pc:'🖥 Crossplay' };
+  const platMap = { mobile: '📱 Mobile', console: '🎮 PS5', pc: '🖥 Crossplay' };
 
   const st        = statusMap[t.estado] || statusMap.soon;
-  const plt       = platMap[t.plataforma] || t.plataforma;
+  const plt       = platMap[t.plataforma] || t.plataforma || '';
   const fillClass = pct >= 87 ? 'danger' : pct >= 60 ? 'warning' : '';
   const canJoin   = t.estado === 'open' && libre > 0;
   const btnLabel  = !canJoin
@@ -316,16 +322,17 @@ function buildCard(t) {
     : (libre <= 3 ? `¡Últimos ${libre} cupos!` : 'Inscribirme');
 
   const fechaStr = t.fecha?.toDate
-    ? t.fecha.toDate().toLocaleString('es-AR', { weekday:'long', day:'numeric', month:'short', hour:'2-digit', minute:'2-digit' })
+    ? t.fecha.toDate().toLocaleString('es-AR', { weekday: 'long', day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })
     : '';
 
   const cardTop = t.imagen
-    ? `<img src="${t.imagen}" alt="${t.nombre}" style="width:100%;height:100%;object-fit:cover;display:block" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">
-       <div class="card-game-bg ${t.plataforma||'console'}" style="display:none;position:absolute;inset:0">${t.emoji||'🎮'}</div>`
-    : `<div class="card-game-bg ${t.plataforma||'console'}">${t.emoji||'🎮'}</div>`;
+    ? `<img src="${t.imagen}" alt="${t.nombre}" style="width:100%;height:100%;object-fit:cover;display:block"
+          onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">
+       <div class="card-game-bg ${t.plataforma || 'console'}" style="display:none;position:absolute;inset:0">${t.emoji || '🎮'}</div>`
+    : `<div class="card-game-bg ${t.plataforma || 'console'}">${t.emoji || '🎮'}</div>`;
 
   return `
-    <div class="tournament-card" data-cat="${t.categoria||''}">
+    <div class="tournament-card" data-cat="${t.categoria || ''}">
       <div class="card-top" style="position:relative">
         ${cardTop}
         <span class="card-status ${st.cls}">${st.label}</span>
@@ -335,18 +342,18 @@ function buildCard(t) {
       <div class="card-body">
         <div class="card-date">📅 ${fechaStr}</div>
         <div class="card-title">${t.nombre}</div>
-        <div class="card-subtitle">${t.subtitulo||''}</div>
+        <div class="card-subtitle">${t.subtitulo || ''}</div>
         <div class="card-meta">
-          <div class="meta-item"><span class="meta-label">Modalidad</span><span class="meta-value">${t.modalidad==='presencial'?'🏠 Local':'🌐 Online'}</span></div>
-          <div class="meta-item"><span class="meta-label">Cupos libres</span><span class="meta-value" style="${libre<=3?'color:var(--red)':''}">${libre}</span></div>
+          <div class="meta-item"><span class="meta-label">Modalidad</span><span class="meta-value">${t.modalidad === 'presencial' ? '🏠 Local' : '🌐 Online'}</span></div>
+          <div class="meta-item"><span class="meta-label">Cupos libres</span><span class="meta-value" style="${libre <= 3 ? 'color:var(--red)' : ''}">${libre}</span></div>
         </div>
         <div class="slots-bar">
-          <div class="slots-info"><span>Cupos</span><span>${t.cupos_ocupados||0} / ${t.cupos_total}</span></div>
+          <div class="slots-info"><span>Cupos</span><span>${t.cupos_ocupados || 0} / ${t.cupos_total}</span></div>
           <div class="slots-track"><div class="slots-fill ${fillClass}" style="width:${pct}%"></div></div>
         </div>
         <div class="card-footer">
-          <button class="btn-inscribir ${canJoin?'available':'disabled'}"
-            ${canJoin?`onclick="openModal('${t.id}')"`:' disabled'}>${btnLabel}</button>
+          <button class="btn-inscribir ${canJoin ? 'available' : 'disabled'}"
+            ${canJoin ? `onclick="openModal('${t.id}')"` : 'disabled'}>${btnLabel}</button>
         </div>
       </div>
     </div>`;
@@ -354,44 +361,56 @@ function buildCard(t) {
 
 // ── MODAL INSCRIPCIÓN ────────────────────────────────────────
 function setupModal() {
-  document.getElementById('modalClose').addEventListener('click', closeModal);
-  document.getElementById('modalOverlay').addEventListener('click', e => {
+  document.getElementById('modalClose')?.addEventListener('click', closeModal);
+  document.getElementById('modalOverlay')?.addEventListener('click', e => {
     if (e.target === document.getElementById('modalOverlay')) closeModal();
   });
-  document.getElementById('btnSubmit').addEventListener('click', submitInscripcion);
-  document.addEventListener('keydown', e => { if (e.key === 'Escape') { closeModal(); closeReseñaModal(); } });
+  document.getElementById('btnSubmit')?.addEventListener('click', submitInscripcion);
+  document.addEventListener('keydown', e => {
+    if (e.key === 'Escape') { closeModal(); closeReseñaModal(); }
+  });
 }
 
 window.openModal = function(torneoId) {
   const t = torneos.find(x => x.id === torneoId);
-  if (!t) return;
+  if (!t) {
+    console.warn('openModal: torneo no encontrado, id:', torneoId);
+    return;
+  }
+
+  const libre = t.cupos_total - (t.cupos_ocupados || 0);
+  if (t.estado !== 'open' || libre <= 0) {
+    alert('Este torneo ya no tiene cupos disponibles.');
+    return;
+  }
+
   selectedTorneo = t;
 
   const fechaStr = t.fecha?.toDate
-    ? t.fecha.toDate().toLocaleString('es-AR', { weekday:'long', day:'numeric', month:'short', hour:'2-digit', minute:'2-digit' })
+    ? t.fecha.toDate().toLocaleString('es-AR', { weekday: 'long', day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })
     : '';
-
-  const libre = t.cupos_total - (t.cupos_ocupados || 0);
-  const pozo  = Math.round(t.cupos_total * (t.precio||5000) * 0.8);
+  const pozo = Math.round(t.cupos_total * (t.precio || 5000) * 0.8);
 
   document.getElementById('modalTitle').textContent   = 'INSCRIPCIÓN — ' + t.nombre.toUpperCase();
   document.getElementById('modalGame').textContent    = t.nombre;
   document.getElementById('modalDate').textContent    = fechaStr;
   document.getElementById('modalMode').textContent    = t.modalidad === 'presencial' ? 'Presencial — Villa de Mayo' : 'Online';
   document.getElementById('modalPrize').textContent   = `Pozo aprox. $${pozo.toLocaleString('es-AR')} (si se llena)`;
-  document.getElementById('modalEntrada').textContent = `$${(t.precio||5000).toLocaleString('es-AR')}`;
+  document.getElementById('modalEntrada').textContent = `$${(t.precio || 5000).toLocaleString('es-AR')}`;
 
-  ['inputNombre','inputGamertag','inputContacto'].forEach(id => document.getElementById(id).value = '');
+  ['inputNombre', 'inputGamertag', 'inputContacto'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.value = '';
+  });
   document.getElementById('formError').style.display  = 'none';
   document.getElementById('btnSubmit').disabled       = false;
   document.getElementById('btnSubmit').textContent    = 'CONFIRMAR INSCRIPCIÓN →';
-
   document.getElementById('modalOverlay').classList.add('active');
   document.body.style.overflow = 'hidden';
 };
 
 function closeModal() {
-  document.getElementById('modalOverlay').classList.remove('active');
+  document.getElementById('modalOverlay')?.classList.remove('active');
   document.body.style.overflow = '';
   selectedTorneo = null;
 }
@@ -404,46 +423,79 @@ async function submitInscripcion() {
   const btn      = document.getElementById('btnSubmit');
 
   errEl.style.display = 'none';
+
   if (!nombre || !gamertag || !contacto) {
     errEl.textContent = 'Completá todos los campos para continuar.';
-    errEl.style.display = 'block'; return;
+    errEl.style.display = 'block';
+    return;
   }
+
   if (!selectedTorneo) {
     errEl.textContent = 'Error: cerrá el modal y volvé a intentar.';
     errEl.style.display = 'block';
     return;
   }
 
-  btn.disabled = true; btn.textContent = 'Guardando...';
+  // *** FIX CRÍTICO: guardar datos locales ANTES de operaciones async y ANTES de closeModal ***
+  // closeModal() pone selectedTorneo = null, si se llama antes de usar estos datos → crash
+  const torneoId     = selectedTorneo.id;
+  const torneoNombre = selectedTorneo.nombre;
+  const torneoPrecio = selectedTorneo.precio || 5000;
+
+  btn.disabled    = true;
+  btn.textContent = 'Guardando...';
 
   try {
+    // Verificar cupos en tiempo real (evita doble inscripción si dos personas acceden a la vez)
+    const torneoSnap = await getDoc(doc(db, 'torneos', torneoId));
+    if (!torneoSnap.exists()) throw new Error('El torneo ya no existe.');
+
+    const torneoActual = torneoSnap.data();
+    const libreActual  = torneoActual.cupos_total - (torneoActual.cupos_ocupados || 0);
+
+    if (torneoActual.estado !== 'open' || libreActual <= 0) {
+      errEl.textContent = 'Lo sentimos, los cupos se agotaron. Intentá con otro torneo.';
+      errEl.style.display = 'block';
+      btn.disabled    = false;
+      btn.textContent = 'CONFIRMAR INSCRIPCIÓN →';
+      loadAll();
+      return;
+    }
+
     await addDoc(collection(db, 'inscripciones'), {
-      nombre, gamertag, contacto,
-      torneo_id: selectedTorneo.id,
-      torneo_nombre: selectedTorneo.nombre,
-      estado: 'pendiente',
+      nombre,
+      gamertag,
+      contacto,
+      torneo_id:         torneoId,
+      torneo_nombre:     torneoNombre,
+      estado:            'pendiente',
       fecha_inscripcion: serverTimestamp(),
     });
-    await updateDoc(doc(db, 'torneos', selectedTorneo.id), { cupos_ocupados: increment(1) });
 
+    await updateDoc(doc(db, 'torneos', torneoId), {
+      cupos_ocupados: increment(1),
+    });
+
+    // Cerrar modal DESPUÉS de guardar todo, datos locales ya seguros arriba
     closeModal();
 
-    const msg = `¡Hola! Quiero inscribirme al torneo de *${selectedTorneo.nombre}*.\n\n` +
+    const msg =
+      `¡Hola! Quiero inscribirme al torneo de *${torneoNombre}*.\n\n` +
       `👤 Nombre: ${nombre}\n🎮 Gamertag: ${gamertag}\n📞 Contacto: ${contacto}\n\n` +
-      `¿Cómo coordino el pago de $${(selectedTorneo.precio||5000).toLocaleString('es-AR')}?`;
+      `¿Cómo coordino el pago de $${torneoPrecio.toLocaleString('es-AR')}?`;
 
     setTimeout(() => {
       alert(`¡Listo, ${nombre}! 🎮\nTe mandamos a WhatsApp para coordinar el pago.`);
       window.open(`https://wa.me/${WA_NUMBER}?text=${encodeURIComponent(msg)}`, '_blank');
       loadAll();
     }, 300);
+
   } catch (err) {
-    console.error('ERROR INSCRIPCION COMPLETO:', err);
-    console.error('codigo:', err.code);
-    console.error('mensaje:', err.message);
+    console.error('submitInscripcion error:', err);
     errEl.textContent = `Error: ${err.code || err.message}`;
     errEl.style.display = 'block';
-    btn.disabled = false; btn.textContent = 'CONFIRMAR INSCRIPCIÓN →';
+    btn.disabled    = false;
+    btn.textContent = 'CONFIRMAR INSCRIPCIÓN →';
   }
 }
 
@@ -453,49 +505,52 @@ function renderGalardones() {
   const grid    = document.getElementById('galardonesGrid');
   const empty   = document.getElementById('galardonesEmpty');
 
-  loading.style.display = 'none';
+  if (loading) loading.style.display = 'none';
+  if (!grid) return;
 
-  if (galardones.length === 0) { empty.style.display = 'block'; return; }
+  if (galardones.length === 0) {
+    if (empty) empty.style.display = 'block';
+    return;
+  }
 
   grid.style.display = 'grid';
   grid.innerHTML = galardones.map((g, i) => {
     const fechaStr = g.fecha?.toDate
-      ? g.fecha.toDate().toLocaleDateString('es-AR', { day:'numeric', month:'long', year:'numeric' })
+      ? g.fecha.toDate().toLocaleDateString('es-AR', { day: 'numeric', month: 'long', year: 'numeric' })
       : g.fecha || '';
 
     const fotoHtml = g.foto
-      ? `<img class="galardon-foto" src="${g.foto}" alt="${g.gamertag}" onerror="this.outerHTML='<div class=\\'galardon-foto-default\\'>${g.gamertag?.charAt(0)||'?'}</div>'">`
-      : `<div class="galardon-foto-default">${g.gamertag?.charAt(0)||'?'}</div>`;
+      ? `<img class="galardon-foto" src="${g.foto}" alt="${g.gamertag}"
+            onerror="this.outerHTML='<div class=\\'galardon-foto-default\\'>${g.gamertag?.charAt(0) || '?'}</div>'">`
+      : `<div class="galardon-foto-default">${g.gamertag?.charAt(0) || '?'}</div>`;
 
     const bgHtml = g.bg_imagen
       ? `<img class="galardon-bg" src="${g.bg_imagen}" alt="">`
-      : `<div class="galardon-bg-default">${g.juego_emoji||'🎮'}</div>`;
+      : `<div class="galardon-bg-default">${g.juego_emoji || '🎮'}</div>`;
 
     return `
-      <div class="galardon-card ${i===0?'featured':''}">
+      <div class="galardon-card ${i === 0 ? 'featured' : ''}">
         <div class="galardon-top">
           ${bgHtml}
           <div class="galardon-overlay"></div>
-          <div class="galardon-crown">${i===0?'👑':'🏅'}</div>
+          <div class="galardon-crown">${i === 0 ? '👑' : '🏅'}</div>
           ${fotoHtml}
         </div>
         <div class="galardon-body">
-          <div class="galardon-torneo">${g.torneo_nombre||''}</div>
-          <div class="galardon-name">${g.gamertag||''}</div>
+          <div class="galardon-torneo">${g.torneo_nombre || ''}</div>
+          <div class="galardon-name">${g.gamertag || ''}</div>
           <div class="galardon-fecha">${fechaStr}</div>
           <div class="galardon-stars">★★★★★</div>
-          <div class="galardon-badge-wrap">
-            <span class="galardon-badge">🏆 CAMPEÓN</span>
-          </div>
+          <div class="galardon-badge-wrap"><span class="galardon-badge">🏆 CAMPEÓN</span></div>
         </div>
-      </div>
-    `;
+      </div>`;
   }).join('');
 }
 
 // ── RESEÑAS ──────────────────────────────────────────────────
 function renderReseñas() {
   const grid = document.getElementById('resenasGrid');
+  if (!grid) return;
 
   if (reseñas.length === 0) {
     grid.innerHTML = '<div class="resena-empty">Aún no hay reseñas. ¡Sé el primero en comentar!</div>';
@@ -503,10 +558,8 @@ function renderReseñas() {
   }
 
   grid.innerHTML = reseñas.map(r => {
-    const stars = '★'.repeat(r.estrellas||5) + '☆'.repeat(5-(r.estrellas||5));
-    const fechaStr = r.fecha?.toDate
-      ? r.fecha.toDate().toLocaleDateString('es-AR')
-      : '';
+    const stars    = '★'.repeat(r.estrellas || 5) + '☆'.repeat(5 - (r.estrellas || 5));
+    const fechaStr = r.fecha?.toDate ? r.fecha.toDate().toLocaleDateString('es-AR') : '';
     return `
       <div class="resena-card">
         <div class="resena-header">
@@ -515,27 +568,27 @@ function renderReseñas() {
         </div>
         <div class="resena-texto">${r.texto}</div>
         <div class="resena-fecha">${fechaStr}</div>
-      </div>
-    `;
+      </div>`;
   }).join('');
 }
 
 window.openReseñaModal = function() {
-  document.getElementById('reseñaModal').classList.add('active');
+  document.getElementById('reseñaModal')?.classList.add('active');
   document.body.style.overflow = 'hidden';
 };
 
 window.closeReseñaModal = function() {
-  document.getElementById('reseñaModal').classList.remove('active');
+  document.getElementById('reseñaModal')?.classList.remove('active');
   document.body.style.overflow = '';
 };
 
 function setupReseñaModal() {
   document.querySelectorAll('#starRating .star').forEach(star => {
     star.addEventListener('click', () => {
-      const val = parseInt(star.dataset.val);
-      document.getElementById('reseñaStars').value = val;
-      document.querySelectorAll('#starRating .star').forEach((s,i) => {
+      const val   = parseInt(star.dataset.val);
+      const input = document.getElementById('reseñaStars');
+      if (input) input.value = val;
+      document.querySelectorAll('#starRating .star').forEach((s, i) => {
         s.classList.toggle('active', i < val);
       });
     });
@@ -543,16 +596,17 @@ function setupReseñaModal() {
 }
 
 window.submitReseña = async function() {
-  const nombre  = document.getElementById('reseñaNombre').value.trim();
-  const juego   = document.getElementById('reseñaJuego').value.trim();
-  const stars   = parseInt(document.getElementById('reseñaStars').value);
-  const texto   = document.getElementById('reseñaTexto').value.trim();
-  const errEl   = document.getElementById('reseñaError');
+  const nombre = document.getElementById('reseñaNombre').value.trim();
+  const juego  = document.getElementById('reseñaJuego').value.trim();
+  const stars  = parseInt(document.getElementById('reseñaStars').value);
+  const texto  = document.getElementById('reseñaTexto').value.trim();
+  const errEl  = document.getElementById('reseñaError');
 
   errEl.style.display = 'none';
   if (!nombre || !juego || !texto || stars === 0) {
     errEl.textContent = 'Completá todos los campos y elegí una puntuación.';
-    errEl.style.display = 'block'; return;
+    errEl.style.display = 'block';
+    return;
   }
 
   try {
@@ -563,6 +617,7 @@ window.submitReseña = async function() {
     closeReseñaModal();
     alert('¡Gracias por tu reseña! Se publicará una vez que sea revisada.');
   } catch (err) {
+    console.error('submitReseña error:', err);
     errEl.textContent = 'Error al enviar. Intentá de nuevo.';
     errEl.style.display = 'block';
   }
@@ -571,39 +626,37 @@ window.submitReseña = async function() {
 // ── ENCUESTAS ────────────────────────────────────────────────
 function renderEncuestas() {
   const container = document.getElementById('encuestasContainer');
+  if (!container) return;
 
   if (encuestas.length === 0) {
     container.innerHTML = '<div class="encuesta-empty"><p style="color:var(--muted)">No hay encuestas activas en este momento.</p></div>';
     return;
   }
-
   container.innerHTML = `<div class="encuestas-grid">${encuestas.map(e => buildEncuesta(e)).join('')}</div>`;
 }
 
 function buildEncuesta(e) {
-  const total = (e.opciones||[]).reduce((s, o) => s + (o.votos||0), 0);
+  const total = (e.opciones || []).reduce((s, o) => s + (o.votos || 0), 0);
   const voted = localStorage.getItem('voted_' + e.id);
 
-  const opcionesHtml = (e.opciones||[]).map((op, idx) => {
-    const pct = total > 0 ? Math.round((op.votos||0)/total*100) : 0;
+  const opcionesHtml = (e.opciones || []).map((op, idx) => {
+    const pct = total > 0 ? Math.round((op.votos || 0) / total * 100) : 0;
     return `
-      <div class="encuesta-opcion ${voted?'voted':''}" onclick="${!voted?`votarEncuesta('${e.id}',${idx})`:''}">
-        <div class="encuesta-opcion-fill" style="width:${voted?pct:0}%"></div>
+      <div class="encuesta-opcion ${voted ? 'voted' : ''}" onclick="${!voted ? `votarEncuesta('${e.id}',${idx})` : ''}">
+        <div class="encuesta-opcion-fill" style="width:${voted ? pct : 0}%"></div>
         <div class="encuesta-opcion-text">
           <span>${op.texto}</span>
-          ${voted?`<span class="encuesta-pct">${pct}%</span>`:''}
+          ${voted ? `<span class="encuesta-pct">${pct}%</span>` : ''}
         </div>
-      </div>
-    `;
+      </div>`;
   }).join('');
 
   return `
     <div class="encuesta-card" id="encuesta-${e.id}">
       <div class="encuesta-pregunta">${e.pregunta}</div>
       <div class="encuesta-opciones">${opcionesHtml}</div>
-      <div class="encuesta-total">${total} voto${total!==1?'s':''}</div>
-    </div>
-  `;
+      <div class="encuesta-total">${total} voto${total !== 1 ? 's' : ''}</div>
+    </div>`;
 }
 
 window.votarEncuesta = async function(encuestaId, opcionIdx) {
@@ -612,12 +665,14 @@ window.votarEncuesta = async function(encuestaId, opcionIdx) {
     const encuesta = encuestas.find(e => e.id === encuestaId);
     if (!encuesta) return;
     const opciones = [...encuesta.opciones];
-    opciones[opcionIdx].votos = (opciones[opcionIdx].votos||0) + 1;
+    opciones[opcionIdx].votos = (opciones[opcionIdx].votos || 0) + 1;
     await updateDoc(doc(db, 'encuestas', encuestaId), { opciones });
     localStorage.setItem('voted_' + encuestaId, '1');
     encuesta.opciones = opciones;
     renderEncuestas();
-  } catch (err) { console.error(err); }
+  } catch (err) {
+    console.error('votarEncuesta error:', err);
+  }
 };
 
 // ── POPUP PROMO ──────────────────────────────────────────────
@@ -626,17 +681,21 @@ function maybeShowPopup() {
   if (abiertos.length === 0) return;
   if (sessionStorage.getItem('popup_shown')) return;
 
-  const t = abiertos[0];
-  const libre = t.cupos_total - (t.cupos_ocupados || 0);
+  const t       = abiertos[0];
+  const libre   = t.cupos_total - (t.cupos_ocupados || 0);
   const fechaStr = t.fecha?.toDate
-    ? t.fecha.toDate().toLocaleString('es-AR', { weekday:'long', day:'numeric', month:'short', hour:'2-digit', minute:'2-digit' })
+    ? t.fecha.toDate().toLocaleString('es-AR', { weekday: 'long', day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })
     : '';
 
   const imgHtml = t.imagen
-    ? `<img class="promo-popup-img" src="${t.imagen}" alt="${t.nombre}" onerror="this.outerHTML='<div class=\\'promo-popup-emoji\\'>${t.emoji||'🎮'}</div>'">`
-    : `<div class="promo-popup-emoji">${t.emoji||'🎮'}</div>`;
+    ? `<img class="promo-popup-img" src="${t.imagen}" alt="${t.nombre}"
+          onerror="this.outerHTML='<div class=\\'promo-popup-emoji\\'>${t.emoji || '🎮'}</div>'">`
+    : `<div class="promo-popup-emoji">${t.emoji || '🎮'}</div>`;
 
-  document.getElementById('promoPopupInner').innerHTML = `
+  const inner = document.getElementById('promoPopupInner');
+  if (!inner) return;
+
+  inner.innerHTML = `
     ${imgHtml}
     <div class="promo-popup-content">
       <div class="promo-popup-tag">🔥 Inscripciones abiertas</div>
@@ -644,8 +703,7 @@ function maybeShowPopup() {
       <div class="promo-popup-date">📅 ${fechaStr}</div>
       <div class="promo-popup-slots">⚡ Solo quedan ${libre} cupos disponibles</div>
       <button class="promo-popup-btn" onclick="closePromoPopup();openModal('${t.id}')">INSCRIBIRME AHORA →</button>
-    </div>
-  `;
+    </div>`;
 
   document.getElementById('promoPopup').style.display = 'flex';
   sessionStorage.setItem('popup_shown', '1');
@@ -653,28 +711,28 @@ function maybeShowPopup() {
 
 window.closePromoPopup = function(e) {
   if (e && e.target !== document.getElementById('promoPopup') && e.target !== e.currentTarget) return;
-  document.getElementById('promoPopup').style.display = 'none';
+  const popup = document.getElementById('promoPopup');
+  if (popup) popup.style.display = 'none';
 };
 
 // ── CHAT ─────────────────────────────────────────────────────
 const FAQ = [
-  { q:'¿Cuánto sale la entrada?',   a:'El precio de entrada varía por torneo. Lo ves cuando te querés inscribir. Generalmente desde $5.000.' },
-  { q:'¿Cómo pago?',                a:'Por transferencia bancaria (acreditación hasta 48hs hábiles) o efectivo según disponibilidad. Te coordinamos por WhatsApp.' },
-  { q:'¿Cuándo cobro si gano?',     a:'El premio se acredita dentro de las 48hs hábiles de finalizado el torneo. Transferencia o efectivo.' },
-  { q:'¿Qué pasa si no puedo jugar?', a:'No hay devoluciones, pero podés ceder tu lugar a otra persona antes de que cierren las inscripciones.' },
-  { q:'¿Cómo me anoto?',            a:'Hacé clic en "Inscribirme" en el torneo que te interese, completá el formulario y coordiná el pago por WhatsApp.' },
-  { q:'¿Cómo sé cuánto es el premio?', a:'El premio se determina al cerrar las inscripciones. A más jugadores, más grande es el pozo.' },
+  { q: '¿Cuánto sale la entrada?',      a: 'El precio de entrada varía por torneo. Lo ves cuando te querés inscribir. Generalmente desde $5.000.' },
+  { q: '¿Cómo pago?',                   a: 'Por transferencia bancaria (acreditación hasta 48hs hábiles) o efectivo según disponibilidad. Te coordinamos por WhatsApp.' },
+  { q: '¿Cuándo cobro si gano?',        a: 'El premio se acredita dentro de las 48hs hábiles de finalizado el torneo. Transferencia o efectivo.' },
+  { q: '¿Qué pasa si no puedo jugar?',  a: 'No hay devoluciones, pero podés ceder tu lugar a otra persona antes de que cierren las inscripciones.' },
+  { q: '¿Cómo me anoto?',              a: 'Hacé clic en "Inscribirme" en el torneo que te interese, completá el formulario y coordiná el pago por WhatsApp.' },
+  { q: '¿Cómo sé cuánto es el premio?', a: 'El premio se determina al cerrar las inscripciones. A más jugadores, más grande es el pozo.' },
 ];
 
 function setupChat() {
   const msgs = document.getElementById('chatMessages');
   const faqs = document.getElementById('chatFaqs');
+  if (!msgs || !faqs) return;
 
-  // Mensaje de bienvenida
   addChatMsg('bot', '¡Hola! 👋 Soy el asistente de <strong>Nexus Arena</strong>. ¿En qué te puedo ayudar?');
   setTimeout(() => addChatMsg('bot', 'Elegí una pregunta frecuente o escribí lo que necesitás 👇'), 800);
 
-  // FAQ buttons
   faqs.innerHTML = FAQ.map((f, i) =>
     `<button class="chat-faq-btn" onclick="answerFaq(${i})">${f.q}</button>`
   ).join('');
@@ -687,13 +745,12 @@ window.answerFaq = function(idx) {
 
 window.sendChatMsg = async function() {
   const input = document.getElementById('chatInput');
-  const msg   = input.value.trim();
+  const msg   = input?.value.trim();
   if (!msg) return;
 
   input.value = '';
   addChatMsg('user', msg);
 
-  // Buscar en FAQ
   const match = FAQ.find(f =>
     f.q.toLowerCase().split(' ').some(w => w.length > 3 && msg.toLowerCase().includes(w))
   );
@@ -702,18 +759,15 @@ window.sendChatMsg = async function() {
     setTimeout(() => addChatMsg('bot', match.a), 600);
   } else {
     setTimeout(() => addChatMsg('bot', 'Entendido 👀 Conectando con un operador de <strong>Nexus Arena</strong>... aguardá un momento en el chat.'), 600);
+
     setTimeout(async () => {
       try {
         await addDoc(collection(db, 'chat_mensajes'), {
-          texto: msg,
-          fecha: serverTimestamp(),
-          respondido: false,
-          leido: false,
+          texto: msg, fecha: serverTimestamp(), respondido: false, leido: false,
         });
-      } catch(e) { /* silencioso */ }
+      } catch (e) { /* silencioso */ }
     }, 800);
 
-    // Escuchar respuesta del admin en tiempo real
     setTimeout(() => {
       try {
         const unsub = onSnapshot(collection(db, 'chat_mensajes'), snap => {
@@ -722,20 +776,21 @@ window.sendChatMsg = async function() {
               const d = change.doc.data();
               if (d.respuesta && !d.respuesta_mostrada) {
                 addChatMsg('operator', `<strong>Nexus Arena:</strong> ${d.respuesta}`);
-                updateDoc(change.doc.ref, { respuesta_mostrada: true });
+                updateDoc(change.doc.ref, { respuesta_mostrada: true }).catch(() => {});
                 unsub();
               }
             }
           });
         });
-      } catch(e) {}
+      } catch (e) { /* silencioso */ }
     }, 1000);
   }
 };
 
 function addChatMsg(type, html) {
   const msgs = document.getElementById('chatMessages');
-  const div  = document.createElement('div');
+  if (!msgs) return;
+  const div = document.createElement('div');
   div.className = `chat-msg ${type}`;
   div.innerHTML = html;
   msgs.appendChild(div);
@@ -744,11 +799,12 @@ function addChatMsg(type, html) {
 
 window.toggleChat = function() {
   const widget = document.getElementById('chatWidget');
+  if (!widget) return;
   chatOpen = !chatOpen;
   widget.classList.toggle('open', chatOpen);
   if (chatOpen) {
     document.getElementById('chatUnread').style.display = 'none';
-    document.getElementById('chatInput').focus();
+    document.getElementById('chatInput')?.focus();
   }
 };
 
@@ -772,5 +828,5 @@ function setupNav() {
 }
 
 window.scrollToId = function(id) {
-  document.getElementById(id)?.scrollIntoView({ behavior:'smooth' });
+  document.getElementById(id)?.scrollIntoView({ behavior: 'smooth' });
 };
