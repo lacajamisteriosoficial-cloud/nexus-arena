@@ -685,6 +685,22 @@ window.confirmDelete = function(tipo, id, nombre) {
         juego: 'juegos_catalogo',
       };
       const colName = colMap[tipo] || tipo;
+
+      // Si es inscripción confirmada o pendiente, restar cupo al torneo
+      if (tipo === 'inscripcion') {
+        try {
+          const inscSnap = await getDoc(doc(db, 'inscripciones', id));
+          if (inscSnap.exists()) {
+            const insc = inscSnap.data();
+            if (insc.estado !== 'cancelado' && insc.torneo_id) {
+              await updateDoc(doc(db, 'torneos', insc.torneo_id), {
+                cupos_ocupados: increment(-1)
+              });
+            }
+          }
+        } catch(e) { /* silencioso si falla el ajuste de cupo */ }
+      }
+
       await deleteDoc(doc(db, colName, id));
       showToast('Eliminado correctamente');
       closeDeleteModal();

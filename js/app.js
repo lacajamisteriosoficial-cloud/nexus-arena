@@ -408,7 +408,11 @@ async function submitInscripcion() {
     errEl.textContent = 'Completá todos los campos para continuar.';
     errEl.style.display = 'block'; return;
   }
-  if (!selectedTorneo) return;
+  if (!selectedTorneo) {
+    errEl.textContent = 'Error: cerrá el modal y volvé a intentar.';
+    errEl.style.display = 'block';
+    return;
+  }
 
   btn.disabled = true; btn.textContent = 'Guardando...';
 
