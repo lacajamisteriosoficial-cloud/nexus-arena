@@ -42,13 +42,14 @@ document.addEventListener('DOMContentLoaded', () => {
 
 async function loadAll() {
   try {
+    const safe = (p) => p.catch(() => ({ docs: [] }));
     const [torneoSnap, galardonSnap, reseñaSnap, encuestaSnap, juegosSnap, configSnap] = await Promise.all([
-      getDocs(collection(db, 'torneos')),
-      getDocs(collection(db, 'galardones')),
-      getDocs(collection(db, 'resenas')),
-      getDocs(collection(db, 'encuestas')),
-      getDocs(collection(db, 'juegos_catalogo')),
-      getDocs(collection(db, 'config')),
+      safe(getDocs(collection(db, 'torneos'))),
+      safe(getDocs(collection(db, 'galardones'))),
+      safe(getDocs(collection(db, 'resenas'))),
+      safe(getDocs(collection(db, 'encuestas'))),
+      safe(getDocs(collection(db, 'juegos_catalogo'))),
+      safe(getDocs(collection(db, 'config'))),
     ]);
 
     torneos   = torneoSnap.docs.map(d => ({ id: d.id, ...d.data() })).sort((a,b) => (a.fecha?.toDate?.()?.getTime()||0) - (b.fecha?.toDate?.()?.getTime()||0));
