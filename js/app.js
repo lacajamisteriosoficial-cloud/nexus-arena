@@ -708,11 +708,7 @@ window.sendChatMsg = async function() {
     // Escuchar respuesta del admin en tiempo real
     setTimeout(() => {
       try {
-        const q = query(
-          collection(db, 'chat_mensajes'),
-          orderBy('fecha', 'desc')
-        );
-        const unsub = onSnapshot(q, snap => {
+        const unsub = onSnapshot(collection(db, 'chat_mensajes'), snap => {
           snap.docChanges().forEach(change => {
             if (change.type === 'modified') {
               const d = change.doc.data();
