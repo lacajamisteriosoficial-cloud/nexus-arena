@@ -5,7 +5,7 @@ import { db } from './firebase.js';
 import {
   collection, getDocs, addDoc, doc, updateDoc,
   query, orderBy, serverTimestamp, increment,
-  onSnapshot, where
+  onSnapshot
 } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
 const WA_NUMBER = "5491157687215";
@@ -46,7 +46,7 @@ async function loadAll() {
       getDocs(query(collection(db, 'torneos'), orderBy('fecha', 'asc'))),
       getDocs(query(collection(db, 'galardones'), orderBy('fecha', 'desc'))),
       getDocs(query(collection(db, 'resenas'), orderBy('fecha', 'desc'))),
-      getDocs(query(collection(db, 'encuestas'), where('activa','==',true))),
+      getDocs(collection(db, 'encuestas')),
       getDocs(collection(db, 'juegos_catalogo')),
       getDocs(collection(db, 'config')),
     ]);
@@ -71,7 +71,7 @@ async function loadAll() {
     }
     galardones = galardonSnap.docs.map(d => ({ id: d.id, ...d.data() }));
     reseñas   = reseñaSnap.docs.map(d => ({ id: d.id, ...d.data() })).filter(r => r.aprobada === true);
-    encuestas  = encuestaSnap.docs.map(d => ({ id: d.id, ...d.data() }));
+    encuestas  = encuestaSnap.docs.map(d => ({ id: d.id, ...d.data() })).filter(e => e.activa === true);
 
     const activos = torneos.filter(t => t.estado === 'open' || t.estado === 'soon');
     const totalInscrip = torneos.reduce((s, t) => s + (t.cupos_ocupados || 0), 0);
