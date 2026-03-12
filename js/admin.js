@@ -99,11 +99,11 @@ async function loadDashboard() {
   try {
     const [torneoSnap, inscripSnap] = await Promise.all([
       getDocs(collection(db, 'torneos')),
-      getDocs(query(collection(db, 'inscripciones'), orderBy('fecha_inscripcion', 'desc')))
+      getDocs(collection(db, 'inscripciones'))
     ]);
 
     allTorneos       = torneoSnap.docs.map(d => ({ id: d.id, ...d.data() }));
-    allInscripciones = inscripSnap.docs.map(d => ({ id: d.id, ...d.data() }));
+    allInscripciones = inscripSnap.docs.map(d => ({ id: d.id, ...d.data() })).sort((a,b) => (b.fecha_inscripcion?.toDate?.()?.getTime()||0) - (a.fecha_inscripcion?.toDate?.()?.getTime()||0));
 
     const activos      = allTorneos.filter(t => t.estado !== 'finished').length;
     const confirmados  = allInscripciones.filter(i => i.estado === 'confirmado');
@@ -149,8 +149,8 @@ async function loadAdminTorneos() {
   container.innerHTML = '<div class="loading-state"><div class="spinner"></div><p>Cargando...</p></div>';
 
   try {
-    const snap = await getDocs(query(collection(db, 'torneos'), orderBy('fecha', 'asc')));
-    allTorneos = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+    const snap = await getDocs(collection(db, 'torneos'));
+    allTorneos = snap.docs.map(d => ({ id: d.id, ...d.data() })).sort((a,b) => (a.fecha?.toDate?.()?.getTime()||0) - (b.fecha?.toDate?.()?.getTime()||0));
 
     if (allTorneos.length === 0) {
       container.innerHTML = '<p style="color:var(--muted);padding:20px 0">No hay torneos creados. <a href="#" onclick="showSection(\'nuevo-torneo\')" style="color:var(--acid)">Crear uno →</a></p>';
@@ -206,9 +206,9 @@ window.loadInscripciones = async function() {
   tbody.innerHTML = '<tr><td colspan="7" class="table-loading">Cargando...</td></tr>';
 
   try {
-    let q = query(collection(db, 'inscripciones'), orderBy('fecha_inscripcion', 'desc'));
+    let q = collection(db, 'inscripciones');
     const snap = await getDocs(q);
-    let lista = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+    let lista = snap.docs.map(d => ({ id: d.id, ...d.data() })).sort((a,b) => (b.fecha_inscripcion?.toDate?.()?.getTime()||0) - (a.fecha_inscripcion?.toDate?.()?.getTime()||0));
 
     // Poblar select de torneos
     await populateTorneoFilter();
@@ -467,8 +467,8 @@ async function loadGalardones() {
   const container = document.getElementById('galardonesAdminList');
   container.innerHTML = '<div class="loading-state"><div class="spinner"></div><p>Cargando...</p></div>';
   try {
-    const snap = await getDocs(query(collection(db, 'galardones'), orderBy('fecha','desc')));
-    const lista = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+    const snap = await getDocs(collection(db, 'galardones'));
+    const lista = snap.docs.map(d => ({ id: d.id, ...d.data() })).sort((a,b) => (b.fecha?.toDate?.()?.getTime()||0) - (a.fecha?.toDate?.()?.getTime()||0));
     if (lista.length === 0) {
       container.innerHTML = '<p style="color:var(--muted);padding:20px 0">No hay campeones registrados aún.</p>';
       return;
@@ -522,8 +522,8 @@ async function loadResenasAdmin() {
   const tbody = document.getElementById('resenasAdminBody');
   tbody.innerHTML = '<tr><td colspan="6" class="table-loading">Cargando...</td></tr>';
   try {
-    const snap = await getDocs(query(collection(db, 'resenas'), orderBy('fecha','desc')));
-    const lista = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+    const snap = await getDocs(collection(db, 'resenas'));
+    const lista = snap.docs.map(d => ({ id: d.id, ...d.data() })).sort((a,b) => (b.fecha?.toDate?.()?.getTime()||0) - (a.fecha?.toDate?.()?.getTime()||0));
     if (lista.length === 0) { tbody.innerHTML = '<tr><td colspan="6" class="table-loading">Sin reseñas.</td></tr>'; return; }
     tbody.innerHTML = lista.map(r => `
       <tr>
@@ -554,8 +554,8 @@ async function loadEncuestasAdmin() {
   const container = document.getElementById('encuestasAdminList');
   container.innerHTML = '<div class="loading-state"><div class="spinner"></div><p>Cargando...</p></div>';
   try {
-    const snap = await getDocs(query(collection(db, 'encuestas'), orderBy('fecha','desc')));
-    const lista = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+    const snap = await getDocs(collection(db, 'encuestas'));
+    const lista = snap.docs.map(d => ({ id: d.id, ...d.data() })).sort((a,b) => (b.fecha?.toDate?.()?.getTime()||0) - (a.fecha?.toDate?.()?.getTime()||0));
     if (lista.length === 0) {
       container.innerHTML = '<p style="color:var(--muted);padding:20px 0">No hay encuestas. Creá una con el botón de arriba.</p>';
       return;
@@ -621,8 +621,8 @@ async function loadChatAdmin() {
   const container = document.getElementById('chatAdminList');
   container.innerHTML = '<div class="loading-state"><div class="spinner"></div><p>Cargando mensajes...</p></div>';
   try {
-    const snap = await getDocs(query(collection(db, 'chat_mensajes'), orderBy('fecha','desc')));
-    const lista = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+    const snap = await getDocs(collection(db, 'chat_mensajes'));
+    const lista = snap.docs.map(d => ({ id: d.id, ...d.data() })).sort((a,b) => (b.fecha?.toDate?.()?.getTime()||0) - (a.fecha?.toDate?.()?.getTime()||0));
     if (lista.length === 0) {
       container.innerHTML = '<p style="color:var(--muted);padding:20px 0">No hay mensajes de usuarios.</p>';
       return;
@@ -708,8 +708,8 @@ async function loadCatalogo() {
   grid.innerHTML = '<div class="loading-state"><div class="spinner"></div><p>Cargando...</p></div>';
 
   try {
-    const snap = await getDocs(query(collection(db, 'juegos_catalogo'), orderBy('nombre', 'asc')));
-    const juegos = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+    const snap = await getDocs(collection(db, 'juegos_catalogo'));
+    const juegos = snap.docs.map(d => ({ id: d.id, ...d.data() })).sort((a,b) => (a.nombre||'').localeCompare(b.nombre||''));
 
     // Detectar duplicados por nombre y mostrar botón de limpieza
     const nombres = juegos.map(j => (j.nombre||'').toLowerCase().trim());

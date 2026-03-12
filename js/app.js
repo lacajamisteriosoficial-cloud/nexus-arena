@@ -51,7 +51,7 @@ async function loadAll() {
       getDocs(collection(db, 'config')),
     ]);
 
-    torneos   = torneoSnap.docs.map(d => ({ id: d.id, ...d.data() })).sort((a,b) => (a.fecha||'').localeCompare(b.fecha||''));
+    torneos   = torneoSnap.docs.map(d => ({ id: d.id, ...d.data() })).sort((a,b) => (a.fecha?.toDate?.()?.getTime()||0) - (b.fecha?.toDate?.()?.getTime()||0));
 
     // Catálogo viene directamente de Firebase, ordenado por nombre
     GAMES_CATALOG = juegosSnap.docs.map(d => ({ id: d.id, ...d.data() }))
@@ -69,8 +69,8 @@ async function loadAll() {
         }
       }
     }
-    galardones = galardonSnap.docs.map(d => ({ id: d.id, ...d.data() })).sort((a,b) => (b.fecha||'').localeCompare(a.fecha||''));
-    reseñas   = reseñaSnap.docs.map(d => ({ id: d.id, ...d.data() })).filter(r => r.aprobada === true).sort((a,b) => (b.fecha||'').localeCompare(a.fecha||''));
+    galardones = galardonSnap.docs.map(d => ({ id: d.id, ...d.data() })).sort((a,b) => (b.fecha?.toDate?.()?.getTime()||0) - (a.fecha?.toDate?.()?.getTime()||0));
+    reseñas   = reseñaSnap.docs.map(d => ({ id: d.id, ...d.data() })).filter(r => r.aprobada === true).sort((a,b) => (b.fecha?.toDate?.()?.getTime()||0) - (a.fecha?.toDate?.()?.getTime()||0));
     encuestas  = encuestaSnap.docs.map(d => ({ id: d.id, ...d.data() })).filter(e => e.activa === true);
 
     const activos = torneos.filter(t => t.estado === 'open' || t.estado === 'soon');
