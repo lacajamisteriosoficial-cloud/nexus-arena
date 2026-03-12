@@ -199,6 +199,13 @@ function buildAdminCard(t) {
         <span class="atc-tag">$${(t.precio || 0).toLocaleString('es-AR')}</span>
       </div>
       <div class="atc-slots">🎟 ${t.cupos_ocupados || 0} / ${t.cupos_total} cupos · ${libre} libres</div>
+      <div style="display:flex;align-items:center;gap:8px;margin:10px 0;padding:10px;background:rgba(200,255,0,0.04);border:1px solid rgba(200,255,0,0.12)">
+        <span style="font-size:0.68rem;color:var(--muted);letter-spacing:1px;white-space:nowrap">✏ CORREGIR:</span>
+        <input type="number" id="fix-cupos-${t.id}" value="${t.cupos_ocupados || 0}" min="0" max="${t.cupos_total}"
+          style="width:55px;background:var(--dark);border:1px solid var(--gray);color:#fff;padding:3px 6px;font-size:0.85rem;text-align:center">
+        <button class="btn-tbl confirm" onclick="fixCupos('${t.id}')">✓ Aplicar</button>
+        <button class="btn-tbl" onclick="sincCuposReales('${t.id}')" title="Cuenta inscriptos activos y corrige automáticamente" style="white-space:nowrap">🔄 Auto</button>
+      </div>
       <div class="atc-actions">
         <button class="btn-tbl" onclick="editTorneo('${t.id}')">✏ Editar</button>
         <button class="btn-tbl" onclick="toggleEstado('${t.id}', '${t.estado}')">🔄 Estado</button>
@@ -955,5 +962,39 @@ window.saveTicker = async function() {
   } catch (err) {
     showToast('Error al guardar', true);
     console.error(err);
+  }
+};
+
+// ── CORRECCIÓN MANUAL DE CUPOS ───────────────────────────────
+
+// Aplica el número que escribiste manualmente en el input
+window.fixCupos = async function(torneoId) {
+  const input = document.getElementById('fix-cupos-' + torneoId);
+  const valor = parseInt(input?.value);
+  if (isNaN(valor) || valor < 0) { showToast('Valor inválido', true); return; }
+  try {
+    await updateDoc(doc(db, 'torneos', torneoId), { cupos_ocupados: valor });
+    showToast('Cupos corregidos a ' + valor + ' ✓');
+    loadAdminTorneos();
+  } catch (err) {
+    console.error(err);
+    showToast('Error al corregir cupos', true);
+  }
+};
+
+// Cuenta los inscriptos activos (no cancelados) en Firestore y sincroniza automáticamente
+window.sincCuposReales = async function(torneoId) {
+  try {
+    const snap = await getDocs(collection(db, 'inscripciones'));
+    const activos = snap.docs
+      .map(d => d.data())
+      .filter(i => i.torneo_id === torneoId && i.estado !== 'cancelado')
+      .length;
+    await updateDoc(doc(db, 'torneos', torneoId), { cupos_ocupados: activos });
+    showToast('Sincronizado: ' + activos + ' inscripto' + (activos !== 1 ? 's' : '') + ' activo' + (activos !== 1 ? 's' : '') + ' ✓');
+    loadAdminTorneos();
+  } catch (err) {
+    console.error(err);
+    showToast('Error al sincronizar', true);
   }
 };
