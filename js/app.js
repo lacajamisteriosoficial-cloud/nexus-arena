@@ -696,7 +696,6 @@ function renderGalardones() {
   }).join("");
 }
 
-}
 
 // ── RESEÑAS ──────────────────────────────────────────────────
 function renderReseñas() {
