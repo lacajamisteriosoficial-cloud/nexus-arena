@@ -1231,3 +1231,188 @@ input[type="range"].img-slider::-webkit-slider-thumb {
 .equipo-opcion-icon { font-size: 1.4rem; }
 .equipo-opcion-label { font-family: 'Barlow Condensed', sans-serif; font-size: 0.95rem; color: #fff; font-weight: 700; }
 .equipo-opcion-desc { font-size: 0.75rem; color: var(--muted); }
+
+/* ============================================================
+   NEXUS ARENA — Hall of Fame Tronos
+   ============================================================ */
+
+/* ── EMPTY STATE ── */
+.hof-empty-wrap {
+  text-align: center;
+  padding: 0 20px 20px;
+}
+.hof-empty-tronos {
+  display: flex;
+  justify-content: center;
+  align-items: flex-end;
+  gap: 20px;
+  flex-wrap: wrap;
+  margin-bottom: 32px;
+}
+.hof-trono-slot { text-align: center; transition: transform 0.3s; }
+.hof-trono-slot:hover { transform: translateY(-6px); }
+.hof-trono-slot.elevated { margin-bottom: 28px; }
+.hof-trono-inner { position: relative; display: inline-block; }
+
+/* Glows */
+.hof-trono-glow {
+  position: absolute;
+  bottom: -8px; left: 50%;
+  transform: translateX(-50%);
+  height: 20px; border-radius: 50%;
+  pointer-events: none;
+}
+.gold-glow   { width:140px; background: radial-gradient(ellipse, rgba(255,215,0,0.45), transparent 70%); animation: glowPulse 2s ease-in-out infinite; }
+.silver-glow { width:110px; background: radial-gradient(ellipse, rgba(192,192,192,0.3), transparent 70%); animation: glowPulse 2.5s ease-in-out infinite; }
+.bronze-glow { width:100px; background: radial-gradient(ellipse, rgba(205,127,50,0.3), transparent 70%); animation: glowPulse 3s ease-in-out infinite; }
+.team-glow   { width:110px; background: radial-gradient(ellipse, rgba(200,255,0,0.3), transparent 70%); animation: glowPulse 2s ease-in-out infinite; }
+@keyframes glowPulse {
+  0%,100% { opacity:0.5; transform:translateX(-50%) scaleX(1); }
+  50%      { opacity:1;   transform:translateX(-50%) scaleX(1.2); }
+}
+
+/* Foto ring */
+.gal-foto-ring {
+  position: absolute;
+  border-radius: 50%;
+  overflow: hidden;
+  display: flex; align-items: center; justify-content: center;
+  border: 2px dashed rgba(255,255,255,0.2);
+  color: rgba(255,255,255,0.2);
+  background: rgba(255,255,255,0.03);
+  transition: all 0.2s;
+}
+.gal-foto-ring.has-foto {
+  border: 2px solid #FFD700;
+  box-shadow: 0 0 20px rgba(255,215,0,0.3);
+  animation: ringPulse 2.5s ease-in-out infinite;
+}
+@keyframes ringPulse {
+  0%,100% { box-shadow: 0 0 12px rgba(255,215,0,0.3); }
+  50%      { box-shadow: 0 0 28px rgba(255,215,0,0.6); }
+}
+
+/* Labels bajo el trono */
+.hof-trono-label {
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: 0.65rem; letter-spacing: 4px;
+  color: rgba(255,255,255,0.3);
+  margin: 10px 0 4px; text-transform: uppercase;
+}
+.hof-trono-slot.gold   .hof-trono-label { color: #FFD700; }
+.hof-trono-slot.silver .hof-trono-label { color: #C0C0C0; }
+.hof-trono-slot.bronze .hof-trono-label { color: #CD7F32; }
+.hof-trono-name {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 1rem; letter-spacing: 3px;
+  color: rgba(255,255,255,0.1);
+  border: 1px dashed rgba(255,255,255,0.08);
+  padding: 3px 14px;
+}
+.hof-trono-slot.gold .hof-trono-name { color:rgba(255,215,0,0.2); border-color:rgba(255,215,0,0.1); }
+.hof-empty-txt {
+  color: rgba(255,255,255,0.15);
+  font-size: 0.75rem; letter-spacing: 4px;
+  margin: 0 0 20px;
+}
+
+/* ── GANADORES INDIVIDUALES ── */
+#galardonesGrid {
+  display: flex !important;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 24px;
+  padding: 0 20px;
+}
+.hof-trono-solo {
+  text-align: center;
+  transition: transform 0.3s;
+}
+.hof-trono-solo:hover { transform: translateY(-6px); }
+.hof-trono-solo.featured .hof-trono-name-real {
+  background: linear-gradient(90deg, #FFD700, #FFF);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+.hof-trono-name-real {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 1.6rem; letter-spacing: 3px;
+  color: #fff; margin-top: 10px;
+}
+.hof-trono-torneo {
+  font-size: 0.7rem; letter-spacing: 2px; color: #C8FF00; margin-top: 2px;
+}
+.hof-trono-fecha {
+  font-size: 0.7rem; color: rgba(255,255,255,0.3); margin-top: 2px;
+}
+
+/* ── BANNER EQUIPO ── */
+.hof-banner-equipo {
+  border: 1px solid rgba(200,255,0,0.15);
+  background: linear-gradient(135deg, rgba(200,255,0,0.03), rgba(0,0,0,0.5));
+  margin: 0 auto 32px;
+  max-width: 900px;
+  width: 100%;
+  overflow: hidden;
+  position: relative;
+}
+.hof-banner-equipo.featured {
+  border-color: rgba(255,215,0,0.3);
+  background: linear-gradient(135deg, rgba(255,215,0,0.04), rgba(0,0,0,0.5));
+}
+.hof-banner-equipo::before {
+  content: 'NEXUS ARENA';
+  position: absolute;
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 7rem; color: rgba(255,215,0,0.02);
+  letter-spacing: 8px;
+  top: 50%; left: 50%; transform: translate(-50%,-50%);
+  pointer-events: none; white-space: nowrap;
+}
+.hof-banner-top {
+  display: flex; align-items: center; gap: 20px; flex-wrap: wrap;
+  padding: 24px 28px 20px;
+  border-bottom: 1px solid rgba(255,215,0,0.08);
+}
+.hof-banner-crown {
+  font-size: 2.8rem;
+  filter: drop-shadow(0 0 16px rgba(255,215,0,0.6));
+  animation: crownFloat 3s ease-in-out infinite;
+}
+.hof-banner-info { flex: 1; min-width: 180px; }
+.hof-banner-torneo { font-size:0.65rem; letter-spacing:3px; color:#C8FF00; margin-bottom:4px; }
+.hof-banner-equipo-nombre {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: clamp(2rem,5vw,3.2rem); letter-spacing:4px;
+  background: linear-gradient(90deg,#FFD700,#FFF);
+  -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text;
+  line-height:1;
+}
+.hof-banner-premio { font-size:0.75rem; color:rgba(255,255,255,0.3); margin-top:4px; }
+
+/* Tronos del equipo */
+.hof-team-tronos {
+  display: flex;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 1px;
+}
+.hof-team-trono {
+  flex: 1; min-width: 120px;
+  text-align: center; padding: 20px 12px;
+  border-right: 1px solid rgba(255,215,0,0.05);
+  transition: background 0.2s;
+}
+.hof-team-trono:last-child { border-right: none; }
+.hof-team-trono:hover { background: rgba(200,255,0,0.03); }
+.hof-team-gamertag {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 1rem; letter-spacing:2px; color:#fff;
+  margin-top: 8px;
+}
+.hof-team-rol {
+  font-size: 0.62rem; letter-spacing:2px;
+  color: rgba(200,255,0,0.4);
+  margin-top: 2px;
+}
