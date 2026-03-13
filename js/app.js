@@ -560,9 +560,8 @@ async function submitInscripcion() {
 
 // ── GALARDONES ───────────────────────────────────────────────
 function buildTronoSVG(tipo, size) {
-  // tipo: 'gold' | 'silver' | 'bronze' | 'team'
   const colors = {
-    gold:   { stroke:'#FFD700', fill:'#1a0a00', num:'rgba(255,215,0,0.1)',  crown:'#FFD700' },
+    gold:   { stroke:'#FFD700', fill:'#1a0a00', num:'rgba(255,215,0,0.1)',   crown:'#FFD700' },
     silver: { stroke:'#C0C0C0', fill:'#1a1a1a', num:'rgba(192,192,192,0.1)', crown:'#C0C0C0' },
     bronze: { stroke:'#CD7F32', fill:'#1a1000', num:'rgba(205,127,50,0.1)',  crown:'#CD7F32' },
     team:   { stroke:'#C8FF00', fill:'#0a1200', num:'rgba(200,255,0,0.1)',   crown:'#C8FF00' },
@@ -571,31 +570,27 @@ function buildTronoSVG(tipo, size) {
   const w  = size === 'lg' ? 200 : size === 'md' ? 165 : 140;
   const h  = size === 'lg' ? 235 : size === 'md' ? 195 : 175;
   const cx = w / 2;
-  return \`<svg width="\${w}" height="\${h}" viewBox="0 0 \${w} \${h}">
-    <rect x="\${cx-80}" y="\${h-22}" width="160" height="14" rx="2" fill="\${c.fill}" stroke="\${c.stroke}" stroke-width="0.5" opacity="0.7"/>
-    <rect x="\${cx-65}" y="\${h-36}" width="130" height="16" rx="3" fill="\${c.fill}" stroke="\${c.stroke}" stroke-width="1" opacity="0.9"/>
-    <rect x="\${cx-55}" y="36" width="110" height="\${h-74}" rx="5" fill="\${c.fill}" stroke="\${c.stroke}" stroke-width="1"/>
-    <rect x="\${cx-44}" y="48" width="88" height="\${h-100}" rx="3" fill="rgba(255,255,255,0.02)" stroke="\${c.stroke}" stroke-width="0.4" opacity="0.5"/>
-    <rect x="\${cx-60}" y="28" width="6" height="50" rx="2" fill="\${c.crown}" opacity="0.2"/>
-    <rect x="\${cx+54}" y="28" width="6" height="50" rx="2" fill="\${c.crown}" opacity="0.2"/>
-    <polygon points="\${cx},12 \${cx-12},26 \${cx-7},22 \${cx},16 \${cx+7},22 \${cx+12},26" fill="\${c.crown}" opacity="0.8"/>
-    <rect x="\${cx-14}" y="24" width="28" height="7" rx="1" fill="\${c.crown}" opacity="0.8"/>
-    <text x="\${cx}" y="\${h/2+14}" text-anchor="middle" font-family="Bebas Neue,sans-serif" font-size="36" fill="\${c.num}">NA</text>
-    <text x="\${cx}" y="\${h-50}" text-anchor="middle" font-family="Bebas Neue,sans-serif" font-size="7" fill="\${c.crown}" opacity="0.4" letter-spacing="3">NEXUS ARENA</text>
-  </svg>\`;
+  return '<svg width="' + w + '" height="' + h + '" viewBox="0 0 ' + w + ' ' + h + '">'
+    + '<rect x="' + (cx-80) + '" y="' + (h-22) + '" width="160" height="14" rx="2" fill="' + c.fill + '" stroke="' + c.stroke + '" stroke-width="0.5" opacity="0.7"/>'
+    + '<rect x="' + (cx-65) + '" y="' + (h-36) + '" width="130" height="16" rx="3" fill="' + c.fill + '" stroke="' + c.stroke + '" stroke-width="1" opacity="0.9"/>'
+    + '<rect x="' + (cx-55) + '" y="36" width="110" height="' + (h-74) + '" rx="5" fill="' + c.fill + '" stroke="' + c.stroke + '" stroke-width="1"/>'
+    + '<rect x="' + (cx-44) + '" y="48" width="88" height="' + (h-100) + '" rx="3" fill="rgba(255,255,255,0.02)" stroke="' + c.stroke + '" stroke-width="0.4" opacity="0.5"/>'
+    + '<rect x="' + (cx-60) + '" y="28" width="6" height="50" rx="2" fill="' + c.crown + '" opacity="0.2"/>'
+    + '<rect x="' + (cx+54) + '" y="28" width="6" height="50" rx="2" fill="' + c.crown + '" opacity="0.2"/>'
+    + '<polygon points="' + cx + ',12 ' + (cx-12) + ',26 ' + (cx-7) + ',22 ' + cx + ',16 ' + (cx+7) + ',22 ' + (cx+12) + ',26" fill="' + c.crown + '" opacity="0.8"/>'
+    + '<rect x="' + (cx-14) + '" y="24" width="28" height="7" rx="1" fill="' + c.crown + '" opacity="0.8"/>'
+    + '<text x="' + cx + '" y="' + (h/2+14) + '" text-anchor="middle" font-family="Bebas Neue,sans-serif" font-size="36" fill="' + c.num + '">NA</text>'
+    + '<text x="' + cx + '" y="' + (h-50) + '" text-anchor="middle" font-family="Bebas Neue,sans-serif" font-size="7" fill="' + c.crown + '" opacity="0.4" letter-spacing="3">NEXUS ARENA</text>'
+    + '</svg>';
 }
 
 function buildFotoSlot(foto, inicial, size) {
   const dim = size === 'lg' ? 72 : size === 'md' ? 58 : 50;
   const top = size === 'lg' ? 48 : size === 'md' ? 40 : 36;
-  const hasImg = !!foto;
-  return \`<div class="gal-foto-ring \${hasImg ? 'has-foto' : ''}"
-    style="width:\${dim}px;height:\${dim}px;top:\${top}px;left:50%;transform:translateX(-50%);position:absolute;">
-    \${hasImg
-      ? \`<img src="\${foto}" onerror="this.style.display='none';this.nextSibling.style.display='flex'" style="width:100%;height:100%;object-fit:cover;border-radius:50%"><span style="display:none;width:100%;height:100%;align-items:center;justify-content:center;font-family:'Bebas Neue',sans-serif;font-size:1.4rem;color:inherit">\${inicial}</span>\`
-      : \`<span style="font-family:'Bebas Neue',sans-serif;font-size:0.55rem;letter-spacing:1px;text-align:center;line-height:1.3;color:inherit">FOTO</span>\`
-    }
-  </div>\`;
+  const inner = foto
+    ? '<img src="' + foto + '" onerror="this.style.display=\'none\';this.nextSibling.style.display=\'flex\'" style="width:100%;height:100%;object-fit:cover;border-radius:50%"><span style="display:none;width:100%;height:100%;align-items:center;justify-content:center;font-family:\'Bebas Neue\',sans-serif;font-size:1.4rem;color:inherit">' + inicial + '</span>'
+    : '<span style="font-family:\'Bebas Neue\',sans-serif;font-size:0.55rem;letter-spacing:1px;text-align:center;line-height:1.3;color:inherit">FOTO</span>';
+  return '<div class="gal-foto-ring ' + (foto ? 'has-foto' : '') + '" style="width:' + dim + 'px;height:' + dim + 'px;top:' + top + 'px;left:50%;transform:translateX(-50%);position:absolute;">' + inner + '</div>';
 }
 
 function renderGalardones() {
@@ -606,106 +601,101 @@ function renderGalardones() {
   if (loading) loading.style.display = 'none';
   if (!grid) return;
 
-  // ── ESTADO VACÍO: tronos épicos ──
   if (galardones.length === 0) {
     if (empty) {
       empty.style.display = 'block';
-      empty.innerHTML = \`
-        <div class="hof-empty-wrap">
-          <div class="hof-empty-tronos">
-            <div class="hof-trono-slot silver">
-              <div class="hof-trono-inner">
-                \${buildTronoSVG('silver','md')}
-                \${buildFotoSlot(null,'?','md')}
-                <div class="hof-trono-glow silver-glow"></div>
-              </div>
-              <div class="hof-trono-label">2° LUGAR</div>
-              <div class="hof-trono-name">???</div>
-            </div>
-            <div class="hof-trono-slot gold elevated">
-              <div class="hof-trono-inner">
-                \${buildTronoSVG('gold','lg')}
-                \${buildFotoSlot(null,'?','lg')}
-                <div class="hof-trono-glow gold-glow"></div>
-              </div>
-              <div class="hof-trono-label" style="color:#FFD700">👑 CAMPEÓN</div>
-              <div class="hof-trono-name">TU NOMBRE AQUÍ</div>
-            </div>
-            <div class="hof-trono-slot bronze">
-              <div class="hof-trono-inner">
-                \${buildTronoSVG('bronze','sm')}
-                \${buildFotoSlot(null,'?','sm')}
-                <div class="hof-trono-glow bronze-glow"></div>
-              </div>
-              <div class="hof-trono-label">3° LUGAR</div>
-              <div class="hof-trono-name">???</div>
-            </div>
-          </div>
-          <p class="hof-empty-txt">ESTOS TRONOS ESPERAN SU REY</p>
-          <a href="#torneos" class="galardones-empty-cta" onclick="scrollToId('torneos');return false;">
-            QUIERO ESE TRONO →
-          </a>
-        </div>\`;
+      empty.innerHTML =
+        '<div class="hof-empty-wrap">' +
+          '<div class="hof-empty-tronos">' +
+            '<div class="hof-trono-slot silver">' +
+              '<div class="hof-trono-inner">' +
+                buildTronoSVG("silver","md") +
+                buildFotoSlot(null,"?","md") +
+                '<div class="hof-trono-glow silver-glow"></div>' +
+              '</div>' +
+              '<div class="hof-trono-label">2° LUGAR</div>' +
+              '<div class="hof-trono-name">???</div>' +
+            '</div>' +
+            '<div class="hof-trono-slot gold elevated">' +
+              '<div class="hof-trono-inner">' +
+                buildTronoSVG("gold","lg") +
+                buildFotoSlot(null,"?","lg") +
+                '<div class="hof-trono-glow gold-glow"></div>' +
+              '</div>' +
+              '<div class="hof-trono-label" style="color:#FFD700">&#128081; CAMPEÓN</div>' +
+              '<div class="hof-trono-name">TU NOMBRE AQUÍ</div>' +
+            '</div>' +
+            '<div class="hof-trono-slot bronze">' +
+              '<div class="hof-trono-inner">' +
+                buildTronoSVG("bronze","sm") +
+                buildFotoSlot(null,"?","sm") +
+                '<div class="hof-trono-glow bronze-glow"></div>' +
+              '</div>' +
+              '<div class="hof-trono-label">3° LUGAR</div>' +
+              '<div class="hof-trono-name">???</div>' +
+            '</div>' +
+          '</div>' +
+          '<p class="hof-empty-txt">ESTOS TRONOS ESPERAN SU REY</p>' +
+          '<a href="#torneos" class="galardones-empty-cta" onclick="scrollToId(\'torneos\');return false;">QUIERO ESE TRONO &#8594;</a>' +
+        '</div>';
     }
     return;
   }
 
-  // ── CON GANADORES ──
   grid.style.display = 'block';
-  grid.innerHTML = galardones.map((g, i) => {
-    const fechaStr = g.fecha?.toDate
-      ? g.fecha.toDate().toLocaleDateString('es-AR', { day:'numeric', month:'long', year:'numeric' })
-      : g.fecha || '';
-    const jpe      = g.jugadores_por_equipo || 1;
-    const esEquipo = jpe > 1;
-    const jugadores = g.jugadores || [];
+  grid.innerHTML = galardones.map(function(g, i) {
+    var fechaStr = g.fecha && g.fecha.toDate
+      ? g.fecha.toDate().toLocaleDateString("es-AR", { day:"numeric", month:"long", year:"numeric" })
+      : g.fecha || "";
+    var jpe      = g.jugadores_por_equipo || 1;
+    var esEquipo = jpe > 1;
+    var jugadores = g.jugadores || [];
 
     if (esEquipo) {
-      // ── BANNER DE EQUIPO (5v5 etc) ──
-      const tronos = Array.from({ length: jpe }, (_, idx) => {
-        const j = jugadores[idx] || null;
-        return \`<div class="hof-team-trono">
-          <div class="hof-trono-inner" style="position:relative;display:inline-block">
-            \${buildTronoSVG('team','md')}
-            \${buildFotoSlot(j?.foto, j?.gamertag?.charAt(0) || '?', 'md')}
-            <div class="hof-trono-glow team-glow"></div>
-          </div>
-          <div class="hof-team-gamertag">\${j?.gamertag || '—'}</div>
-          \${j?.rol ? \`<div class="hof-team-rol">\${j.rol}</div>\` : ''}
-        </div>\`;
-      }).join('');
-
-      return \`<div class="hof-banner-equipo \${i === 0 ? 'featured' : ''}">
-        <div class="hof-banner-top">
-          <div class="hof-banner-crown">👑</div>
-          <div class="hof-banner-info">
-            <div class="hof-banner-torneo">\${g.torneo_nombre || ''} · \${fechaStr}</div>
-            <div class="hof-banner-equipo-nombre">\${g.equipo_nombre || g.gamertag || 'CAMPEONES'}</div>
-            \${g.premio ? \`<div class="hof-banner-premio">Premio: $\${g.premio.toLocaleString('es-AR')}</div>\` : ''}
-          </div>
-          <span class="galardon-badge">🏆 CAMPEONES</span>
-        </div>
-        <div class="hof-team-tronos">\${tronos}</div>
-      </div>\`;
-
+      var tronos = Array.from({ length: jpe }, function(_, idx) {
+        var j = jugadores[idx] || null;
+        var rolHtml = j && j.rol ? "<div class=\"hof-team-rol\">" + j.rol + "</div>" : "";
+        return "<div class=\"hof-team-trono\">"
+          + "<div class=\"hof-trono-inner\" style=\"position:relative;display:inline-block\">"
+          + buildTronoSVG("team","md")
+          + buildFotoSlot(j && j.foto ? j.foto : null, j && j.gamertag ? j.gamertag.charAt(0) : "?", "md")
+          + "<div class=\"hof-trono-glow team-glow\"></div>"
+          + "</div>"
+          + "<div class=\"hof-team-gamertag\">" + (j && j.gamertag ? j.gamertag : "—") + "</div>"
+          + rolHtml + "</div>";
+      }).join("");
+      var premioHtml = g.premio ? "<div class=\"hof-banner-premio\">Premio: $" + g.premio.toLocaleString("es-AR") + "</div>" : "";
+      var featClass  = i === 0 ? "featured" : "";
+      return "<div class=\"hof-banner-equipo " + featClass + "\">"
+        + "<div class=\"hof-banner-top\">"
+        + "<div class=\"hof-banner-crown\">&#128081;</div>"
+        + "<div class=\"hof-banner-info\">"
+        + "<div class=\"hof-banner-torneo\">" + (g.torneo_nombre || "") + " · " + fechaStr + "</div>"
+        + "<div class=\"hof-banner-equipo-nombre\">" + (g.equipo_nombre || g.gamertag || "CAMPEONES") + "</div>"
+        + premioHtml + "</div>"
+        + "<span class=\"galardon-badge\">&#127942; CAMPEONES</span>"
+        + "</div><div class=\"hof-team-tronos\">" + tronos + "</div></div>";
     } else {
-      // ── TRONO INDIVIDUAL ──
-      const tipoTrono = i === 0 ? 'gold' : i === 1 ? 'silver' : 'bronze';
-      const sizeT     = i === 0 ? 'lg' : i === 1 ? 'md' : 'sm';
-      const posLabel  = i === 0 ? '👑 CAMPEÓN' : i === 1 ? '2° LUGAR' : '3° LUGAR';
-      return \`<div class="hof-trono-solo \${i === 0 ? 'featured' : ''}">
-        <div class="hof-trono-inner" style="position:relative;display:inline-block">
-          \${buildTronoSVG(tipoTrono, sizeT)}
-          \${buildFotoSlot(g.foto, g.gamertag?.charAt(0) || '?', sizeT)}
-          <div class="hof-trono-glow \${tipoTrono}-glow"></div>
-        </div>
-        <div class="hof-trono-label" style="\${i===0?'color:#FFD700':''}">\${posLabel}</div>
-        <div class="hof-trono-name-real">\${g.gamertag || ''}</div>
-        <div class="hof-trono-torneo">\${g.torneo_nombre || ''}</div>
-        <div class="hof-trono-fecha">\${fechaStr}</div>
-      </div>\`;
+      var tipoTrono = i === 0 ? "gold" : i === 1 ? "silver" : "bronze";
+      var sizeT     = i === 0 ? "lg"   : i === 1 ? "md"     : "sm";
+      var posLabel  = i === 0 ? "&#128081; CAMPEÓN" : i === 1 ? "2° LUGAR" : "3° LUGAR";
+      var colorSt   = i === 0 ? "color:#FFD700" : "";
+      var featClass = i === 0 ? "featured" : "";
+      return "<div class=\"hof-trono-solo " + featClass + "\">"
+        + "<div class=\"hof-trono-inner\" style=\"position:relative;display:inline-block\">"
+        + buildTronoSVG(tipoTrono, sizeT)
+        + buildFotoSlot(g.foto || null, g.gamertag ? g.gamertag.charAt(0) : "?", sizeT)
+        + "<div class=\"hof-trono-glow " + tipoTrono + "-glow\"></div>"
+        + "</div>"
+        + "<div class=\"hof-trono-label\" style=\"" + colorSt + "\">" + posLabel + "</div>"
+        + "<div class=\"hof-trono-name-real\">" + (g.gamertag || "") + "</div>"
+        + "<div class=\"hof-trono-torneo\">" + (g.torneo_nombre || "") + "</div>"
+        + "<div class=\"hof-trono-fecha\">" + fechaStr + "</div>"
+        + "</div>";
     }
-  }).join('');
+  }).join("");
+}
+
 }
 
 // ── RESEÑAS ──────────────────────────────────────────────────
