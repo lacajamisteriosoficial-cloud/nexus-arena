@@ -91,12 +91,25 @@
 
 <!-- GALARDONES -->
 <section id="galardones">
-  <div class="section-label">Hall of Fame</div>
-  <h2 class="section-title">CAMPEONES <span>NEXUS</span></h2>
-  <p class="section-sub">Los que llegaron a lo más alto. Su nombre queda grabado para siempre.</p>
-  <div id="galardonesLoading" class="loading-state"><div class="spinner"></div><p>Cargando...</p></div>
-  <div id="galardonesGrid" class="galardones-grid" style="display:none"></div>
-  <div id="galardonesEmpty" class="empty-state" style="display:none"><p>🏆 Los primeros campeones están por llegar.<br>¿Vas a ser el primero?</p></div>
+
+  <!-- Header decorado -->
+  <div style="padding:80px 6vw 40px;position:relative">
+    <div class="section-label">Hall of Fame</div>
+    <h2 class="section-title">CAMPEONES <span>NEXUS</span></h2>
+    <p class="section-sub">Los que llegaron a lo más alto. Su nombre queda grabado para siempre.</p>
+
+    <!-- Decoración lateral -->
+    <div style="position:absolute;right:6vw;top:50%;transform:translateY(-50%);text-align:right;display:flex;flex-direction:column;gap:4px;opacity:0.15;pointer-events:none">
+      <div style="font-family:'Bebas Neue',sans-serif;font-size:6rem;line-height:1;color:#FFD700;letter-spacing:-4px">HOF</div>
+    </div>
+  </div>
+
+  <div style="padding:0 6vw 80px">
+    <div id="galardonesLoading" class="loading-state"><div class="spinner"></div><p>Cargando...</p></div>
+    <div id="galardonesGrid" class="galardones-grid" style="display:none"></div>
+    <div id="galardonesEmpty" style="display:none"></div>
+  </div>
+
 </section>
 
 <!-- RESEÑAS -->
@@ -346,6 +359,6 @@
   </div>
 </div>
 
-<script type="module" src="js/app.js?v=17"></script>
+<script type="module" src="js/app.js?v=18"></script>
 </body>
 </html>

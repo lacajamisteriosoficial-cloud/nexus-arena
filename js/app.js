@@ -568,7 +568,35 @@ function renderGalardones() {
   if (!grid) return;
 
   if (galardones.length === 0) {
-    if (empty) empty.style.display = 'block';
+    if (empty) {
+      empty.style.display = 'block';
+      empty.innerHTML = `
+        <div class="galardones-empty-epic">
+          <span class="galardones-empty-throne">👑</span>
+          <div class="galardones-empty-title">EL TRONO<br><span>ESTÁ VACÍO</span></div>
+          <p class="galardones-empty-sub">Todavía no hay campeones. El primero en ganar un torneo quedará grabado aquí para siempre.</p>
+          <div class="galardones-empty-slots">
+            <div class="galardones-slot">
+              <div class="galardones-slot-num">1° LUGAR</div>
+              <span class="galardones-slot-icon">👑</span>
+              <div class="galardones-slot-label">???</div>
+            </div>
+            <div class="galardones-slot">
+              <div class="galardones-slot-num">2° LUGAR</div>
+              <span class="galardones-slot-icon">🥈</span>
+              <div class="galardones-slot-label">???</div>
+            </div>
+            <div class="galardones-slot">
+              <div class="galardones-slot-num">3° LUGAR</div>
+              <span class="galardones-slot-icon">🥉</span>
+              <div class="galardones-slot-label">???</div>
+            </div>
+          </div>
+          <a href="#torneos" class="galardones-empty-cta" onclick="scrollToId('torneos');return false;">
+            🏆 INSCRIBIRME AL TORNEO
+          </a>
+        </div>`;
+    }
     return;
   }
 

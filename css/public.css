@@ -437,6 +437,131 @@
   background-clip: text;
 }
 
+/* ── HALL OF FAME SECTION BACKGROUND ── */
+#galardones {
+  position: relative;
+  overflow: hidden;
+}
+#galardones::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(ellipse 80% 50% at 50% 0%, rgba(255,215,0,0.04) 0%, transparent 70%),
+    radial-gradient(ellipse 40% 40% at 20% 50%, rgba(200,255,0,0.03) 0%, transparent 60%);
+  pointer-events: none;
+}
+
+/* Partículas decorativas */
+#galardones::after {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 2px;
+  background: linear-gradient(90deg, transparent, #FFD700, rgba(200,255,0,0.8), #FFD700, transparent);
+}
+
+/* Empty state épico */
+.galardones-empty-epic {
+  padding: 60px 20px;
+  text-align: center;
+  position: relative;
+}
+.galardones-empty-throne {
+  font-size: 5rem;
+  margin-bottom: 20px;
+  animation: throneFloat 4s ease-in-out infinite;
+  filter: drop-shadow(0 0 30px rgba(255,215,0,0.5));
+  display: block;
+}
+@keyframes throneFloat {
+  0%, 100% { transform: translateY(0) rotate(-2deg); }
+  50%       { transform: translateY(-12px) rotate(2deg); }
+}
+.galardones-empty-title {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: clamp(2rem, 5vw, 3.5rem);
+  letter-spacing: 4px;
+  color: #fff;
+  margin-bottom: 12px;
+  line-height: 1;
+}
+.galardones-empty-title span {
+  background: linear-gradient(90deg, #FFD700, #FFF176);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+.galardones-empty-sub {
+  font-size: 0.9rem;
+  color: var(--muted);
+  max-width: 400px;
+  margin: 0 auto 32px;
+  line-height: 1.6;
+}
+.galardones-empty-slots {
+  display: flex;
+  justify-content: center;
+  gap: 16px;
+  flex-wrap: wrap;
+  margin-bottom: 40px;
+}
+.galardones-slot {
+  width: 120px;
+  border: 1px dashed rgba(255,215,0,0.3);
+  padding: 20px 12px;
+  text-align: center;
+  position: relative;
+  background: rgba(255,215,0,0.02);
+  transition: all 0.3s;
+}
+.galardones-slot:hover {
+  border-color: rgba(255,215,0,0.6);
+  background: rgba(255,215,0,0.05);
+}
+.galardones-slot:first-child {
+  border-color: rgba(255,215,0,0.5);
+  transform: translateY(-12px);
+}
+.galardones-slot-num {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 0.7rem;
+  letter-spacing: 3px;
+  color: rgba(255,215,0,0.5);
+  margin-bottom: 8px;
+}
+.galardones-slot:first-child .galardones-slot-num { color: #FFD700; }
+.galardones-slot-icon {
+  font-size: 2rem;
+  margin-bottom: 8px;
+  display: block;
+  opacity: 0.3;
+}
+.galardones-slot:first-child .galardones-slot-icon { opacity: 0.8; }
+.galardones-slot-label {
+  font-size: 0.7rem;
+  color: rgba(255,255,255,0.15);
+  letter-spacing: 2px;
+  font-family: 'Barlow Condensed', sans-serif;
+}
+.galardones-empty-cta {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: linear-gradient(90deg, #FFD700, #FFA500);
+  color: #000;
+  padding: 14px 32px;
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 1.1rem;
+  letter-spacing: 3px;
+  cursor: pointer;
+  border: none;
+  clip-path: polygon(10px 0%, 100% 0%, calc(100% - 10px) 100%, 0% 100%);
+  transition: opacity 0.2s;
+  text-decoration: none;
+}
+.galardones-empty-cta:hover { opacity: 0.85; }
+
 /* ── RESEÑAS ── */
 .resenas-grid {
   display: grid;
