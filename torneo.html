@@ -266,6 +266,32 @@
   min-height: 60vh; display: flex; align-items: center; justify-content: center;
   flex-direction: column; gap: 16px; color: var(--muted);
 }
+
+/* ── MODAL 2 PASOS ── */
+.modal-steps {
+  display: flex; align-items: center; padding: 14px 24px 0;
+  border-bottom: 1px solid var(--gray); margin-bottom: 0;
+}
+.modal-step {
+  display: flex; align-items: center; gap: 8px;
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: 0.75rem; letter-spacing: 2px; color: var(--muted);
+}
+.modal-step.active { color: var(--acid); }
+.step-dot {
+  width: 24px; height: 24px; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 0.75rem; font-weight: 700;
+  border: 1px solid var(--gray); color: var(--muted);
+}
+.modal-step.active .step-dot { background: var(--acid); color: #000; border-color: var(--acid); }
+.modal-step-line { flex: 1; height: 1px; background: var(--gray); margin: 0 12px; }
+.modal-resumen-paso2 {
+  padding: 10px 14px; margin-bottom: 16px;
+  background: rgba(200,255,0,0.04); border: 1px solid rgba(200,255,0,0.12);
+  font-size: 0.8rem; color: var(--muted); line-height: 1.6;
+}
+.modal-resumen-paso2 strong { color: var(--acid); }
 </style>
 </head>
 <body>
@@ -380,20 +406,30 @@
   </div>
 </div>
 
-<!-- MODAL INSCRIPCIÓN (igual que index) -->
+<!-- MODAL INSCRIPCIÓN — 2 pasos -->
 <div class="modal-overlay" id="modalOverlay">
   <div class="modal modal-wide">
     <div class="modal-header">
       <span class="modal-title" id="modalTitle">INSCRIPCIÓN</span>
       <button class="modal-close" id="modalClose">✕</button>
     </div>
+
+    <!-- PASO INDICATOR -->
+    <div class="modal-steps">
+      <div class="modal-step active" id="stepDot1">
+        <span class="step-dot">1</span><span class="step-label">Torneo</span>
+      </div>
+      <div class="modal-step-line"></div>
+      <div class="modal-step" id="stepDot2">
+        <span class="step-dot">2</span><span class="step-label">Tus datos</span>
+      </div>
+    </div>
+
     <div class="modal-body">
-      <div class="form-info" id="modalInfoBlock">
-        <div class="modal-info-row">
-          <div class="modal-info-item"><span class="modal-info-label">Torneo</span><span class="modal-info-val" id="modalGame">—</span></div>
-          <div class="modal-info-item"><span class="modal-info-label">Fecha</span><span class="modal-info-val" id="modalDate">—</span></div>
-          <div class="modal-info-item"><span class="modal-info-label">Modalidad</span><span class="modal-info-val" id="modalMode">—</span></div>
-        </div>
+
+      <!-- ── PASO 1: Info torneo + alias + equipo ── -->
+      <div id="modalStep1">
+        <!-- Premio + Entrada compacto -->
         <div class="modal-prize-block">
           <div class="modal-prize-left">
             <span class="modal-prize-label">🏆 PREMIO</span>
@@ -404,49 +440,82 @@
             <span class="modal-entrada-val" id="modalEntrada">—</span>
           </div>
         </div>
+
+        <!-- Alias MP destacado -->
         <div class="modal-alias-block" id="modalAliasBlock" style="display:none">
-          <span class="modal-alias-label">💳 Alias Mercado Pago</span>
+          <span class="modal-alias-label">💳 ALIAS MERCADO PAGO — enviá la entrada antes de jugar</span>
           <div class="modal-alias-row">
             <span class="modal-alias-val" id="modalAlias">—</span>
-            <button class="modal-alias-copy" onclick="copyAlias()">Copiar</button>
+            <button class="modal-alias-copy" onclick="copyAlias()">📋 Copiar</button>
           </div>
-          <span class="modal-alias-note">Realizá la transferencia y adjuntá el comprobante al contactarnos.</span>
+          <span class="modal-alias-note">Transferí <strong id="modalAliasEntrada">—</strong> y adjuntá el comprobante cuando nos contactemos por WhatsApp.</span>
         </div>
-        <div class="modal-galardon-note">
-          🏅 El ganador del torneo será <strong>Galardonado en nuestra sección Hall of Fame</strong>
+
+        <!-- Equipo -->
+        <div class="form-section-title" style="margin-top:16px">¿CON O SIN EQUIPO?</div>
+        <div id="equipoBlock">
+          <div class="equipo-opciones">
+            <label class="equipo-opcion">
+              <input type="radio" name="equipoOpt" value="con" onchange="toggleEquipoInput(this.value)">
+              <span class="equipo-opcion-box">
+                <span class="equipo-opcion-icon">🤝</span>
+                <span class="equipo-opcion-label">Ya tengo equipo</span>
+                <span class="equipo-opcion-desc">Compito con mi equipo formado</span>
+              </span>
+            </label>
+            <label class="equipo-opcion">
+              <input type="radio" name="equipoOpt" value="sin" onchange="toggleEquipoInput(this.value)" checked>
+              <span class="equipo-opcion-box">
+                <span class="equipo-opcion-icon">🎲</span>
+                <span class="equipo-opcion-label">Sin equipo</span>
+                <span class="equipo-opcion-desc">Me asignan uno automáticamente</span>
+              </span>
+            </label>
+          </div>
+          <div class="form-group" id="inputEquipoGroup" style="display:none;margin-top:12px">
+            <label class="form-label">Nombre del equipo *</label>
+            <input type="text" class="form-input" id="inputEquipo" placeholder="Ej: Team Nexus, Los Pibes...">
+          </div>
+        </div>
+
+        <!-- Galardon + TC compactos -->
+        <div class="modal-galardon-note" style="margin-top:14px">
+          🏅 El ganador será <strong>Galardonado en el Hall of Fame</strong>
         </div>
         <div class="modal-terminos">
-          * El premio de <span id="modalPremioTC">—</span> se acredita únicamente al llenarse el cupo de <span id="modalCuposTC">—</span> jugadores.
+          * Premio de <span id="modalPremioTC">—</span> sujeto a cupo completo de <span id="modalCuposTC">—</span> jugadores.
+        </div>
+
+        <button class="btn-submit" id="btnStep1" onclick="irPaso2()">SIGUIENTE → MIS DATOS</button>
+      </div>
+
+      <!-- ── PASO 2: Datos personales ── -->
+      <div id="modalStep2" style="display:none">
+        <div id="formError" class="form-error" style="display:none"></div>
+
+        <!-- Resumen compacto arriba -->
+        <div class="modal-resumen-paso2" id="resumenPaso2"></div>
+
+        <div class="form-section-title">TUS DATOS</div>
+        <div class="form-row-2">
+          <div class="form-group"><label class="form-label">Nombre o apodo *</label><input type="text" class="form-input" id="inputNombre" placeholder="¿Cómo te conocen?"></div>
+          <div class="form-group"><label class="form-label">Gamertag / ID en el juego *</label><input type="text" class="form-input" id="inputGamertag" placeholder="Tu nombre en el juego"></div>
+        </div>
+        <div class="form-row-2">
+          <div class="form-group"><label class="form-label">WhatsApp *</label><input type="tel" class="form-input" id="inputWhatsapp" placeholder="11 1234-5678"></div>
+          <div class="form-group"><label class="form-label">Mail *</label><input type="email" class="form-input" id="inputMail" placeholder="tu@mail.com"></div>
+        </div>
+
+        <div style="display:flex;gap:10px;margin-top:4px">
+          <button class="btn-submit" id="btnBack" onclick="irPaso1()" style="background:transparent;border:1px solid var(--gray);color:var(--muted);flex:0 0 auto;width:auto;padding:14px 20px;font-size:0.85rem">← Volver</button>
+          <button class="btn-submit" id="btnSubmit" style="flex:1">CONFIRMAR INSCRIPCIÓN →</button>
         </div>
       </div>
-      <div id="formError" class="form-error" style="display:none"></div>
-      <div class="form-section-title">TUS DATOS</div>
-      <div class="form-row-2">
-        <div class="form-group"><label class="form-label">Nombre o apodo *</label><input type="text" class="form-input" id="inputNombre" placeholder="¿Cómo te conocen?"></div>
-        <div class="form-group"><label class="form-label">Gamertag / ID en el juego *</label><input type="text" class="form-input" id="inputGamertag" placeholder="Tu nombre en el juego"></div>
-      </div>
-      <div class="form-row-2">
-        <div class="form-group"><label class="form-label">WhatsApp *</label><input type="tel" class="form-input" id="inputWhatsapp" placeholder="11 1234-5678"></div>
-        <div class="form-group"><label class="form-label">Mail *</label><input type="email" class="form-input" id="inputMail" placeholder="tu@mail.com"></div>
-      </div>
-      <div class="form-section-title" id="equipoSectionTitle" style="display:none">EQUIPO</div>
-      <div id="equipoBlock" style="display:none">
-        <div class="equipo-opciones">
-          <label class="equipo-opcion">
-            <input type="radio" name="equipoOpt" value="con" onchange="toggleEquipoInput(this.value)">
-            <span class="equipo-opcion-box"><span class="equipo-opcion-icon">🤝</span><span class="equipo-opcion-label">Ya tengo equipo</span><span class="equipo-opcion-desc">Voy a competir con mi equipo formado</span></span>
-          </label>
-          <label class="equipo-opcion">
-            <input type="radio" name="equipoOpt" value="sin" onchange="toggleEquipoInput(this.value)" checked>
-            <span class="equipo-opcion-box"><span class="equipo-opcion-icon">🎲</span><span class="equipo-opcion-label">Sin equipo</span><span class="equipo-opcion-desc">Me asignan uno automáticamente</span></span>
-          </label>
-        </div>
-        <div class="form-group" id="inputEquipoGroup" style="display:none;margin-top:12px">
-          <label class="form-label">Nombre del equipo *</label>
-          <input type="text" class="form-input" id="inputEquipo" placeholder="Ej: Team Nexus, Los Pibes...">
-        </div>
-      </div>
-      <button class="btn-submit" id="btnSubmit">CONFIRMAR INSCRIPCIÓN →</button>
+
+      <!-- IDs ocultos para compatibilidad -->
+      <input type="hidden" id="modalGame">
+      <input type="hidden" id="modalDate">
+      <input type="hidden" id="modalMode">
     </div>
   </div>
 </div>

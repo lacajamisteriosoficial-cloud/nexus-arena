@@ -475,3 +475,42 @@ function mostrarError(msg) {
 window.addEventListener('scroll', () => {
   document.getElementById('nav')?.classList.toggle('scrolled', window.scrollY > 50);
 });
+
+// ── MODAL 2 PASOS ─────────────────────────────────────────────
+
+window.irPaso2 = function() {
+  // Validar equipo si eligió "con equipo"
+  const radioCon = document.querySelector('input[name="equipoOpt"][value="con"]');
+  if (radioCon?.checked) {
+    const nombre = document.getElementById('inputEquipo')?.value.trim();
+    if (!nombre) {
+      document.getElementById('inputEquipo')?.focus();
+      return;
+    }
+  }
+
+  // Armar resumen
+  const alias    = document.getElementById('modalAlias')?.textContent || '—';
+  const entrada  = document.getElementById('modalEntrada')?.textContent || '—';
+  const radioCon2 = document.querySelector('input[name="equipoOpt"][value="con"]');
+  const equipo   = radioCon2?.checked
+    ? (document.getElementById('inputEquipo')?.value.trim() || '—')
+    : 'Sin equipo (se asigna automático)';
+
+  document.getElementById('resumenPaso2').innerHTML =
+    `<strong>Alias MP:</strong> ${alias} &nbsp;|&nbsp; <strong>Entrada:</strong> ${entrada}<br>
+     <strong>Equipo:</strong> ${equipo}`;
+
+  document.getElementById('modalStep1').style.display = 'none';
+  document.getElementById('modalStep2').style.display = 'block';
+  document.getElementById('stepDot1').classList.remove('active');
+  document.getElementById('stepDot2').classList.add('active');
+};
+
+window.irPaso1 = function() {
+  document.getElementById('modalStep2').style.display = 'none';
+  document.getElementById('modalStep1').style.display = 'block';
+  document.getElementById('stepDot2').classList.remove('active');
+  document.getElementById('stepDot1').classList.add('active');
+  document.getElementById('formError').style.display = 'none';
+};
