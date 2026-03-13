@@ -201,7 +201,7 @@ window.openGameModal = function(gameId) {
               <div style="height:100%;background:${pct >= 87 ? 'var(--red)' : pct >= 60 ? 'var(--orange)' : 'var(--acid)'};width:${pct}%;transition:width 0.5s"></div>
             </div>
             <button class="btn-inscribir available"
-              onclick="document.getElementById('gameModal').classList.remove('active');openModal('${t.id}')"
+              onclick="window.location='torneo.html?id=${t.id}'"
               style="clip-path:polygon(7px 0%,100% 0%,calc(100% - 7px) 100%,0% 100%);width:100%;padding:11px;font-size:0.9rem">
               INSCRIBIRME →
             </button>
@@ -242,7 +242,7 @@ function renderPromoCarousel() {
             <span class="promo-meta-tag">${t.modalidad || 'online'}</span>
             <span class="promo-meta-tag">${t.plataforma || ''}</span>
           </div>
-          <button class="promo-slide-btn" onclick="openModal('${t.id}')">INSCRIBIRME AHORA</button>
+          <button class="promo-slide-btn" onclick="window.location='torneo.html?id=${t.id}'">INSCRIBIRME AHORA</button>
           <div class="promo-slots">⚡ Solo quedan ${libre} cupos</div>
         </div>
       </div>`;
@@ -353,7 +353,7 @@ function buildCard(t) {
         </div>
         <div class="card-footer">
           <button class="btn-inscribir ${canJoin ? 'available' : 'disabled'}"
-            ${canJoin ? `onclick="openModal('${t.id}')"` : 'disabled'}>${btnLabel}</button>
+            ${canJoin ? `onclick="window.location='torneo.html?id=${t.id}'"` : 'disabled'}>${btnLabel}</button>
         </div>
       </div>
     </div>`;
@@ -761,7 +761,7 @@ function maybeShowPopup() {
       <div class="promo-popup-title">${t.nombre}</div>
       <div class="promo-popup-date">📅 ${fechaStr}</div>
       <div class="promo-popup-slots">⚡ Solo quedan ${libre} cupos disponibles</div>
-      <button class="promo-popup-btn" onclick="closePromoPopup();openModal('${t.id}')">INSCRIBIRME AHORA →</button>
+      <button class="promo-popup-btn" onclick="window.location='torneo.html?id=${t.id}'">INSCRIBIRME AHORA →</button>
     </div>`;
 
   document.getElementById('promoPopup').style.display = 'flex';
