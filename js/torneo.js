@@ -111,10 +111,12 @@ function renderInfo() {
   document.getElementById('premioBig').textContent  = `$${premio.toLocaleString('es-AR')}`;
   document.getElementById('precioShow').textContent = `$${(t.precio || 5000).toLocaleString('es-AR')}`;
 
-  // Alias
-  if (t.alias_mp) {
-    document.getElementById('aliasVal').textContent   = t.alias_mp;
-    document.getElementById('aliasBlock').style.display = 'block';
+  // Alias — siempre visible
+  const aliasValEl = document.getElementById('aliasVal');
+  const aliasBlockEl = document.getElementById('aliasBlock');
+  if (aliasValEl && aliasBlockEl) {
+    aliasValEl.textContent    = t.alias_mp || 'Nexus.arena';
+    aliasBlockEl.style.display = 'block';
   }
 
   // TC
@@ -299,20 +301,16 @@ window.abrirInscripcion = function() {
   const aliasBlock = document.getElementById('modalAliasBlock');
   const aliasEl    = document.getElementById('modalAlias');
   if (aliasBlock && aliasEl) {
-    if (t.alias_mp) { aliasEl.textContent = t.alias_mp; aliasBlock.style.display = 'block'; }
-    else { aliasBlock.style.display = 'none'; }
+    aliasEl.textContent      = t.alias_mp || 'Nexus.arena';
+    aliasBlock.style.display = 'block';
   }
 
   const jpe = t.jugadores_por_equipo || 1;
   const equipoSection = document.getElementById('equipoSectionTitle');
   const equipoBlock   = document.getElementById('equipoBlock');
-  if (jpe > 1) {
-    if (equipoSection) equipoSection.style.display = 'block';
-    if (equipoBlock)   equipoBlock.style.display   = 'block';
-  } else {
-    if (equipoSection) equipoSection.style.display = 'none';
-    if (equipoBlock)   equipoBlock.style.display   = 'none';
-  }
+  // Mostrar siempre la sección de equipo — cualquier jugador puede tener o no equipo
+  if (equipoSection) equipoSection.style.display = 'block';
+  if (equipoBlock)   equipoBlock.style.display   = 'block';
 
   ['inputNombre','inputGamertag','inputWhatsapp','inputMail','inputEquipo'].forEach(id => {
     const el = document.getElementById(id);
@@ -366,16 +364,15 @@ async function submitInscripcion() {
   const jpe = torneoData?.jugadores_por_equipo || 1;
   let equipoNombre = null;
   let equipoOpt    = 'sin';
-  if (jpe > 1) {
-    const radioCon = document.querySelector('input[name="equipoOpt"][value="con"]');
-    equipoOpt = radioCon?.checked ? 'con' : 'sin';
-    if (equipoOpt === 'con') {
-      equipoNombre = document.getElementById('inputEquipo')?.value.trim();
-      if (!equipoNombre) {
-        errEl.textContent = 'Escribí el nombre de tu equipo.';
-        errEl.style.display = 'block';
-        return;
-      }
+  // Siempre leer la opción de equipo (sección siempre visible)
+  const radioCon = document.querySelector('input[name="equipoOpt"][value="con"]');
+  equipoOpt = radioCon?.checked ? 'con' : 'sin';
+  if (equipoOpt === 'con') {
+    equipoNombre = document.getElementById('inputEquipo')?.value.trim();
+    if (!equipoNombre) {
+      errEl.textContent = 'Escribí el nombre de tu equipo.';
+      errEl.style.display = 'block';
+      return;
     }
   }
 
@@ -417,17 +414,26 @@ async function submitInscripcion() {
     closeModal();
 
     // Mensaje WA profesional
+    const equipoLinea = equipoNombre
+      ? `Equipo: ${equipoNombre}`
+      : `Equipo: Sin equipo (me asignan uno)`;
+
     const lineas = [
-      `Hola, me quiero inscribir al torneo de *${tNombre}*.`,
+      `Hola! Me quiero inscribir al torneo de *${tNombre}*.`,
       ``,
+      `*Mis datos:*`,
       `Nombre: ${nombre}`,
       `Gamertag: ${gamertag}`,
       `WhatsApp: ${whatsapp}`,
       `Mail: ${mail}`,
+      equipoLinea,
+      ``,
+      `*Pago:*`,
+      `Monto: $${tPrecio.toLocaleString('es-AR')}`,
+      `Alias MP: *${tAlias}*`,
+      ``,
+      `Adjunto el comprobante de transferencia.`,
     ];
-    if (equipoNombre) lineas.push(`Equipo: ${equipoNombre}`);
-    else if (jpe > 1)  lineas.push(`Equipo: Sin equipo (asignar automaticamente)`);
-    lineas.push(``, `Adjunto comprobante de transferencia al alias *${tAlias}* por $${tPrecio.toLocaleString('es-AR')}.`);
 
     setTimeout(() => {
       alert(`Inscripcion registrada, ${nombre}. Te redirigimos a WhatsApp para enviar el comprobante de pago.`);
