@@ -279,6 +279,31 @@
           </div>
         </div>
 
+        <!-- FRASES ÉPICAS v3 -->
+        <div style="margin-top:16px">
+          <label class="form-label" style="color:var(--acid);font-size:0.75rem;letter-spacing:2px">FRASES DEL TORNEO — dejar vacío para usar el texto por defecto</label>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:4px">
+          <div class="form-group" style="margin-bottom:0">
+            <label class="form-label">Paso 3 — Título "Asegurá tu lugar" <span style="color:var(--muted);font-weight:400">(opcional)</span></label>
+            <input type="text" class="form-input" id="tFrasePagoTitulo" placeholder="Asegurá tu lugar">
+          </div>
+          <div class="form-group" style="margin-bottom:0">
+            <label class="form-label">Paso 3 — Descripción <span style="color:var(--muted);font-weight:400">(opcional)</span></label>
+            <input type="text" class="form-input" id="tFrasePagoDesc" placeholder="Confirmá tu entrada y reservá tu cupo...">
+          </div>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:8px">
+          <div class="form-group" style="margin-bottom:0">
+            <label class="form-label">Paso 4 — Título "Demostrá de qué estás hecho" <span style="color:var(--muted);font-weight:400">(opcional)</span></label>
+            <input type="text" class="form-input" id="tFraseCompetirTitulo" placeholder="Demostrá de qué estás hecho">
+          </div>
+          <div class="form-group" style="margin-bottom:0">
+            <label class="form-label">Paso 4 — Descripción <span style="color:var(--muted);font-weight:400">(opcional)</span></label>
+            <input type="text" class="form-input" id="tFraseCompetirDesc" placeholder="El bracket está armado, la arena está lista...">
+          </div>
+        </div>
+
         <div id="formTorneoError" class="form-error" style="display:none"></div>
         <div class="form-actions">
           <button class="btn-admin-secondary" onclick="resetTorneoForm()">Cancelar</button>

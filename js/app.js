@@ -269,6 +269,40 @@ window.goToSlide = function(idx) {
 };
 
 // ── TORNEOS ──────────────────────────────────────────────────
+
+// ── FRASES DINÁMICAS "CÓMO FUNCIONA" ─────────────────────────
+function updateStepsFrases() {
+  // Toma el primer torneo "open", si no hay ninguno usa defaults
+  const t = torneos.find(x => x.estado === 'open') || torneos[0] || null;
+  const jpe = t ? (t.jugadores_por_equipo || 1) : 1;
+  const esEquipo = jpe > 1;
+
+  // Defaults según individual o equipo
+  const defaultPagoTitulo     = 'Asegurá tu lugar';
+  const defaultPagoDesc       = 'Confirmá tu entrada y reservá tu cupo en el torneo. Cada lugar es limitado — los que llegan primero, compiten.';
+  const defaultCompetirTitulo = esEquipo
+    ? '¿Tiene tu equipo lo que hace falta?'
+    : 'Demostrá de qué estás hecho';
+  const defaultCompetirDesc   = esEquipo
+    ? 'El bracket está armado, la arena los espera. Ganan, el nombre de su equipo queda grabado para siempre en el podio del Nexus Arena — y el premio es de todos.'
+    : 'El bracket está armado, la arena está lista. Ganás, tu nombre queda grabado en el podio de campeones del Nexus Arena — y el premio es tuyo.';
+
+  // Usar frases custom del torneo si existen, sino el default
+  const pagoTitulo     = (t && t.frase_pago_titulo)     || defaultPagoTitulo;
+  const pagoDesc       = (t && t.frase_pago_desc)       || defaultPagoDesc;
+  const competirTitulo = (t && t.frase_competir_titulo) || defaultCompetirTitulo;
+  const competirDesc   = (t && t.frase_competir_desc)   || defaultCompetirDesc;
+
+  const elPT = document.getElementById('stepPagoTitulo');
+  const elPD = document.getElementById('stepPagoDesc');
+  const elCT = document.getElementById('stepCompetirTitulo');
+  const elCD = document.getElementById('stepCompetirDesc');
+  if (elPT) elPT.textContent = pagoTitulo;
+  if (elPD) elPD.textContent = pagoDesc;
+  if (elCT) elCT.textContent = competirTitulo;
+  if (elCD) elCD.textContent = competirDesc;
+}
+
 function renderTorneos() {
   const grid    = document.getElementById('tournamentsGrid');
   const loading = document.getElementById('loadingState');
@@ -299,6 +333,7 @@ function renderTorneos() {
 
   grid.style.display = 'grid';
   grid.innerHTML = filtered.map(buildCard).join('');
+  updateStepsFrases();
 }
 
 function buildCard(t) {

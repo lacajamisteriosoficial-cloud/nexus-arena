@@ -316,6 +316,10 @@ async function saveTorneo() {
   const aliasMP  = document.getElementById('tAliasMP')?.value.trim() || '';
   const premio   = parseInt(document.getElementById('tPremio')?.value) || 0;
   const jpe      = parseInt(document.getElementById('tJugadoresPorEquipo')?.value) || 1;
+  const frasePagoTitulo     = document.getElementById('tFrasePagoTitulo')?.value.trim() || '';
+  const frasePagoDesc       = document.getElementById('tFrasePagoDesc')?.value.trim() || '';
+  const fraseCompetirTitulo = document.getElementById('tFraseCompetirTitulo')?.value.trim() || '';
+  const fraseCompetirDesc   = document.getElementById('tFraseCompetirDesc')?.value.trim() || '';
 
   const data = {
     nombre, subtitulo, plataforma, modalidad, categoria,
@@ -325,6 +329,10 @@ async function saveTorneo() {
     alias_mp:             aliasMP,
     premio:               premio || Math.round(cupos * precio * 0.8),
     jugadores_por_equipo: jpe,
+    frase_pago_titulo:      frasePagoTitulo,
+    frase_pago_desc:        frasePagoDesc,
+    frase_competir_titulo:  fraseCompetirTitulo,
+    frase_competir_desc:    fraseCompetirDesc,
   };
 
   const btn = document.getElementById('btnSaveTorneo');
@@ -374,6 +382,14 @@ window.editTorneo = async function(id) {
     if (premioEl) premioEl.value = t.premio || '';
     const jpeEl = document.getElementById('tJugadoresPorEquipo');
     if (jpeEl) jpeEl.value = t.jugadores_por_equipo || 1;
+    const fpt  = document.getElementById('tFrasePagoTitulo');
+    const fpd  = document.getElementById('tFrasePagoDesc');
+    const fct  = document.getElementById('tFraseCompetirTitulo');
+    const fcd  = document.getElementById('tFraseCompetirDesc');
+    if (fpt) fpt.value = t.frase_pago_titulo     || '';
+    if (fpd) fpd.value = t.frase_pago_desc       || '';
+    if (fct) fct.value = t.frase_competir_titulo || '';
+    if (fcd) fcd.value = t.frase_competir_desc   || '';
     previewImagen(t.imagen || '');
 
     if (t.fecha?.toDate) {
@@ -415,6 +431,10 @@ window.resetTorneoForm = function() {
   if (premioReset) premioReset.value = '';
   const jpeReset = document.getElementById('tJugadoresPorEquipo');
   if (jpeReset) jpeReset.value = '1';
+  ['tFrasePagoTitulo','tFrasePagoDesc','tFraseCompetirTitulo','tFraseCompetirDesc'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.value = '';
+  });
   document.getElementById('editTorneoId').value = '';
   document.getElementById('formTorneoTitle').textContent = 'Nuevo Torneo';
   document.getElementById('formTorneoError').style.display = 'none';
