@@ -28,6 +28,7 @@ document.addEventListener('DOMContentLoaded', () => {
   setupReseñaModal();
   renderGamesGrid([]);
   loadAll();
+  initReveal();
   setTimeout(maybeShowPopup, 2500);
   setupChat();
   setTimeout(() => {
@@ -37,6 +38,20 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 // ── CARGA DE DATOS ───────────────────────────────────────────
+// ── REVEAL ON SCROLL ─────────────────────────────────────────
+function initReveal() {
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        entry.target.classList.add('visible');
+        observer.unobserve(entry.target);
+      }
+    });
+  }, { threshold: 0.08, rootMargin: '0px 0px -40px 0px' });
+
+  document.querySelectorAll('.reveal-section').forEach(el => observer.observe(el));
+}
+
 async function loadAll() {
   try {
     const safe = (p) => p.catch(() => ({ docs: [] }));
@@ -346,64 +361,55 @@ function buildCard(t) {
     full:     { cls: 'status-full',     label: 'Cupos llenos' },
     finished: { cls: 'status-finished', label: 'Finalizado' },
   };
-  const platMap = { mobile: '📱 Mobile', console: '🎮 PS5', pc: '🖥 Crossplay' };
+  const platMap = { mobile: 'Mobile', console: 'Consola', pc: 'PC / Cross' };
 
   const st        = statusMap[t.estado] || statusMap.soon;
   const plt       = platMap[t.plataforma] || t.plataforma || '';
   const fillClass = pct >= 87 ? 'danger' : pct >= 60 ? 'warning' : '';
   const canJoin   = t.estado === 'open' && libre > 0;
   const btnLabel  = !canJoin
-    ? (t.estado === 'full' ? 'Sin cupos' : t.estado === 'soon' ? 'Aún no disponible' : 'Finalizado')
-    : (libre <= 3 ? `¡Últimos ${libre} cupos!` : 'Inscribirme');
+    ? (t.estado === 'finished' ? 'Finalizado' : t.estado === 'full' ? 'Sin cupos' : 'Próximamente')
+    : 'Inscribirme';
+  const btnCls    = canJoin ? 'available' : 'disabled';
 
-  const fechaStr = t.fecha?.toDate
-    ? t.fecha.toDate().toLocaleString('es-AR', { weekday: 'long', day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })
+  const fechaStr = t.fecha && t.fecha.toDate
+    ? t.fecha.toDate().toLocaleDateString('es-AR', { day:'numeric', month:'short', year:'numeric' })
     : '';
 
-  const cardTop = t.imagen
-    ? `<img src="${t.imagen}" alt="${t.nombre}" style="width:100%;height:100%;object-fit:cover;display:block"
-          onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">
-       <div class="card-game-bg ${t.plataforma || 'console'}" style="display:none;position:absolute;inset:0">${t.emoji || '🎮'}</div>`
-    : `<div class="card-game-bg ${t.plataforma || 'console'}">${t.emoji || '🎮'}</div>`;
+  const premio = t.premio
+    ? '$' + Number(t.premio).toLocaleString('es-AR')
+    : (t.cupos_total && t.precio
+      ? '$' + Math.round(t.cupos_total * t.precio * 0.8).toLocaleString('es-AR') + ' est.'
+      : 'A confirmar');
 
-  return `
-    <div class="tournament-card" data-cat="${t.categoria || ''}">
-      <div class="card-top" style="position:relative">
-        ${cardTop}
-        <span class="card-status ${st.cls}">${st.label}</span>
-        <span class="card-platform">${plt}</span>
-        <div class="card-overlay"></div>
-      </div>
-      <div class="card-body">
-        <div class="card-date">📅 ${fechaStr}</div>
-        <div class="card-title">${t.nombre}</div>
-        <div class="card-subtitle">${t.subtitulo || ''}</div>
-        <div class="card-meta">
-          <div class="meta-item"><span class="meta-label">Modalidad</span><span class="meta-value">${t.modalidad === 'presencial' ? '🏠 Local' : '🌐 Online'}</span></div>
-          <div class="meta-item"><span class="meta-label">Cupos libres</span><span class="meta-value" style="${libre <= 3 ? 'color:var(--red)' : ''}">${libre}</span></div>
-        </div>
-        <div class="slots-bar">
-          <div class="slots-info"><span>Cupos</span><span>${t.cupos_ocupados || 0} / ${t.cupos_total}</span></div>
-          <div class="slots-track"><div class="slots-fill ${fillClass}" style="width:${pct}%"></div></div>
-        </div>
-        <div class="card-footer">
-          <button class="btn-inscribir ${canJoin ? 'available' : 'disabled'}"
-            ${canJoin ? `onclick="window.location='torneo.html?id=${t.id}'"` : 'disabled'}>${btnLabel}</button>
-        </div>
-      </div>
-    </div>`;
-}
+  const iconTrophy = '<svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6"/><path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18"/><path d="M4 22h16"/><path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22"/><path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22"/><path d="M18 2H6v7a6 6 0 0 0 12 0V2Z"/></svg>';
 
-// ── MODAL INSCRIPCIÓN ────────────────────────────────────────
-function setupModal() {
-  document.getElementById('modalClose')?.addEventListener('click', closeModal);
-  document.getElementById('modalOverlay')?.addEventListener('click', e => {
-    if (e.target === document.getElementById('modalOverlay')) closeModal();
-  });
-  document.getElementById('btnSubmit')?.addEventListener('click', submitInscripcion);
-  document.addEventListener('keydown', e => {
-    if (e.key === 'Escape') { closeModal(); closeReseñaModal(); }
-  });
+  const heroContent = t.imagen
+    ? '<img class="card-hero-img" src="' + t.imagen + '" alt="' + t.nombre + '" loading="lazy"><div class="card-hero-overlay"></div>'
+    : '<div class="card-hero-placeholder">' + iconTrophy + '</div>';
+
+  return '<div class="tournament-card">'
+    + '<div class="card-hero">' + heroContent + '</div>'
+    + '<span class="card-status ' + st.cls + '">' + st.label + '</span>'
+    + (plt ? '<span class="card-platform">' + plt + '</span>' : '')
+    + '<div class="card-body">'
+    + (fechaStr ? '<div class="card-date">' + fechaStr + '</div>' : '')
+    + '<div class="card-title">' + t.nombre + '</div>'
+    + (t.subtitulo ? '<div class="card-subtitle">' + t.subtitulo + '</div>' : '')
+    + '<div class="card-meta">'
+    + '<div class="meta-item"><span class="meta-label">Premio</span><span class="meta-value prize">' + premio + '</span></div>'
+    + '<div class="meta-item"><span class="meta-label">Entrada</span><span class="meta-value">$' + (t.precio || 0).toLocaleString('es-AR') + '</span></div>'
+    + '<div class="meta-item"><span class="meta-label">Cupos libres</span><span class="meta-value">' + libre + '</span></div>'
+    + '</div>'
+    + '<div class="slots-bar">'
+    + '<div class="slots-info"><span>' + (t.cupos_ocupados || 0) + '/' + t.cupos_total + ' inscriptos</span><span>' + Math.round(pct) + '%</span></div>'
+    + '<div class="slots-track"><div class="slots-fill ' + fillClass + '" style="width:' + Math.min(pct, 100) + '%"></div></div>'
+    + '</div>'
+    + '<div class="card-footer">'
+    + '<button class="btn-inscribir ' + btnCls + '" onclick="window.location='torneo.html?id=' + t.id + ''">' + btnLabel + '</button>'
+    + '</div>'
+    + '</div>'
+    + '</div>';
 }
 
 window.openModal = function(torneoId) {

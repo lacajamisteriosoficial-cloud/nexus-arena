@@ -7,8 +7,8 @@
 <meta name="description" content="Torneos privados de videojuegos en Villa de Mayo. Wild Rift, PUBG, Fortnite, FIFA, Gang Beasts y más.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Barlow+Condensed:wght@400;600;700&family=Barlow:wght@300;400;500&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="css/styles.css?v=18">
-<link rel="stylesheet" href="css/public.css?v=18">
+<link rel="stylesheet" href="css/styles.css?v=19">
+<link rel="stylesheet" href="css/public.css?v=19">
 </head>
 <body>
 
@@ -18,8 +18,8 @@
     <li><a href="#juegos">Juegos</a></li>
     <li><a href="#torneos">Torneos</a></li>
     <li><a href="#galardones">Galardones</a></li>
-    <li><a href="#resenas">Reseñas</a></li>
-    <li><a href="#como-funciona">Cómo funciona</a></li>
+    <li><a href="#resenas">Rese&ntilde;as</a></li>
+    <li><a href="#como-funciona">C&oacute;mo funciona</a></li>
   </ul>
   <button class="nav-cta" onclick="scrollToId('torneos')">Ver torneos</button>
 </nav>
@@ -27,19 +27,23 @@
 <section class="hero">
   <div class="hero-bg"></div>
   <div class="hero-grid"></div>
+  <div class="hero-scanlines"></div>
   <div class="hero-visual">GG</div>
   <div class="hero-content">
-    <div class="hero-badge">Torneos privados — Villa de Mayo, Buenos Aires</div>
-    <h1>COMPETÍ.<br><span class="line-accent">GANÁ.</span><br><span class="line-stroke">DOMINÁ.</span></h1>
+    <div class="hero-badge">
+      <span class="hero-badge-dot"></span>
+      Torneos privados &mdash; Villa de Mayo, Buenos Aires
+    </div>
+    <h1>COMPET&Iacute;.<br><span class="line-accent">GAN&Aacute;.</span><br><span class="line-stroke">DOMIN&Aacute;.</span></h1>
     <p class="hero-sub">Torneos competitivos online y presenciales. <strong>Premios reales, rivales reales.</strong></p>
     <div class="hero-actions">
       <button class="btn-primary" onclick="scrollToId('torneos')">Ver torneos activos</button>
-      <button class="btn-secondary" onclick="scrollToId('como-funciona')">Cómo funciona</button>
+      <button class="btn-secondary" onclick="scrollToId('como-funciona')">C&oacute;mo funciona</button>
     </div>
     <div class="hero-stats">
-      <div class="stat-item"><span class="stat-num" id="statTorneos">—</span><span class="stat-label">Torneos activos</span></div>
-      <div class="stat-item"><span class="stat-num" id="statInscrip">—</span><span class="stat-label">Competidores</span></div>
-      <div class="stat-item"><span class="stat-num" id="statGanadores">—</span><span class="stat-label">Campeones</span></div>
+      <div class="stat-item"><span class="stat-num" id="statTorneos">&mdash;</span><span class="stat-label">Torneos activos</span></div>
+      <div class="stat-item"><span class="stat-num" id="statInscrip">&mdash;</span><span class="stat-label">Competidores</span></div>
+      <div class="stat-item"><span class="stat-num" id="statGanadores">&mdash;</span><span class="stat-label">Campeones</span></div>
     </div>
   </div>
 </section>
@@ -53,23 +57,20 @@
   </div>
 </div>
 
-<!-- PROMO CAROUSEL -->
 <div id="promoCarousel" style="display:none">
-  <div class="promo-label">🔥 INSCRIPCIONES ABIERTAS AHORA</div>
+  <div class="promo-label">INSCRIPCIONES ABIERTAS AHORA</div>
   <div class="promo-track" id="promoTrack"></div>
   <div class="promo-dots" id="promoDots"></div>
 </div>
 
-<!-- JUEGOS -->
-<section id="juegos">
-  <div class="section-label">Catálogo</div>
+<section id="juegos" class="reveal-section">
+  <div class="section-label">Cat&aacute;logo</div>
   <h2 class="section-title">JUEGOS <span>DISPONIBLES</span></h2>
-  <p class="section-sub">Hacé clic en un juego para ver si hay torneos activos.</p>
+  <p class="section-sub">Hac&eacute; clic en un juego para ver si hay torneos activos.</p>
   <div class="games-grid" id="gamesGrid"></div>
 </section>
 
-<!-- TORNEOS -->
-<section id="torneos" class="section-dark">
+<section id="torneos" class="section-dark reveal-section">
   <div class="section-label">Calendario</div>
   <h2 class="section-title">TORNEOS <span>ACTIVOS</span></h2>
   <div class="filter-bar">
@@ -80,96 +81,119 @@
     <button class="filter-btn" data-filter="presencial">Presencial</button>
   </div>
   <div id="loadingState" class="loading-state"><div class="spinner"></div><p>Cargando torneos...</p></div>
-  <div id="emptyState" class="empty-state" style="display:none"><p>🎮 No hay torneos activos ahora.<br>Seguinos en Instagram para los próximos.</p></div>
+  <div id="emptyState" class="empty-state" style="display:none">
+    <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1" stroke-linecap="round" stroke-linejoin="round" style="margin-bottom:16px;color:var(--muted)"><path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6"/><path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18"/><path d="M4 22h16"/><path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22"/><path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22"/><path d="M18 2H6v7a6 6 0 0 0 12 0V2Z"/></svg>
+    <p>No hay torneos activos ahora.<br>Segu&iacute;nos en Instagram para los pr&oacute;ximos.</p>
+  </div>
   <div class="tournaments-grid" id="tournamentsGrid" style="display:none"></div>
   <div class="pago-info-banner">
-    <div class="pago-info-item"><span class="pago-icon">💸</span><div><strong>Transferencia</strong><p>Acreditación hasta 48hs hábiles</p></div></div>
-    <div class="pago-info-item"><span class="pago-icon">💵</span><div><strong>Efectivo</strong><p>Según disponibilidad. Consultá antes.</p></div></div>
-    <div class="pago-info-item"><span class="pago-icon">🏆</span><div><strong>Premio</strong><p>Se determina al cerrar inscripciones.</p></div></div>
+    <div class="pago-info-item">
+      <span class="pago-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect width="20" height="14" x="2" y="5" rx="2"/><line x1="2" x2="22" y1="10" y2="10"/></svg></span>
+      <div><strong>Transferencia</strong><p>Acreditaci&oacute;n hasta 48hs h&aacute;biles</p></div>
+    </div>
+    <div class="pago-info-item">
+      <span class="pago-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect width="7" height="18" x="3" y="3" rx="1"/><rect width="7" height="9" x="14" y="3" rx="1"/><rect width="7" height="5" x="14" y="16" rx="1"/></svg></span>
+      <div><strong>Efectivo</strong><p>Seg&uacute;n disponibilidad. Consult&aacute; antes.</p></div>
+    </div>
+    <div class="pago-info-item">
+      <span class="pago-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6"/><path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18"/><path d="M4 22h16"/><path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22"/><path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22"/><path d="M18 2H6v7a6 6 0 0 0 12 0V2Z"/></svg></span>
+      <div><strong>Premio</strong><p>Se determina al cerrar inscripciones.</p></div>
+    </div>
   </div>
 </section>
 
-<!-- GALARDONES -->
-<section id="galardones">
-
-  <!-- Header decorado -->
+<section id="galardones" class="reveal-section">
   <div style="padding:80px 6vw 40px;position:relative">
     <div class="section-label">Hall of Fame</div>
     <h2 class="section-title">CAMPEONES <span>NEXUS</span></h2>
-    <p class="section-sub">Los que llegaron a lo más alto. Su nombre queda grabado para siempre.</p>
-
-    <!-- Decoración lateral -->
-    <div style="position:absolute;right:6vw;top:50%;transform:translateY(-50%);text-align:right;display:flex;flex-direction:column;gap:4px;opacity:0.15;pointer-events:none">
-      <div style="font-family:'Bebas Neue',sans-serif;font-size:6rem;line-height:1;color:#FFD700;letter-spacing:-4px">HOF</div>
-    </div>
+    <p class="section-sub">Los que llegaron a lo m&aacute;s alto. Su nombre queda grabado para siempre.</p>
+    <div style="position:absolute;right:6vw;top:50%;transform:translateY(-50%);opacity:0.06;pointer-events:none;font-family:'Bebas Neue',sans-serif;font-size:6rem;line-height:1;color:#FFD700;letter-spacing:-4px">HOF</div>
   </div>
-
   <div style="padding:0 6vw 80px">
     <div id="galardonesLoading" class="loading-state"><div class="spinner"></div><p>Cargando...</p></div>
     <div id="galardonesGrid" class="galardones-grid" style="display:none"></div>
     <div id="galardonesEmpty" style="display:none"></div>
   </div>
-
 </section>
 
-<!-- RESEÑAS -->
-<section id="resenas" class="section-dark">
+<section id="resenas" class="section-dark reveal-section">
   <div class="section-label">Comunidad</div>
-  <h2 class="section-title">RESEÑAS <span>DE JUGADORES</span></h2>
+  <h2 class="section-title">RESE&Ntilde;AS <span>DE JUGADORES</span></h2>
   <p class="section-sub">Lo que dice la comunidad.</p>
   <div id="resenasGrid" class="resenas-grid"></div>
   <div style="text-align:center;margin-top:40px">
-    <button class="btn-secondary" onclick="openReseñaModal()">+ Dejá tu reseña</button>
+    <button class="btn-secondary" onclick="openRese&ntilde;aModal()">+ Dej&aacute; tu rese&ntilde;a</button>
   </div>
 </section>
 
-<!-- STREAMING COMING SOON -->
 <section style="padding:40px 6vw;background:var(--dark2)">
   <div class="streaming-coming">
-    <div class="streaming-icon">📺</div>
+    <div class="streaming-icon">
+      <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="m22 8-6 4 6 4V8Z"/><rect width="14" height="12" x="2" y="6" rx="2" ry="2"/></svg>
+    </div>
     <div>
-      <div class="section-label" style="margin-bottom:4px">Próximamente</div>
+      <div class="section-label" style="margin-bottom:4px">Pr&oacute;ximamente</div>
       <h3 style="font-family:'Bebas Neue',sans-serif;font-size:2rem;letter-spacing:2px;color:#fff;margin-bottom:6px">STREAMING EN VIVO</h3>
-      <p style="color:var(--muted);font-size:0.9rem">Seguí los torneos en tiempo real desde la página. YouTube y Twitch.</p>
+      <p style="color:var(--muted);font-size:0.9rem">Segu&iacute; los torneos en tiempo real desde la p&aacute;gina. YouTube y Twitch.</p>
     </div>
     <div class="streaming-badge">COMING SOON</div>
   </div>
 </section>
 
-<!-- COMO FUNCIONA -->
-<section id="como-funciona">
+<section id="como-funciona" class="reveal-section">
   <div class="section-label">El proceso</div>
-  <h2 class="section-title">CÓMO <span>FUNCIONA</span></h2>
+  <h2 class="section-title">C&Oacute;MO <span>FUNCIONA</span></h2>
   <div class="steps-grid">
-    <div class="step"><div class="step-num">01</div><div class="step-icon">🗓</div><div class="step-title">Elegí tu torneo</div><div class="step-text">Revisá el calendario, elegí el juego y fijate cuántos cupos quedan.</div><div class="step-accent"></div></div>
-    <div class="step"><div class="step-num">02</div><div class="step-icon">📝</div><div class="step-title">Completá el formulario</div><div class="step-text">Poné tu gamertag y contacto. Te llega confirmación por WhatsApp.</div><div class="step-accent"></div></div>
-    <div class="step"><div class="step-num">03</div><div class="step-icon">💸</div><div class="step-title" id="stepPagoTitulo">Asegurá tu lugar</div><div class="step-text" id="stepPagoDesc">Confirmá tu entrada y reservá tu cupo en el torneo. Cada lugar es limitado — los que llegan primero, compiten.</div><div class="step-accent"></div></div>
-    <div class="step"><div class="step-num">04</div><div class="step-icon">🏆</div><div class="step-title" id="stepCompetirTitulo">Demostrá de qué estás hecho</div><div class="step-text" id="stepCompetirDesc">El bracket está armado, la arena está lista. Ganás, tu nombre queda grabado en el podio de campeones del Nexus Arena — y el premio es tuyo.</div><div class="step-accent"></div></div>
+    <div class="step">
+      <div class="step-num">01</div>
+      <div class="step-icon"><svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="18" x="3" y="4" rx="2" ry="2"/><line x1="16" x2="16" y1="2" y2="6"/><line x1="8" x2="8" y1="2" y2="6"/><line x1="3" x2="21" y1="10" y2="10"/></svg></div>
+      <div class="step-title">Eleg&iacute; tu torneo</div>
+      <div class="step-text">Revis&aacute; el calendario, eleg&iacute; el juego y fijate cu&aacute;ntos cupos quedan.</div>
+      <div class="step-accent"></div>
+    </div>
+    <div class="step">
+      <div class="step-num">02</div>
+      <div class="step-icon"><svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></div>
+      <div class="step-title">Complet&aacute; el formulario</div>
+      <div class="step-text">Pon&eacute; tu gamertag y contacto. Te llega confirmaci&oacute;n por WhatsApp.</div>
+      <div class="step-accent"></div>
+    </div>
+    <div class="step">
+      <div class="step-num">03</div>
+      <div class="step-icon"><svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect width="20" height="14" x="2" y="5" rx="2"/><line x1="2" x2="22" y1="10" y2="10"/></svg></div>
+      <div class="step-title" id="stepPagoTitulo">Asegur&aacute; tu lugar</div>
+      <div class="step-text" id="stepPagoDesc">Confirm&aacute; tu entrada y reserv&aacute; tu cupo en el torneo. Cada lugar es limitado &mdash; los que llegan primero, compiten.</div>
+      <div class="step-accent"></div>
+    </div>
+    <div class="step">
+      <div class="step-num">04</div>
+      <div class="step-icon"><svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6"/><path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18"/><path d="M4 22h16"/><path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22"/><path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22"/><path d="M18 2H6v7a6 6 0 0 0 12 0V2Z"/></svg></div>
+      <div class="step-title" id="stepCompetirTitulo">Demostr&aacute; de qu&eacute; est&aacute;s hecho</div>
+      <div class="step-text" id="stepCompetirDesc">El bracket est&aacute; armado, la arena est&aacute; lista. Gan&aacute;s, tu nombre queda grabado en el podio de campeones del Nexus Arena &mdash; y el premio es tuyo.</div>
+      <div class="step-accent"></div>
+    </div>
   </div>
 </section>
 
-<!-- REGLAS -->
-<section id="reglas" class="section-dark">
+<section id="reglas" class="section-dark reveal-section">
   <div class="section-label">Reglamento</div>
   <h2 class="section-title">REGLAS <span>DEL JUEGO</span></h2>
   <div class="rules-grid">
-    <div class="rule-item"><div class="rule-num">01</div><div class="rule-title">Pago previo obligatorio</div><div class="rule-text">La inscripción se confirma únicamente con el pago. Sin pago no hay cupo.</div></div>
-    <div class="rule-item"><div class="rule-num">02</div><div class="rule-title">Sin devoluciones</div><div class="rule-text">Una vez confirmada la inscripción no se devuelve. Podés ceder tu lugar antes del cierre.</div></div>
-    <div class="rule-item"><div class="rule-num">03</div><div class="rule-title">Puntualidad</div><div class="rule-text">10 minutos de gracia. Pasado ese tiempo perdés la ronda por W/O.</div></div>
-    <div class="rule-item"><div class="rule-num">04</div><div class="rule-title">Juego limpio</div><div class="rule-text">Cero tolerancia con hacks. Si se detecta trampa, eliminado sin devolución.</div></div>
-    <div class="rule-item"><div class="rule-num">05</div><div class="rule-title">Premio a confirmar</div><div class="rule-text">El monto final se determina al cerrar inscripciones según total de participantes.</div></div>
-    <div class="rule-item"><div class="rule-num">06</div><div class="rule-title">Acreditación hasta 48hs</div><div class="rule-text">Los premios se pagan en hasta 48hs hábiles. Efectivo según stock, consultá antes.</div></div>
+    <div class="rule-item"><div class="rule-num">01</div><div class="rule-title">Pago previo obligatorio</div><div class="rule-text">La inscripci&oacute;n se confirma &uacute;nicamente con el pago. Sin pago no hay cupo.</div></div>
+    <div class="rule-item"><div class="rule-num">02</div><div class="rule-title">Sin devoluciones</div><div class="rule-text">Una vez confirmada la inscripci&oacute;n no se devuelve. Pod&eacute;s ceder tu lugar antes del cierre.</div></div>
+    <div class="rule-item"><div class="rule-num">03</div><div class="rule-title">Puntualidad</div><div class="rule-text">10 minutos de gracia. Pasado ese tiempo perd&eacute;s la ronda por W/O.</div></div>
+    <div class="rule-item"><div class="rule-num">04</div><div class="rule-title">Juego limpio</div><div class="rule-text">Cero tolerancia con hacks. Si se detecta trampa, eliminado sin devoluci&oacute;n.</div></div>
+    <div class="rule-item"><div class="rule-num">05</div><div class="rule-title">Premio a confirmar</div><div class="rule-text">El monto final se determina al cerrar inscripciones seg&uacute;n total de participantes.</div></div>
+    <div class="rule-item"><div class="rule-num">06</div><div class="rule-title">Acreditaci&oacute;n hasta 48hs</div><div class="rule-text">Los premios se pagan en hasta 48hs h&aacute;biles. Efectivo seg&uacute;n stock, consult&aacute; antes.</div></div>
   </div>
 </section>
 
-<!-- ENCUESTAS -->
-<section id="encuestas">
-  <div class="section-label">Tu opinión importa</div>
+<section id="encuestas" class="reveal-section">
+  <div class="section-label">Tu opini&oacute;n importa</div>
   <h2 class="section-title">ENCUESTAS <span>ACTIVAS</span></h2>
   <div id="encuestasContainer"><div class="loading-state"><div class="spinner"></div><p>Cargando...</p></div></div>
 </section>
 
-<!-- FOOTER -->
 <footer>
   <div class="footer-top">
     <div class="footer-brand">
@@ -178,7 +202,7 @@
     </div>
     <div class="footer-links"><h4>Secciones</h4><ul>
       <li><a href="#juegos">Juegos</a></li><li><a href="#torneos">Torneos</a></li>
-      <li><a href="#galardones">Galardones</a></li><li><a href="#resenas">Reseñas</a></li>
+      <li><a href="#galardones">Galardones</a></li><li><a href="#resenas">Rese&ntilde;as</a></li>
     </ul></div>
     <div class="footer-links"><h4>Contacto</h4><ul>
       <li><a href="https://wa.me/5491157687215" target="_blank">WhatsApp</a></li>
@@ -186,89 +210,66 @@
     </ul></div>
   </div>
   <div class="footer-bottom">
-    <p class="footer-copy">© 2025 NexusArena</p>
-    <p class="footer-note">Evento privado. Premios según inscripciones. Acreditación hasta 48hs hábiles.</p>
+    <p class="footer-copy">&copy; 2025 NexusArena</p>
+    <p class="footer-note">Evento privado. Premios seg&uacute;n inscripciones. Acreditaci&oacute;n hasta 48hs h&aacute;biles.</p>
   </div>
 </footer>
 
-<!-- MODAL INSCRIPCIÓN -->
+<!-- MODAL INSCRIPCION -->
 <div class="modal-overlay" id="modalOverlay">
   <div class="modal modal-wide">
     <div class="modal-header">
-      <span class="modal-title" id="modalTitle">INSCRIPCIÓN</span>
-      <button class="modal-close" id="modalClose">✕</button>
+      <span class="modal-title" id="modalTitle">INSCRIPCI&Oacute;N</span>
+      <button class="modal-close" id="modalClose"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
     </div>
     <div class="modal-body">
-
-      <!-- INFO TORNEO -->
       <div class="form-info" id="modalInfoBlock">
         <div class="modal-info-row">
-          <div class="modal-info-item"><span class="modal-info-label">Torneo</span><span class="modal-info-val" id="modalGame">—</span></div>
-          <div class="modal-info-item"><span class="modal-info-label">Fecha</span><span class="modal-info-val" id="modalDate">—</span></div>
-          <div class="modal-info-item"><span class="modal-info-label">Modalidad</span><span class="modal-info-val" id="modalMode">—</span></div>
+          <div class="modal-info-item"><span class="modal-info-label">Torneo</span><span class="modal-info-val" id="modalGame">&mdash;</span></div>
+          <div class="modal-info-item"><span class="modal-info-label">Fecha</span><span class="modal-info-val" id="modalDate">&mdash;</span></div>
+          <div class="modal-info-item"><span class="modal-info-label">Modalidad</span><span class="modal-info-val" id="modalMode">&mdash;</span></div>
         </div>
         <div class="modal-prize-block">
           <div class="modal-prize-left">
-            <span class="modal-prize-label">🏆 PREMIO</span>
-            <span class="modal-prize-val" id="modalPrize">—</span>
+            <span class="modal-prize-label"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block;vertical-align:middle;margin-right:4px"><path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6"/><path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18"/><path d="M4 22h16"/><path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22"/><path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22"/><path d="M18 2H6v7a6 6 0 0 0 12 0V2Z"/></svg> PREMIO</span>
+            <span class="modal-prize-val" id="modalPrize">&mdash;</span>
           </div>
           <div class="modal-prize-right">
             <span class="modal-entrada-label">Entrada</span>
-            <span class="modal-entrada-val" id="modalEntrada">—</span>
+            <span class="modal-entrada-val" id="modalEntrada">&mdash;</span>
           </div>
         </div>
-        <!-- ALIAS MP -->
         <div class="modal-alias-block" id="modalAliasBlock" style="display:none">
-          <span class="modal-alias-label">💳 Alias Mercado Pago</span>
+          <span class="modal-alias-label"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block;vertical-align:middle;margin-right:4px"><rect width="20" height="14" x="2" y="5" rx="2"/><line x1="2" x2="22" y1="10" y2="10"/></svg> Alias Mercado Pago</span>
           <div class="modal-alias-row">
-            <span class="modal-alias-val" id="modalAlias">—</span>
+            <span class="modal-alias-val" id="modalAlias">&mdash;</span>
             <button class="modal-alias-copy" onclick="copyAlias()">Copiar</button>
           </div>
-          <span class="modal-alias-note">Realizá la transferencia y adjuntá el comprobante al contactarnos.</span>
+          <span class="modal-alias-note">Realiz&aacute; la transferencia y adjunt&aacute; el comprobante al contactarnos.</span>
         </div>
-        <!-- GALARDON NOTE -->
         <div class="modal-galardon-note">
-          🏅 El ganador del torneo será <strong>Galardonado en nuestra sección Hall of Fame</strong>
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block;vertical-align:middle;margin-right:6px;flex-shrink:0"><path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6"/><path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18"/><path d="M4 22h16"/><path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22"/><path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22"/><path d="M18 2H6v7a6 6 0 0 0 12 0V2Z"/></svg>
+          El ganador del torneo ser&aacute; <strong>Galardonado en nuestra secci&oacute;n Hall of Fame</strong>
         </div>
-        <!-- TERMINOS -->
-        <div class="modal-terminos">
-          * El premio de <span id="modalPremioTC">—</span> se acredita únicamente al llenarse el cupo de <span id="modalCuposTC">—</span> jugadores. Sin cupo completo el monto puede variar. Pago en hasta 48hs hábiles post-torneo.
-        </div>
+        <div class="modal-terminos">* El premio de <span id="modalPremioTC">&mdash;</span> se acredita &uacute;nicamente al llenarse el cupo de <span id="modalCuposTC">&mdash;</span> jugadores. Sin cupo completo el monto puede variar. Pago en hasta 48hs h&aacute;biles post-torneo.</div>
       </div>
-
       <div id="formError" class="form-error" style="display:none"></div>
-
-      <!-- DATOS PERSONALES -->
       <div class="form-section-title">TUS DATOS</div>
       <div class="form-row-2">
-        <div class="form-group">
-          <label class="form-label">Nombre o apodo *</label>
-          <input type="text" class="form-input" id="inputNombre" placeholder="¿Cómo te conocen?">
-        </div>
-        <div class="form-group">
-          <label class="form-label">Gamertag / ID en el juego *</label>
-          <input type="text" class="form-input" id="inputGamertag" placeholder="Tu nombre en el juego">
-        </div>
+        <div class="form-group"><label class="form-label">Nombre o apodo *</label><input type="text" class="form-input" id="inputNombre" placeholder="&iquest;C&oacute;mo te conocen?"></div>
+        <div class="form-group"><label class="form-label">Gamertag / ID en el juego *</label><input type="text" class="form-input" id="inputGamertag" placeholder="Tu nombre en el juego"></div>
       </div>
       <div class="form-row-2">
-        <div class="form-group">
-          <label class="form-label">WhatsApp *</label>
-          <input type="tel" class="form-input" id="inputWhatsapp" placeholder="11 1234-5678">
-        </div>
-        <div class="form-group">
-          <label class="form-label">Mail *</label>
-          <input type="email" class="form-input" id="inputMail" placeholder="tu@mail.com">
-        </div>
+        <div class="form-group"><label class="form-label">WhatsApp *</label><input type="tel" class="form-input" id="inputWhatsapp" placeholder="11 1234-5678"></div>
+        <div class="form-group"><label class="form-label">Mail *</label><input type="email" class="form-input" id="inputMail" placeholder="tu@mail.com"></div>
       </div>
-
-      <!-- EQUIPO -->
       <div class="form-section-title" id="equipoSectionTitle" style="display:none">EQUIPO</div>
       <div id="equipoBlock" style="display:none">
         <div class="equipo-opciones">
           <label class="equipo-opcion" id="optConEquipo">
             <input type="radio" name="equipoOpt" value="con" onchange="toggleEquipoInput(this.value)">
             <span class="equipo-opcion-box">
-              <span class="equipo-opcion-icon">🤝</span>
+              <span class="equipo-opcion-icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg></span>
               <span class="equipo-opcion-label">Ya tengo equipo</span>
               <span class="equipo-opcion-desc">Voy a competir con mi equipo formado</span>
             </span>
@@ -276,9 +277,9 @@
           <label class="equipo-opcion" id="optSinEquipo">
             <input type="radio" name="equipoOpt" value="sin" onchange="toggleEquipoInput(this.value)" checked>
             <span class="equipo-opcion-box">
-              <span class="equipo-opcion-icon">🎲</span>
+              <span class="equipo-opcion-icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><path d="M12 17h.01"/></svg></span>
               <span class="equipo-opcion-label">Sin equipo</span>
-              <span class="equipo-opcion-desc">Me asignan uno automáticamente</span>
+              <span class="equipo-opcion-desc">Me asignan uno autom&aacute;ticamente</span>
             </span>
           </label>
         </div>
@@ -287,22 +288,22 @@
           <input type="text" class="form-input" id="inputEquipo" placeholder="Ej: Team Nexus, Los Pibes...">
         </div>
       </div>
-
-      <!-- FASES DEL TORNEO -->
       <div class="modal-fases" id="modalFasesBlock" style="display:none">
         <div class="form-section-title">FORMATO DEL TORNEO</div>
         <div id="modalFasesContent"></div>
       </div>
-
-      <button class="btn-submit" id="btnSubmit">CONFIRMAR INSCRIPCIÓN →</button>
+      <button class="btn-submit" id="btnSubmit">CONFIRMAR INSCRIPCI&Oacute;N &rarr;</button>
     </div>
   </div>
 </div>
 
-<!-- MODAL RESEÑA -->
+<!-- MODAL RESENA -->
 <div class="modal-overlay" id="reseñaModal">
   <div class="modal">
-    <div class="modal-header"><span class="modal-title">DEJÁ TU RESEÑA</span><button class="modal-close" onclick="closeReseñaModal()">✕</button></div>
+    <div class="modal-header">
+      <span class="modal-title">DEJ&Aacute; TU RESE&Ntilde;A</span>
+      <button class="modal-close" onclick="closeReseñaModal()"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+    </div>
     <div class="modal-body">
       <div id="reseñaError" class="form-error" style="display:none"></div>
       <div class="form-group"><label class="form-label">Tu nombre / gamertag</label><input type="text" class="form-input" id="reseñaNombre" placeholder="¿Cómo te conocen?"></div>
@@ -317,7 +318,7 @@
         <input type="hidden" id="reseñaStars" value="0">
       </div>
       <div class="form-group"><label class="form-label">Tu comentario</label><textarea class="form-input form-textarea" id="reseñaTexto" placeholder="Contá tu experiencia..."></textarea></div>
-      <button class="btn-submit" onclick="submitReseña()">ENVIAR RESEÑA →</button>
+      <button class="btn-submit" onclick="submitReseña()">ENVIAR RESEÑA &rarr;</button>
     </div>
   </div>
 </div>
@@ -325,14 +326,17 @@
 <!-- MODAL JUEGO -->
 <div class="modal-overlay" id="gameModal">
   <div class="modal">
-    <div class="modal-header"><span class="modal-title" id="gameModalTitle">—</span><button class="modal-close" onclick="document.getElementById('gameModal').classList.remove('active')">✕</button></div>
+    <div class="modal-header">
+      <span class="modal-title" id="gameModalTitle">&mdash;</span>
+      <button class="modal-close" onclick="document.getElementById('gameModal').classList.remove('active')"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+    </div>
     <div class="modal-body" id="gameModalBody"></div>
   </div>
 </div>
 
 <!-- CHAT -->
 <div class="chat-bubble-btn" id="chatBubbleBtn" onclick="toggleChat()">
-  <span class="chat-bubble-icon">💬</span>
+  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
   <span class="chat-unread" id="chatUnread" style="display:none">1</span>
 </div>
 <div class="chat-widget" id="chatWidget">
@@ -341,24 +345,24 @@
       <div class="chat-avatar">NA</div>
       <div><div class="chat-title">Nexus Arena</div><div class="chat-status"><span class="chat-dot"></span> En línea</div></div>
     </div>
-    <button class="chat-close" onclick="toggleChat()">✕</button>
+    <button class="chat-close" onclick="toggleChat()"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
   </div>
   <div class="chat-messages" id="chatMessages"></div>
   <div class="chat-faqs" id="chatFaqs"></div>
   <div class="chat-input-row">
     <input type="text" class="chat-input" id="chatInput" placeholder="Escribí tu mensaje..." onkeydown="if(event.key==='Enter')sendChatMsg()">
-    <button class="chat-send" onclick="sendChatMsg()">→</button>
+    <button class="chat-send" onclick="sendChatMsg()"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg></button>
   </div>
 </div>
 
 <!-- POPUP PROMO -->
 <div class="promo-popup-overlay" id="promoPopup" style="display:none" onclick="closePromoPopup(event)">
   <div class="promo-popup">
-    <button class="promo-popup-close" onclick="closePromoPopup()">✕</button>
+    <button class="promo-popup-close" onclick="closePromoPopup()"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
     <div id="promoPopupInner"></div>
   </div>
 </div>
 
-<script type="module" src="js/app.js?v=18"></script>
+<script type="module" src="js/app.js?v=19"></script>
 </body>
 </html>
