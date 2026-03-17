@@ -1459,3 +1459,18 @@ input[type="range"].img-slider::-webkit-slider-thumb {
   color: rgba(200,255,0,0.4);
   margin-top: 2px;
 }
+
+/* ── RESPONSIVE MOBILE — public.css ──────────────────────── */
+@media (max-width: 768px) {
+  .hof-empty-tronos { gap: 8px; }
+  .hof-trono-slot.elevated { margin-bottom: 16px; }
+  .galardon-card { min-width: unset; }
+  .galardones-grid { grid-template-columns: 1fr !important; }
+  .resenas-grid { grid-template-columns: 1fr !important; }
+  .promo-slide { flex-direction: column; gap: 20px; }
+  .promo-slide-img, .promo-slide-emoji { width: 100%; height: 160px; }
+  .games-grid { grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 2px; }
+  .modal-prize-block { flex-direction: column; gap: 12px; }
+  .modal-info-row { flex-direction: column; gap: 8px; }
+  .equipo-opciones { flex-direction: column; }
+}

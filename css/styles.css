@@ -842,13 +842,70 @@ footer {
 
 /* ── RESPONSIVE ── */
 @media (max-width: 768px) {
+  /* Nav */
   .nav-links, .nav-cta { display: none; }
+  .nav { padding: 14px 5vw; }
+
+  /* Hero */
   .hero-visual { display: none; }
-  .hero-stats { gap: 24px; }
-  .prize-banner { flex-direction: column; gap: 24px; }
+  .hero-stats { gap: 20px; flex-wrap: wrap; }
+  .hero h1 { font-size: clamp(3rem, 14vw, 5rem); }
+  .hero-actions { flex-direction: column; gap: 12px; }
+  .hero-actions .btn-primary,
+  .hero-actions .btn-secondary { width: 100%; text-align: center; }
+
+  /* Steps */
   .steps-grid { grid-template-columns: 1fr; }
   .step { border-right: none; border-bottom: 1px solid var(--gray); }
   .step:last-child { border-bottom: none; }
+
+  /* Prize banner */
+  .prize-banner { flex-direction: column; gap: 24px; }
+
+  /* Pago info */
+  .pago-info-banner { flex-direction: column; }
+  .pago-info-item { border-right: none; border-bottom: 1px solid rgba(255,255,255,0.05); }
+  .pago-info-item:last-child { border-bottom: none; }
+
+  /* Modal */
+  .modal, .modal.modal-wide { margin: 0; max-width: 100%; width: 100%; }
+  .modal-body { padding: 20px; }
+  .modal-overlay { padding: 0; align-items: flex-end; }
+  .modal { border-bottom: none; }
+  .form-row-2 { grid-template-columns: 1fr; gap: 0; }
+
+  /* Tournaments grid */
+  .tournaments-grid { grid-template-columns: 1fr; }
+
+  /* Filter bar */
+  .filter-bar { gap: 6px; flex-wrap: wrap; }
+  .filter-btn { font-size: 0.75rem; padding: 6px 14px; }
+
+  /* Sections padding */
+  section { padding-left: 5vw !important; padding-right: 5vw !important; }
+
+  /* Footer */
+  .footer-top { flex-direction: column; gap: 24px; }
+  .footer-bottom { flex-direction: column; gap: 8px; text-align: center; }
+  .footer-note { text-align: center; }
+
+  /* Streaming */
+  .streaming-coming { flex-direction: column; gap: 16px; }
+  .streaming-badge { margin-left: 0; }
+
+  /* Galardones */
+  .galardones-grid { grid-template-columns: 1fr; }
+
+  /* Chat */
+  .chat-widget { width: calc(100vw - 32px); right: 16px; }
+}
+
+@media (max-width: 480px) {
+  .hero-stats { gap: 16px; }
+  .stat-num { font-size: 1.6rem; }
+  .section-title { font-size: clamp(1.8rem, 8vw, 3rem); }
+  .hero-badge { font-size: 0.65rem; }
+  .ticker-inner span { margin: 0 28px; }
 }
 
 /* ── REVEAL ON SCROLL ─────────────────────────────────────── */
