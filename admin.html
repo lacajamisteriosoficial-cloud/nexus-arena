@@ -522,39 +522,26 @@
 
     </section>
 
-  </main>
-</div>
-
-    <!-- BRACKET MODAL -->
-    <div class="modal-overlay" id="bracketModal">
-      <div class="modal" style="max-width:680px;width:100%">
-        <div class="modal-header">
-          <span class="modal-title" id="bracketModalTitle">EDITAR BRACKET</span>
-          <button class="modal-close" onclick="closeBracketModal()">&#10005;</button>
-        </div>
-        <div class="modal-body" id="bracketModalBody"></div>
-      </div>
-    </div>
 
     <!-- SECCION JUGADORES -->
-    <section class="admin-section" id="section-jugadores" style="display:none">
+    <section class="admin-section" id="section-jugadores">
       <div class="admin-header">
         <h1 class="admin-title">Jugadores</h1>
         <button class="btn-admin-primary" onclick="showNuevoJugador()">+ Registrar jugador</button>
       </div>
-      <p style="color:var(--muted);font-size:0.85rem;margin-bottom:24px">Jugadores registrados en la plataforma. Los puntos se actualizan automáticamente al cerrar torneos.</p>
+      <p style="color:var(--muted);font-size:0.85rem;margin-bottom:24px">Jugadores registrados en la plataforma.</p>
       <div id="jugadoresGrid" class="admin-torneos-grid"></div>
     </section>
 
     <!-- SECCION RANKING -->
-    <section class="admin-section" id="section-ranking" style="display:none">
+    <section class="admin-section" id="section-ranking">
       <div class="admin-header">
         <h1 class="admin-title">Ranking Global</h1>
       </div>
       <div class="table-wrap">
         <table class="admin-table">
           <thead><tr>
-            <th>#</th><th>Jugador</th><th>Gamertag</th><th>Puntos</th><th>Victorias</th><th>Torneos</th>
+            <th>#</th><th>Foto</th><th>Gamertag</th><th>Puntos</th><th>Victorias</th><th>Torneos</th>
           </tr></thead>
           <tbody id="rankingBody"><tr><td colspan="6" class="table-loading">Cargando...</td></tr></tbody>
         </table>
@@ -562,14 +549,28 @@
     </section>
 
     <!-- SECCION TEMPORADAS -->
-    <section class="admin-section" id="section-temporadas" style="display:none">
+    <section class="admin-section" id="section-temporadas">
       <div class="admin-header">
         <h1 class="admin-title">Temporadas</h1>
         <button class="btn-admin-primary" onclick="showNuevaTemporada()">+ Nueva temporada</button>
       </div>
-      <p style="color:var(--muted);font-size:0.85rem;margin-bottom:24px">Cada torneo puede pertenecer a una temporada. El ranking se puede reiniciar por temporada.</p>
+      <p style="color:var(--muted);font-size:0.85rem;margin-bottom:24px">Cada torneo puede pertenecer a una temporada.</p>
       <div id="temporadasList" style="display:flex;flex-direction:column;gap:2px;max-width:600px"></div>
     </section>
+
+  </main>
+</div>
+
+<!-- BRACKET MODAL -->
+<div class="modal-overlay" id="bracketModal">
+  <div class="modal" style="max-width:680px;width:100%">
+    <div class="modal-header">
+      <span class="modal-title" id="bracketModalTitle">EDITAR BRACKET</span>
+      <button class="modal-close" onclick="closeBracketModal()">&#10005;</button>
+    </div>
+    <div class="modal-body" id="bracketModalBody"></div>
+  </div>
+</div>
 
 <!-- MODAL CONFIRMAR ELIMINAR -->
 <div class="modal-overlay" id="deleteModal">
