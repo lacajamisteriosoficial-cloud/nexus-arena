@@ -103,6 +103,9 @@ window.showSection = function(name) {
     chat:          loadChatAdmin,
     catalogo:      loadCatalogo,
     config:        loadConfig,
+    jugadores:     loadJugadores,
+    ranking:       loadRanking,
+    temporadas:    loadTemporadas,
   };
   if (loaders[name]) loaders[name]();
 
@@ -211,10 +214,11 @@ function buildAdminCard(t) {
         <button class="btn-tbl" onclick="sincCuposReales('${t.id}')" title="Cuenta inscriptos activos y corrige automáticamente" style="white-space:nowrap">🔄 Auto</button>
       </div>
       <div class="atc-actions">
-        <button class="btn-tbl" onclick="editTorneo('${t.id}')">✏ Editar</button>
-        <a class="btn-tbl" href="torneo.html?id=${t.id}" target="_blank" style="text-decoration:none;display:inline-block">🔗 Ver</a>
-        <button class="btn-tbl" onclick="toggleEstado('${t.id}', '${t.estado}')">🔄 Estado</button>
-        <button class="btn-tbl delete" onclick="confirmDelete('torneo', '${t.id}', '${t.nombre}')">🗑 Eliminar</button>
+        <button class="btn-tbl" onclick="editTorneo('${t.id}')">Editar</button>
+        <a class="btn-tbl" href="torneo.html?id=${t.id}" target="_blank" style="text-decoration:none;display:inline-block">Ver</a>
+        <button class="btn-tbl" onclick="abrirBracketAdmin('${t.id}', '${t.nombre}')">Bracket</button>
+        <button class="btn-tbl" onclick="toggleEstado('${t.id}', '${t.estado}')">Estado</button>
+        <button class="btn-tbl delete" onclick="confirmDelete('torneo', '${t.id}', '${t.nombre}')">Eliminar</button>
       </div>
     </div>`;
 }
@@ -1004,6 +1008,290 @@ window.saveTicker = async function() {
     showToast('Error al guardar', true);
     console.error(err);
   }
+};
+
+// ── BRACKET ADMIN ────────────────────────────────────────────
+window.abrirBracketAdmin = async function(torneoId, torneoNombre) {
+  const modal = document.getElementById('bracketModal');
+  const body  = document.getElementById('bracketModalBody');
+  const title = document.getElementById('bracketModalTitle');
+  if (!modal || !body) return;
+
+  title.textContent = 'BRACKET — ' + torneoNombre.toUpperCase();
+  body.innerHTML = '<p style="color:var(--muted);padding:20px 0">Cargando...</p>';
+  modal.classList.add('active');
+
+  try {
+    const [torneoSnap, inscripSnap] = await Promise.all([
+      getDoc(doc(db, 'torneos', torneoId)),
+      getDocs(collection(db, 'inscripciones')),
+    ]);
+
+    if (!torneoSnap.exists()) { body.innerHTML = '<p style="color:var(--red)">Torneo no encontrado.</p>'; return; }
+
+    const t          = { id: torneoSnap.id, ...torneoSnap.data() };
+    const inscriptos = inscripSnap.docs.map(d => ({ id: d.id, ...d.data() }))
+      .filter(i => i.torneo_id === torneoId && i.estado !== 'cancelado');
+    const jpe        = t.jugadores_por_equipo || 1;
+    const bracket    = t.bracket || {};
+
+    // Armar equipos
+    const equiposMap = {};
+    inscriptos.forEach(i => {
+      const nombre = (jpe > 1 && i.equipo_nombre) ? i.equipo_nombre : i.gamertag;
+      if (!equiposMap[nombre]) equiposMap[nombre] = [];
+      equiposMap[nombre].push(i.gamertag);
+    });
+    const equipos = Object.keys(equiposMap);
+
+    if (equipos.length < 2) {
+      body.innerHTML = '<p style="color:var(--muted);padding:20px 0">Se necesitan al menos 2 equipos/jugadores para el bracket.</p>';
+      return;
+    }
+
+    // Armar partidos
+    const partidos = [];
+    for (let i = 0; i < equipos.length; i += 2) {
+      if (equipos[i] && equipos[i+1]) {
+        const key     = 'match_' + Math.floor(i/2);
+        const ganador = bracket.ganadores ? bracket.ganadores[key] || '' : '';
+        partidos.push({ eq1: equipos[i], eq2: equipos[i+1], key, ganador });
+      }
+    }
+
+    const ganadorFinal = bracket.ganador_final || '';
+    const finalistas   = bracket.finalistas || partidos.map(p => p.ganador || '?');
+
+    let html = '<div style="display:flex;gap:24px;flex-wrap:wrap">';
+
+    // Fase 1
+    html += '<div style="flex:1;min-width:240px">';
+    html += '<div style="font-size:0.65rem;letter-spacing:3px;color:var(--acid);margin-bottom:16px">FASE 1</div>';
+    partidos.forEach((p, idx) => {
+      html += '<div style="background:var(--dark);border:1px solid var(--gray);margin-bottom:8px;padding:0">';
+      html += '<div style="padding:4px 12px;font-size:0.6rem;letter-spacing:2px;color:var(--muted);border-bottom:1px solid var(--gray)">PARTIDO ' + (idx+1) + '</div>';
+      html += '<div style="display:flex;align-items:center;padding:8px 12px;gap:8px;border-bottom:1px solid rgba(255,255,255,0.05)">';
+      html += '<span style="flex:1;font-family:Barlow Condensed,sans-serif;font-weight:700;color:' + (p.ganador===p.eq1?'var(--acid)':'#fff') + '">' + p.eq1 + '</span>';
+      html += '<button class="btn-tbl confirm" style="font-size:0.65rem;padding:3px 8px" onclick="marcarGanadorBracket('' + torneoId + '','' + p.key + '','' + p.eq1.replace(/'/g,"\'") + '')">Ganador</button></div>';
+      html += '<div style="display:flex;align-items:center;padding:8px 12px;gap:8px">';
+      html += '<span style="flex:1;font-family:Barlow Condensed,sans-serif;font-weight:700;color:' + (p.ganador===p.eq2?'var(--acid)':'#fff') + '">' + p.eq2 + '</span>';
+      html += '<button class="btn-tbl confirm" style="font-size:0.65rem;padding:3px 8px" onclick="marcarGanadorBracket('' + torneoId + '','' + p.key + '','' + p.eq2.replace(/'/g,"\'") + '')">Ganador</button></div>';
+      if (p.ganador) html += '<div style="padding:4px 12px;font-size:0.65rem;color:var(--acid);background:rgba(200,255,0,0.05)">&#9733; ' + p.ganador + '</div>';
+      html += '</div>';
+    });
+    html += '</div>';
+
+    // Gran Final
+    if (finalistas.length >= 2 && finalistas[0] !== '?' && finalistas[1] !== '?') {
+      html += '<div style="min-width:240px;flex:1">';
+      html += '<div style="font-size:0.65rem;letter-spacing:3px;color:var(--acid);margin-bottom:16px">GRAN FINAL</div>';
+      html += '<div style="background:var(--dark);border:1px solid rgba(200,255,0,0.3);padding:0">';
+      [0,1].forEach(fi => {
+        const f = finalistas[fi];
+        html += '<div style="display:flex;align-items:center;padding:10px 14px;gap:8px;' + (fi===0?'border-bottom:1px solid rgba(255,255,255,0.05)':'') + '">';
+        html += '<span style="flex:1;font-family:Barlow Condensed,sans-serif;font-size:1.1rem;font-weight:700;color:' + (ganadorFinal===f?'var(--acid)':'#fff') + '">' + f + '</span>';
+        html += '<button class="btn-tbl confirm" style="font-size:0.65rem" onclick="marcarGanadorFinal('' + torneoId + '','' + f.replace(/'/g,"\'") + '','' + finalistas.join(',').replace(/'/g,"\'") + '')">Campeón</button></div>';
+      });
+      if (ganadorFinal) html += '<div style="padding:6px 14px;font-size:0.7rem;color:var(--acid);background:rgba(200,255,0,0.08)">&#9733; CAMPEÓN: ' + ganadorFinal + '</div>';
+      html += '</div></div>';
+    }
+
+    html += '</div>';
+    html += '<div style="margin-top:20px;padding-top:16px;border-top:1px solid var(--gray);text-align:right">';
+    html += '<button class="btn-admin-secondary" onclick="closeBracketModal()">Cerrar</button></div>';
+    body.innerHTML = html;
+
+  } catch (err) {
+    console.error('abrirBracketAdmin:', err);
+    body.innerHTML = '<p style="color:var(--red)">Error al cargar el bracket.</p>';
+  }
+};
+
+window.marcarGanadorBracket = async function(torneoId, matchKey, ganador) {
+  try {
+    const snap = await getDoc(doc(db, 'torneos', torneoId));
+    if (!snap.exists()) return;
+    const bracket = snap.data().bracket || {};
+    const ganadores = bracket.ganadores || {};
+    ganadores[matchKey] = ganador;
+    // Actualizar lista de finalistas
+    const allGanadores = Object.values(ganadores).filter(Boolean);
+    await updateDoc(doc(db, 'torneos', torneoId), {
+      'bracket.ganadores': ganadores,
+      'bracket.finalistas': allGanadores,
+    });
+    showToast('Ganador guardado: ' + ganador);
+    // Reabrir modal para reflejar cambio
+    const title = document.getElementById('bracketModalTitle');
+    const nombre = title ? title.textContent.replace('BRACKET — ','') : '';
+    abrirBracketAdmin(torneoId, nombre);
+  } catch (err) {
+    console.error(err);
+    showToast('Error al guardar ganador', true);
+  }
+};
+
+window.marcarGanadorFinal = async function(torneoId, ganador, finalistasStr) {
+  try {
+    await updateDoc(doc(db, 'torneos', torneoId), {
+      'bracket.ganador_final': ganador,
+      'bracket.finalistas': finalistasStr.split(','),
+    });
+    showToast('Campeón registrado: ' + ganador);
+    const title = document.getElementById('bracketModalTitle');
+    const nombre = title ? title.textContent.replace('BRACKET — ','') : '';
+    abrirBracketAdmin(torneoId, nombre);
+  } catch (err) {
+    console.error(err);
+    showToast('Error al guardar campeón', true);
+  }
+};
+
+window.closeBracketModal = function() {
+  document.getElementById('bracketModal')?.classList.remove('active');
+};
+
+// ── JUGADORES ────────────────────────────────────────────────
+async function loadJugadores() {
+  const grid = document.getElementById('jugadoresGrid');
+  if (!grid) return;
+  grid.innerHTML = '<p style="color:var(--muted)">Cargando...</p>';
+  try {
+    const snap = await getDocs(collection(db, 'jugadores'));
+    const jugadores = snap.docs.map(d => ({ id: d.id, ...d.data() }))
+      .sort((a, b) => (b.ranking_points || 0) - (a.ranking_points || 0));
+    if (jugadores.length === 0) {
+      grid.innerHTML = '<p style="color:var(--muted)">No hay jugadores registrados.</p>';
+      return;
+    }
+    grid.innerHTML = jugadores.map(j => buildJugadorAdminCard(j)).join('');
+  } catch (err) {
+    console.error(err);
+    grid.innerHTML = '<p style="color:var(--red)">Error al cargar jugadores.</p>';
+  }
+}
+
+function buildJugadorAdminCard(j) {
+  const fotoHtml = j.foto
+    ? '<img src="' + j.foto + '" style="width:44px;height:44px;border-radius:50%;object-fit:cover;border:2px solid var(--acid)" onerror="this.outerHTML='<div style=width:44px;height:44px;border-radius:50%;background:rgba(200,255,0,0.1);display:flex;align-items:center;justify-content:center;font-family:Bebas Neue,sans-serif;font-size:1.2rem;color:var(--acid)>' + (j.gamertag||'?').charAt(0) + '</div>'">'
+    : '<div style="width:44px;height:44px;border-radius:50%;background:rgba(200,255,0,0.1);display:flex;align-items:center;justify-content:center;font-family:'Bebas Neue',sans-serif;font-size:1.2rem;color:var(--acid)">' + (j.gamertag||'?').charAt(0) + '</div>';
+  return '<div class="admin-torneo-card" style="display:flex;align-items:center;gap:16px">'
+    + fotoHtml
+    + '<div style="flex:1">'
+    + '<div class="atc-title" style="margin-bottom:4px">' + (j.gamertag || '—') + '</div>'
+    + '<div style="color:var(--muted);font-size:0.8rem">' + (j.nombre || '') + '</div>'
+    + '</div>'
+    + '<div style="text-align:right">'
+    + '<div style="font-family:'Bebas Neue',sans-serif;font-size:1.5rem;color:var(--acid);line-height:1">' + (j.ranking_points || 0) + '</div>'
+    + '<div style="font-size:0.65rem;letter-spacing:2px;color:var(--muted)">PUNTOS</div>'
+    + '</div>'
+    + '<div class="tbl-actions">'
+    + '<button class="btn-tbl delete" onclick="confirmDelete('jugador','' + j.id + '','' + (j.gamertag||'').replace(/'/g,"\'") + '')">Eliminar</button>'
+    + '</div>'
+    + '</div>';
+}
+
+window.showNuevoJugador = function() {
+  const gamertag = prompt('Gamertag del jugador:');
+  if (!gamertag || !gamertag.trim()) return;
+  const nombre = prompt('Nombre real (opcional):') || '';
+  const foto   = prompt('URL de foto (opcional):') || '';
+  addDoc(collection(db, 'jugadores'), {
+    gamertag:       gamertag.trim(),
+    nombre:         nombre.trim(),
+    foto:           foto.trim(),
+    ranking_points: 0,
+    victorias:      0,
+    torneos_jugados:0,
+    fecha_registro: serverTimestamp(),
+  }).then(() => {
+    showToast('Jugador registrado ✓');
+    loadJugadores();
+  }).catch(err => {
+    showToast('Error al registrar', true);
+    console.error(err);
+  });
+};
+
+// ── RANKING ───────────────────────────────────────────────────
+async function loadRanking() {
+  const tbody = document.getElementById('rankingBody');
+  if (!tbody) return;
+  tbody.innerHTML = '<tr><td colspan="6" class="table-loading">Cargando...</td></tr>';
+  try {
+    const snap = await getDocs(collection(db, 'jugadores'));
+    const jugadores = snap.docs.map(d => ({ id: d.id, ...d.data() }))
+      .sort((a, b) => (b.ranking_points || 0) - (a.ranking_points || 0));
+    if (jugadores.length === 0) {
+      tbody.innerHTML = '<tr><td colspan="6" class="table-loading">Sin jugadores registrados</td></tr>';
+      return;
+    }
+    tbody.innerHTML = jugadores.map((j, idx) => {
+      const fotoHtml = j.foto
+        ? '<img src="' + j.foto + '" style="width:32px;height:32px;border-radius:50%;object-fit:cover;vertical-align:middle;margin-right:8px" onerror="this.remove()">'
+        : '<span style="display:inline-flex;width:32px;height:32px;border-radius:50%;background:rgba(200,255,0,0.1);align-items:center;justify-content:center;font-family:Bebas Neue,sans-serif;color:var(--acid);vertical-align:middle;margin-right:8px">' + (j.gamertag||'?').charAt(0) + '</span>';
+      const posColor = idx===0?'#FFD700':idx===1?'#C0C0C0':idx===2?'#CD7F32':'var(--muted)';
+      return '<tr>'
+        + '<td style="font-family:'Bebas Neue',sans-serif;font-size:1.2rem;color:' + posColor + '">' + (idx+1) + '</td>'
+        + '<td>' + fotoHtml + '</td>'
+        + '<td style="font-family:'Barlow Condensed',sans-serif;font-weight:700;color:#fff">' + (j.gamertag||'—') + '</td>'
+        + '<td style="font-family:'Bebas Neue',sans-serif;font-size:1.3rem;color:var(--acid)">' + (j.ranking_points||0) + '</td>'
+        + '<td>' + (j.victorias||0) + '</td>'
+        + '<td>' + (j.torneos_jugados||0) + '</td>'
+        + '</tr>';
+    }).join('');
+  } catch (err) {
+    console.error(err);
+    tbody.innerHTML = '<tr><td colspan="6" class="table-loading">Error al cargar</td></tr>';
+  }
+}
+
+// ── TEMPORADAS ────────────────────────────────────────────────
+async function loadTemporadas() {
+  const list = document.getElementById('temporadasList');
+  if (!list) return;
+  list.innerHTML = '<p style="color:var(--muted)">Cargando...</p>';
+  try {
+    const snap = await getDocs(collection(db, 'temporadas'));
+    const temps = snap.docs.map(d => ({ id: d.id, ...d.data() }))
+      .sort((a, b) => (b.fecha_inicio?.toDate?.()?.getTime()||0) - (a.fecha_inicio?.toDate?.()?.getTime()||0));
+    if (temps.length === 0) {
+      list.innerHTML = '<p style="color:var(--muted)">No hay temporadas. Creá la primera.</p>';
+      return;
+    }
+    list.innerHTML = temps.map(t => {
+      const inicio = t.fecha_inicio?.toDate ? t.fecha_inicio.toDate().toLocaleDateString('es-AR') : '—';
+      const fin    = t.fecha_fin?.toDate    ? t.fecha_fin.toDate().toLocaleDateString('es-AR')    : 'En curso';
+      return '<div class="admin-torneo-card" style="display:flex;align-items:center;gap:16px;padding:16px 20px">'
+        + '<div style="flex:1">'
+        + '<div class="atc-title">' + (t.nombre||'—') + '</div>'
+        + '<div style="color:var(--muted);font-size:0.8rem;margin-top:4px">' + inicio + ' — ' + fin + '</div>'
+        + '</div>'
+        + '<span class="badge ' + (t.activa?'badge-confirmado':'badge-cancelado') + '">' + (t.activa?'Activa':'Cerrada') + '</span>'
+        + '<button class="btn-tbl delete" onclick="confirmDelete('temporada','' + t.id + '','' + (t.nombre||'').replace(/'/g,"\'") + '')">Eliminar</button>'
+        + '</div>';
+    }).join('');
+  } catch (err) {
+    console.error(err);
+    list.innerHTML = '<p style="color:var(--red)">Error al cargar.</p>';
+  }
+}
+
+window.showNuevaTemporada = function() {
+  const nombre = prompt('Nombre de la temporada (ej: Season 2026):');
+  if (!nombre || !nombre.trim()) return;
+  addDoc(collection(db, 'temporadas'), {
+    nombre:       nombre.trim(),
+    activa:       true,
+    fecha_inicio: serverTimestamp(),
+    fecha_fin:    null,
+  }).then(() => {
+    showToast('Temporada creada ✓');
+    loadTemporadas();
+  }).catch(err => {
+    showToast('Error al crear temporada', true);
+    console.error(err);
+  });
 };
 
 // ── CONFIG HOMEPAGE ─────────────────────────────────────────
