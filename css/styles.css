@@ -109,8 +109,9 @@ body::before {
 .hero-bg {
   position: absolute; inset: 0;
   background:
-    radial-gradient(ellipse 60% 50% at 70% 50%, rgba(200,255,0,0.06) 0%, transparent 70%),
-    radial-gradient(ellipse 40% 60% at 20% 80%, rgba(255,92,0,0.08) 0%, transparent 60%);
+    radial-gradient(ellipse 55% 60% at 75% 50%, rgba(200,255,0,0.07) 0%, transparent 65%),
+    radial-gradient(ellipse 40% 50% at 15% 80%, rgba(255,92,0,0.07) 0%, transparent 55%),
+    radial-gradient(ellipse 80% 40% at 50% 0%, rgba(200,255,0,0.03) 0%, transparent 60%);
 }
 
 .hero-grid {
@@ -389,6 +390,7 @@ section { padding: 80px 6vw; }
   background: var(--acid);
   border-color: var(--acid);
   color: #000;
+  box-shadow: 0 0 18px rgba(200,255,0,0.2);
 }
 
 .tournaments-grid {
@@ -398,14 +400,25 @@ section { padding: 80px 6vw; }
 }
 
 .tournament-card {
-  background: var(--dark3);
-  border: 1px solid var(--gray);
+  background: linear-gradient(160deg, #161616 0%, #111111 100%);
+  border: 1px solid rgba(255,255,255,0.06);
   position: relative;
   overflow: hidden;
-  transition: transform 0.3s, border-color 0.3s;
+  transition: transform 0.3s ease, border-color 0.3s ease, box-shadow 0.3s ease;
 }
 
-.tournament-card:hover { transform: translateY(-4px); border-color: var(--acid); }
+.tournament-card::after {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 2px;
+  background: linear-gradient(90deg, transparent, var(--acid), transparent);
+  transform: scaleX(0);
+  transition: transform 0.35s ease;
+}
+
+.tournament-card:hover { transform: translateY(-6px); border-color: rgba(200,255,0,0.25); box-shadow: 0 16px 48px rgba(0,0,0,0.5), 0 0 0 1px rgba(200,255,0,0.08); }
+.tournament-card:hover::after { transform: scaleX(1); }
 .tournament-card:hover .card-overlay { opacity: 1; }
 
 .card-top {
@@ -422,9 +435,16 @@ section { padding: 80px 6vw; }
   font-size: 5rem;
 }
 
-.card-game-bg.mobile   { background: linear-gradient(135deg, #0d1f0d, #0a1a0a); }
-.card-game-bg.console  { background: linear-gradient(135deg, #0d0d1f, #0a0a1a); }
-.card-game-bg.pc       { background: linear-gradient(135deg, #1f0d0d, #1a0a0a); }
+.card-game-bg.mobile   { background: linear-gradient(135deg, #0a1a0a 0%, #050d05 100%); }
+.card-game-bg.console  { background: linear-gradient(135deg, #0a0a1f 0%, #050510 100%); }
+.card-game-bg.pc       { background: linear-gradient(135deg, #1a0a0a 0%, #0d0505 100%); }
+.card-game-bg::before  {
+  content: '';
+  position: absolute; inset: 0;
+  background-image: linear-gradient(rgba(200,255,0,0.03) 1px, transparent 1px),
+                    linear-gradient(90deg, rgba(200,255,0,0.03) 1px, transparent 1px);
+  background-size: 32px 32px;
+}
 
 .card-status {
   position: absolute;
@@ -445,19 +465,20 @@ section { padding: 80px 6vw; }
 .card-platform {
   position: absolute;
   top: 12px; right: 12px;
-  background: rgba(0,0,0,0.7);
+  background: rgba(0,0,0,0.75);
+  backdrop-filter: blur(8px);
   padding: 4px 10px;
   font-family: 'Barlow Condensed', sans-serif;
   font-size: 0.65rem;
   letter-spacing: 1px;
   text-transform: uppercase;
   color: var(--muted);
-  border: 1px solid var(--gray);
+  border: 1px solid rgba(255,255,255,0.1);
 }
 
 .card-overlay {
   position: absolute; inset: 0;
-  background: rgba(200,255,0,0.04);
+  background: linear-gradient(135deg, rgba(200,255,0,0.04) 0%, transparent 60%);
   opacity: 0;
   transition: opacity 0.3s;
 }
@@ -508,11 +529,11 @@ section { padding: 80px 6vw; }
   margin-bottom: 6px;
 }
 
-.slots-track { height: 3px; background: var(--gray); overflow: hidden; }
+.slots-track { height: 3px; background: rgba(255,255,255,0.06); overflow: hidden; border-radius: 2px; }
 
-.slots-fill { height: 100%; background: var(--acid); transition: width 0.8s ease; }
-.slots-fill.warning { background: var(--orange); }
-.slots-fill.danger  { background: var(--red); }
+.slots-fill { height: 100%; background: linear-gradient(90deg, var(--acid), #a8d400); transition: width 0.8s ease; border-radius: 2px; }
+.slots-fill.warning { background: linear-gradient(90deg, var(--orange), #ff8c00); }
+.slots-fill.danger  { background: linear-gradient(90deg, var(--red), #ff4444); }
 
 .card-footer { display: flex; gap: 8px; }
 
@@ -531,8 +552,8 @@ section { padding: 80px 6vw; }
 }
 
 .btn-inscribir.available { background: var(--acid); color: #000; }
-.btn-inscribir.available:hover { background: #fff; box-shadow: 0 4px 20px rgba(200,255,0,0.4); }
-.btn-inscribir.disabled { background: var(--gray); color: var(--muted); cursor: not-allowed; }
+.btn-inscribir.available:hover { background: #fff; box-shadow: 0 0 28px rgba(200,255,0,0.45), 0 4px 12px rgba(0,0,0,0.3); transform: translateY(-1px); }
+.btn-inscribir.disabled { background: rgba(42,42,42,0.6); color: var(--muted); cursor: not-allowed; }
 
 .btn-info {
   padding: 10px 14px;
@@ -616,7 +637,8 @@ section { padding: 80px 6vw; }
 }
 
 .step:last-child { border-right: none; }
-.step:hover { background: rgba(200,255,0,0.02); }
+.step:hover { background: rgba(200,255,0,0.03); }
+.step { cursor: default; }
 
 .step-num { font-family: 'Bebas Neue', sans-serif; font-size: 4rem; color: rgba(200,255,0,0.1); line-height: 1; margin-bottom: 16px; }
 .step-icon { font-size: 2rem; margin-bottom: 16px; display:flex; align-items:center; color: var(--acid); }
@@ -662,15 +684,16 @@ section { padding: 80px 6vw; }
 .modal-overlay.active { display: flex; }
 
 .modal {
-  background: var(--dark3);
-  border: 1px solid rgba(200,255,0,0.25);
+  background: linear-gradient(160deg, rgba(22,22,22,0.98) 0%, rgba(10,10,10,0.99) 100%);
+  border: 1px solid rgba(200,255,0,0.15);
   max-width: 500px;
   width: 100%;
-  animation: modalIn 0.3s ease;
+  animation: modalIn 0.3s cubic-bezier(0.34,1.2,0.64,1);
+  box-shadow: 0 24px 80px rgba(0,0,0,0.7), 0 0 0 1px rgba(200,255,0,0.04);
 }
 
 @keyframes modalIn {
-  from { opacity: 0; transform: scale(0.95) translateY(20px); }
+  from { opacity: 0; transform: scale(0.92) translateY(24px); }
   to   { opacity: 1; transform: scale(1) translateY(0); }
 }
 

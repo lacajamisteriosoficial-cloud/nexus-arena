@@ -207,11 +207,11 @@ function buildAdminCard(t) {
       </div>
       <div class="atc-slots">🎟 ${t.cupos_ocupados || 0} / ${t.cupos_total} cupos · ${libre} libres</div>
       <div style="display:flex;align-items:center;gap:8px;margin:10px 0;padding:10px;background:rgba(200,255,0,0.04);border:1px solid rgba(200,255,0,0.12)">
-        <span style="font-size:0.68rem;color:var(--muted);letter-spacing:1px;white-space:nowrap">✏ CORREGIR:</span>
+        <span style="font-size:0.68rem;color:var(--muted);letter-spacing:1px;white-space:nowrap">CORREGIR:</span>
         <input type="number" id="fix-cupos-${t.id}" value="${t.cupos_ocupados || 0}" min="0" max="${t.cupos_total}"
           style="width:55px;background:var(--dark);border:1px solid var(--gray);color:#fff;padding:3px 6px;font-size:0.85rem;text-align:center">
         <button class="btn-tbl confirm" onclick="fixCupos('${t.id}')">✓ Aplicar</button>
-        <button class="btn-tbl" onclick="sincCuposReales('${t.id}')" title="Cuenta inscriptos activos y corrige automáticamente" style="white-space:nowrap">🔄 Auto</button>
+        <button class="btn-tbl" onclick="sincCuposReales('${t.id}')" title="Cuenta inscriptos activos y corrige automáticamente" style="white-space:nowrap">Auto</button>
       </div>
       <div class="atc-actions">
         <button class="btn-tbl" onclick="editTorneo('${t.id}')">Editar</button>
@@ -261,7 +261,7 @@ window.loadInscripciones = async function() {
           <div class="tbl-actions">
             ${i.estado !== 'confirmado' ? `<button class="btn-tbl confirm" onclick="updateEstadoInscrip('${i.id}', 'confirmado')">✓ Confirmar</button>` : ''}
             ${i.estado !== 'cancelado'  ? `<button class="btn-tbl cancel"  onclick="updateEstadoInscrip('${i.id}', 'cancelado')">✕ Cancelar</button>`  : ''}
-            <button class="btn-tbl delete" onclick="confirmDelete('inscripcion', '${i.id}', '${i.nombre}')">🗑</button>
+            <button class="btn-tbl delete" onclick="confirmDelete('inscripcion', '${i.id}', '${i.nombre}')">Eliminar</button>
           </div>
         </td>
       </tr>`).join('');
@@ -581,7 +581,7 @@ async function loadGalardones() {
         <div class="atc-fecha">${g.torneo_nombre}</div>
         ${g.foto ? `<img src="${g.foto}" style="width:60px;height:60px;border-radius:50%;object-fit:cover;margin:8px 0;border:2px solid var(--acid)">` : ''}
         <div class="atc-actions">
-          <button class="btn-tbl delete" onclick="confirmDelete('galardon','${g.id}','${g.gamertag}')">🗑 Eliminar</button>
+          <button class="btn-tbl delete" onclick="confirmDelete('galardon','${g.id}','${g.gamertag}')">Eliminar</button>
         </div>
       </div>`).join('')}</div>`;
   } catch (err) {
@@ -644,7 +644,7 @@ async function loadResenasAdmin() {
         <td>${r.aprobada ? '<span class="badge badge-confirmado">Aprobada</span>' : '<span class="badge badge-pendiente">Pendiente</span>'}</td>
         <td><div class="tbl-actions">
           ${!r.aprobada ? `<button class="btn-tbl confirm" onclick="aprobarResena('${r.id}')">✓ Aprobar</button>` : ''}
-          <button class="btn-tbl delete" onclick="confirmDelete('resena','${r.id}','${r.nombre}')">🗑</button>
+          <button class="btn-tbl delete" onclick="confirmDelete('resena','${r.id}','${r.nombre}')">Eliminar</button>
         </div></td>
       </tr>`).join('');
   } catch (err) {
@@ -691,7 +691,7 @@ async function loadEncuestasAdmin() {
           <div style="font-size:0.75rem;color:var(--muted);margin:8px 0">${total} votos totales</div>
           <div class="atc-actions">
             <button class="btn-tbl" onclick="toggleEncuesta('${e.id}',${e.activa})">${e.activa ? '⏸ Desactivar' : '▶ Activar'}</button>
-            <button class="btn-tbl delete" onclick="confirmDelete('encuesta','${e.id}','${(e.pregunta || '').substring(0, 30)}')">🗑 Eliminar</button>
+            <button class="btn-tbl delete" onclick="confirmDelete('encuesta','${e.id}','${(e.pregunta || '').substring(0, 30)}')">Eliminar</button>
           </div>
         </div>`;
     }).join('');
@@ -772,7 +772,7 @@ async function loadChatAdmin() {
             <button class="btn-admin-primary" onclick="responderChat('${m.id}')">Enviar</button>
           </div>` : ''}
         <div class="atc-actions" style="margin-top:8px">
-          <button class="btn-tbl delete" onclick="confirmDelete('chat_mensajes','${m.id}','mensaje')">🗑 Borrar</button>
+          <button class="btn-tbl delete" onclick="confirmDelete('chat_mensajes','${m.id}','mensaje')">Borrar</button>
         </div>
       </div>`).join('');
   } catch (err) {
@@ -820,7 +820,7 @@ async function loadCatalogo() {
       html = `<div style="grid-column:1/-1;background:rgba(255,23,68,0.1);border:1px solid var(--red);padding:16px;margin-bottom:16px;display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap">
         <div><strong style="color:var(--red)">⚠️ Hay juegos duplicados en Firebase</strong><br>
         <span style="font-size:0.8rem;color:var(--muted)">Esto causa que aparezcan repetidos en la página pública.</span></div>
-        <button class="btn-admin-primary" onclick="limpiarDuplicados()" style="background:var(--red);flex-shrink:0">🗑 Limpiar duplicados</button>
+        <button class="btn-admin-primary" onclick="limpiarDuplicados()" style="background:var(--red);flex-shrink:0">Limpiar duplicados</button>
       </div>` + html;
     }
     grid.innerHTML = html;
@@ -883,8 +883,8 @@ function buildJuegoCard(j) {
           <button class="img-editor-btn" onclick="resetImgEditor('${j.id}')">Reset</button>
         </div>` : ''}
         <div class="atc-actions" style="margin-top:8px">
-          <button class="btn-tbl confirm" onclick="saveJuego('${j.id}')">💾 Guardar</button>
-          <button class="btn-tbl delete" onclick="confirmDelete('juego','${j.id}','${nombre}')">🗑 Eliminar</button>
+          <button class="btn-tbl confirm" onclick="saveJuego('${j.id}')">Guardar</button>
+          <button class="btn-tbl delete" onclick="confirmDelete('juego','${j.id}','${nombre}')">Eliminar</button>
         </div>
       </div>
     </div>`;
