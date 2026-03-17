@@ -83,6 +83,44 @@ async function loadAll() {
       }
     }
 
+    // ── CONFIG REGLAS ────────────────────────────────────────
+    const reglasDoc = configSnap.docs.find(d => d.id === 'reglas');
+    if (reglasDoc) {
+      const reglas = reglasDoc.data().items || [];
+      const grid   = document.getElementById('reglasGrid');
+      if (grid && reglas.length > 0) {
+        grid.innerHTML = reglas.map((r, i) =>
+          '<div class="rule-item">'
+          + '<div class="rule-num">0' + (i + 1) + '</div>'
+          + '<div class="rule-title">' + (r.titulo || '') + '</div>'
+          + '<div class="rule-text">'  + (r.texto  || '') + '</div>'
+          + '</div>'
+        ).join('');
+      }
+    }
+
+    // ── CONFIG FOOTER ─────────────────────────────────────────
+    const footerDoc = configSnap.docs.find(d => d.id === 'footer');
+    if (footerDoc) {
+      const ft = footerDoc.data();
+      if (ft.wa_number) {
+        const waEl = document.getElementById('footerWA');
+        if (waEl) waEl.href = 'https://wa.me/' + ft.wa_number;
+      }
+      if (ft.instagram_url) {
+        const igEl = document.getElementById('igLink');
+        if (igEl) igEl.href = ft.instagram_url;
+      }
+      if (ft.copy_text) {
+        const cpEl = document.getElementById('footerCopy');
+        if (cpEl) cpEl.textContent = ft.copy_text;
+      }
+      if (ft.note_text) {
+        const ntEl = document.getElementById('footerNote');
+        if (ntEl) ntEl.textContent = ft.note_text;
+      }
+    }
+
     // ── CONFIG HOMEPAGE ──────────────────────────────────────
     const homepageDoc = configSnap.docs.find(d => d.id === 'homepage');
     if (homepageDoc) {

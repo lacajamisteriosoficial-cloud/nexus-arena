@@ -520,6 +520,45 @@
         </div>
       </div>
 
+      <!-- REGLAS -->
+      <div class="form-card" style="max-width:760px;margin-top:2px">
+        <div class="admin-subtitle">Reglas del juego</div>
+        <p style="color:var(--muted);font-size:0.85rem;margin-bottom:16px">Hasta 8 reglas. Dejar filas vacías para no mostrar.</p>
+        <div id="reglasAdminList" style="display:flex;flex-direction:column;gap:8px;margin-bottom:16px"></div>
+        <div class="form-actions">
+          <button class="btn-admin-secondary" onclick="addReglaRow()">+ Agregar regla</button>
+          <button class="btn-admin-primary" onclick="saveReglas()">Guardar reglas</button>
+        </div>
+      </div>
+
+      <!-- FOOTER / REDES -->
+      <div class="form-card" style="max-width:760px;margin-top:2px;margin-bottom:2px">
+        <div class="admin-subtitle">Footer y redes sociales</div>
+        <div class="form-row" style="margin-bottom:12px">
+          <div class="form-group" style="margin-bottom:0">
+            <label class="form-label">Número WhatsApp (solo números)</label>
+            <input type="text" class="form-input" id="cfgWA" placeholder="5491157687215">
+          </div>
+          <div class="form-group" style="margin-bottom:0">
+            <label class="form-label">URL Instagram</label>
+            <input type="text" class="form-input" id="cfgIG" placeholder="https://instagram.com/nexusarena">
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group" style="margin-bottom:0">
+            <label class="form-label">Texto copyright</label>
+            <input type="text" class="form-input" id="cfgCopy" placeholder="© 2025 NexusArena">
+          </div>
+          <div class="form-group" style="margin-bottom:0">
+            <label class="form-label">Nota legal footer</label>
+            <input type="text" class="form-input" id="cfgNote" placeholder="Evento privado. Premios según inscripciones...">
+          </div>
+        </div>
+        <div class="form-actions" style="margin-top:16px">
+          <button class="btn-admin-primary" onclick="saveFooter()">Guardar footer</button>
+        </div>
+      </div>
+
     </section>
 
 

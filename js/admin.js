@@ -1341,6 +1341,55 @@ window.showNuevaTemporada = function() {
   });
 };
 
+// ── REGLAS EDITABLES ─────────────────────────────────────────
+let reglaRows = [];
+
+function renderReglaRows() {
+  const list = document.getElementById('reglasAdminList');
+  if (!list) return;
+  list.innerHTML = reglaRows.map((r, i) =>
+    '<div style="display:grid;grid-template-columns:1fr 1fr auto;gap:8px;align-items:center">'
+    + '<input type="text" class="form-input" placeholder="Título (ej: Pago previo)" value="' + (r.titulo||'').replace(/"/g,'&quot;') + '" oninput="reglaRows[' + i + '].titulo=this.value" style="margin:0">'
+    + '<input type="text" class="form-input" placeholder="Descripción" value="' + (r.texto||'').replace(/"/g,'&quot;') + '" oninput="reglaRows[' + i + '].texto=this.value" style="margin:0">'
+    + '<button class="btn-tbl delete" onclick="reglaRows.splice(' + i + ',1);renderReglaRows()" style="padding:8px 10px;height:auto">X</button>'
+    + '</div>'
+  ).join('');
+}
+
+window.addReglaRow = function() {
+  if (reglaRows.length >= 8) { showToast('Máximo 8 reglas', true); return; }
+  reglaRows.push({ titulo: '', texto: '' });
+  renderReglaRows();
+};
+
+window.saveReglas = async function() {
+  const items = reglaRows.filter(r => r.titulo.trim());
+  try {
+    await setDoc(doc(db, 'config', 'reglas'), { items });
+    showToast('Reglas guardadas ✓');
+  } catch (err) {
+    showToast('Error al guardar', true);
+    console.error(err);
+  }
+};
+
+// ── FOOTER / REDES ────────────────────────────────────────────
+window.saveFooter = async function() {
+  const data = {
+    wa_number:      document.getElementById('cfgWA')?.value.trim()   || '',
+    instagram_url:  document.getElementById('cfgIG')?.value.trim()   || '',
+    copy_text:      document.getElementById('cfgCopy')?.value.trim() || '',
+    note_text:      document.getElementById('cfgNote')?.value.trim() || '',
+  };
+  try {
+    await setDoc(doc(db, 'config', 'footer'), data);
+    showToast('Footer guardado ✓');
+  } catch (err) {
+    showToast('Error al guardar', true);
+    console.error(err);
+  }
+};
+
 // ── CONFIG HOMEPAGE ─────────────────────────────────────────
 window.saveHomepage = async function() {
   const data = {
@@ -1383,10 +1432,12 @@ window.saveSecciones = async function() {
 async function loadConfigSection() {
   try {
     const safe = p => p.catch(() => null);
-    const [hpSnap, secSnap, tickerSnap] = await Promise.all([
+    const [hpSnap, secSnap, tickerSnap, reglasSnap, footerSnap] = await Promise.all([
       safe(getDoc(doc(db, 'config', 'homepage'))),
       safe(getDoc(doc(db, 'config', 'secciones'))),
       safe(getDoc(doc(db, 'config', 'ticker'))),
+      safe(getDoc(doc(db, 'config', 'reglas'))),
+      safe(getDoc(doc(db, 'config', 'footer'))),
     ]);
 
     if (hpSnap && hpSnap.exists()) {
@@ -1414,6 +1465,29 @@ async function loadConfigSection() {
     if (tickerSnap && tickerSnap.exists()) {
       const el = document.getElementById('tickerItems');
       if (el) el.value = (tickerSnap.data().items || []).join('\n');
+    }
+
+    if (reglasSnap && reglasSnap.exists()) {
+      reglaRows = (reglasSnap.data().items || []).map(r => ({ titulo: r.titulo||'', texto: r.texto||'' }));
+    } else {
+      reglaRows = [
+        { titulo: 'Pago previo obligatorio', texto: 'La inscripción se confirma únicamente con el pago. Sin pago no hay cupo.' },
+        { titulo: 'Sin devoluciones',        texto: 'Una vez confirmada la inscripción no se devuelve. Podés ceder tu lugar antes del cierre.' },
+        { titulo: 'Puntualidad',             texto: '10 minutos de gracia. Pasado ese tiempo perdés la ronda por W/O.' },
+        { titulo: 'Juego limpio',            texto: 'Cero tolerancia con hacks. Si se detecta trampa, eliminado sin devolución.' },
+        { titulo: 'Premio a confirmar',      texto: 'El monto final se determina al cerrar inscripciones según total de participantes.' },
+        { titulo: 'Acreditación hasta 48hs', texto: 'Los premios se pagan en hasta 48hs hábiles. Efectivo según stock, consultá antes.' },
+      ];
+    }
+    renderReglaRows();
+
+    if (footerSnap && footerSnap.exists()) {
+      const ft = footerSnap.data();
+      const setV = (id, val) => { const el = document.getElementById(id); if (el) el.value = val||''; };
+      setV('cfgWA',   ft.wa_number);
+      setV('cfgIG',   ft.instagram_url);
+      setV('cfgCopy', ft.copy_text);
+      setV('cfgNote', ft.note_text);
     }
   } catch (err) {
     console.error('loadConfigSection error:', err);
