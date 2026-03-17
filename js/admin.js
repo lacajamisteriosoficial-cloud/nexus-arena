@@ -193,10 +193,10 @@ function buildAdminCard(t) {
   return `
     <div class="admin-torneo-card">
       <div class="atc-header">
-        <div><div class="atc-title">${t.emoji || '🎮'} ${t.nombre}</div></div>
+        <div><div class="atc-title">${t.emoji || ''} ${t.nombre}</div></div>
         <span class="card-status ${statusMap[t.estado] || ''}" style="position:static;clip-path:none;padding:3px 10px">${t.estado}</span>
       </div>
-      <div class="atc-fecha">📅 ${fechaStr}</div>
+      <div class="atc-fecha">${fechaStr}</div>
       <div class="atc-meta">
         <span class="atc-tag">${t.plataforma || ''}</span>
         <span class="atc-tag">${t.modalidad || ''}</span>
@@ -299,7 +299,7 @@ async function saveTorneo() {
   const categoria  = document.getElementById('tCategoria').value;
   const cupos      = parseInt(document.getElementById('tCupos').value);
   const precio     = parseInt(document.getElementById('tPrecio').value);
-  const emoji      = document.getElementById('tEmoji').value.trim() || '🎮';
+  const emoji      = document.getElementById('tEmoji').value.trim() || '';
   const estado     = document.getElementById('tEstado').value;
   const desc       = document.getElementById('tDescripcion').value.trim();
   const imagen     = document.getElementById('tImagen').value.trim();
@@ -372,7 +372,7 @@ window.editTorneo = async function(id) {
     document.getElementById('tCategoria').value     = t.categoria || 'console';
     document.getElementById('tCupos').value         = t.cupos_total || '';
     document.getElementById('tPrecio').value        = t.precio || 5000;
-    document.getElementById('tEmoji').value         = t.emoji || '🎮';
+    document.getElementById('tEmoji').value         = t.emoji || '';
     document.getElementById('tEstado').value        = t.estado || 'open';
     document.getElementById('tDescripcion').value   = t.descripcion || '';
     document.getElementById('tImagen').value        = t.imagen || '';
@@ -560,9 +560,9 @@ async function loadGalardones() {
     container.innerHTML = `<div class="admin-torneos-grid">${lista.map(g => `
       <div class="admin-torneo-card">
         <div class="atc-header">
-          <div class="atc-title">${g.juego_emoji || '🏆'} ${g.gamertag}</div>
+          <div class="atc-title">${g.juego_emoji || ''} ${g.gamertag}</div>
         </div>
-        <div class="atc-fecha">🏆 ${g.torneo_nombre}</div>
+        <div class="atc-fecha">${g.torneo_nombre}</div>
         ${g.foto ? `<img src="${g.foto}" style="width:60px;height:60px;border-radius:50%;object-fit:cover;margin:8px 0;border:2px solid var(--acid)">` : ''}
         <div class="atc-actions">
           <button class="btn-tbl delete" onclick="confirmDelete('galardon','${g.id}','${g.gamertag}')">🗑 Eliminar</button>
@@ -576,7 +576,7 @@ async function loadGalardones() {
 async function saveGalardon() {
   const gamertag = document.getElementById('gGamertag').value.trim();
   const torneo   = document.getElementById('gTorneo').value.trim();
-  const emoji    = document.getElementById('gEmoji').value.trim() || '🎮';
+  const emoji    = document.getElementById('gEmoji').value.trim() || '';
   const fechaVal = document.getElementById('gFecha').value;
   const foto     = document.getElementById('gFoto').value.trim();
   const bg       = document.getElementById('gBg').value.trim();
@@ -594,7 +594,7 @@ async function saveGalardon() {
       foto: foto || '', bg_imagen: bg || '',
       fecha: fechaVal ? new Date(fechaVal) : serverTimestamp(),
     });
-    showToast('Campeón registrado 🏆');
+    showToast('Campeón registrado ✓');
     ['gGamertag', 'gTorneo', 'gEmoji', 'gFecha', 'gFoto', 'gBg'].forEach(id => {
       document.getElementById(id).value = '';
     });
@@ -748,7 +748,7 @@ async function loadChatAdmin() {
           <span style="font-family:'Barlow Condensed',sans-serif;font-size:0.75rem;letter-spacing:2px;color:${m.respondido ? 'var(--acid)' : 'var(--orange)'}">${m.respondido ? 'RESPONDIDO' : 'SIN RESPONDER'}</span>
           <span style="font-size:0.75rem;color:var(--muted)">${formatFecha(m.fecha)}</span>
         </div>
-        <div style="color:#fff;margin-bottom:12px;font-size:0.9rem">💬 ${m.texto}</div>
+        <div style="color:#fff;margin-bottom:12px;font-size:0.9rem">${m.texto}</div>
         ${m.respuesta ? `<div style="color:var(--acid);font-size:0.85rem;margin-bottom:12px">↩ ${m.respuesta}</div>` : ''}
         ${!m.respondido ? `
           <div style="display:flex;gap:8px;margin-top:8px">
@@ -816,7 +816,7 @@ async function loadCatalogo() {
 
 function buildJuegoCard(j) {
   const imagen = j.imagen || '';
-  const emoji  = j.emoji  || '🎮';
+  const emoji  = j.emoji || '';
   const nombre = j.nombre || 'Sin nombre';
   const posX   = j.posX ?? 50;
   const posY   = j.posY ?? 50;
@@ -842,10 +842,10 @@ function buildJuegoCard(j) {
           <div class="form-group" style="flex:2;margin-bottom:0">
             <label class="form-label" style="font-size:0.6rem">Plataforma</label>
             <select class="form-input form-select" id="jplat-${j.id}">
-              <option value="mobile"  ${j.plataforma === 'mobile'  ? 'selected' : ''}>📱 Mobile</option>
-              <option value="console" ${j.plataforma === 'console' ? 'selected' : ''}>🎮 Consola</option>
-              <option value="pc"      ${j.plataforma === 'pc'      ? 'selected' : ''}>🖥 PC</option>
-              <option value="cross"   ${j.plataforma === 'cross'   ? 'selected' : ''}>🌐 Crossplay</option>
+              <option value="mobile"  ${j.plataforma === 'mobile'  ? 'selected' : ''}>Mobile</option>
+              <option value="console" ${j.plataforma === 'console' ? 'selected' : ''}>Consola</option>
+              <option value="pc"      ${j.plataforma === 'pc'      ? 'selected' : ''}>PC</option>
+              <option value="cross"   ${j.plataforma === 'cross'   ? 'selected' : ''}>Crossplay</option>
             </select>
           </div>
         </div>
@@ -885,7 +885,7 @@ window.livePreviewJuego = function(id) {
     prev.style.cssText = `background:url('${img}') ${posX}% ${posY}% / ${zoom}% auto no-repeat; height:160px; border-bottom:1px solid var(--gray);`;
     prev.textContent = '';
   } else {
-    const emoji = document.getElementById('jemoji-' + id)?.value || '🎮';
+    const emoji = document.getElementById('jemoji-' + id)?.value || '';
     prev.style.cssText = `height:160px; background:var(--dark); display:flex; align-items:center; justify-content:center; font-size:3.5rem; border-bottom:1px solid var(--gray);`;
     prev.textContent = emoji;
   }
@@ -966,7 +966,7 @@ window.closeNuevoJuego = function() {
 
 window.saveNuevoJuego = async function() {
   const nombre     = document.getElementById('njNombre')?.value.trim();
-  const emoji      = document.getElementById('njEmoji')?.value.trim() || '🎮';
+  const emoji      = document.getElementById('njEmoji')?.value.trim() || '';
   const imagen     = document.getElementById('njImagen')?.value.trim() || '';
   const plataforma = document.getElementById('njPlat')?.value || 'mobile';
   const errEl      = document.getElementById('njError');

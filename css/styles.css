@@ -619,7 +619,7 @@ section { padding: 80px 6vw; }
 .step:hover { background: rgba(200,255,0,0.02); }
 
 .step-num { font-family: 'Bebas Neue', sans-serif; font-size: 4rem; color: rgba(200,255,0,0.1); line-height: 1; margin-bottom: 16px; }
-.step-icon { font-size: 2rem; margin-bottom: 16px; }
+.step-icon { font-size: 2rem; margin-bottom: 16px; display:flex; align-items:center; color: var(--acid); }
 .step-title { font-family: 'Barlow Condensed', sans-serif; font-size: 1.2rem; font-weight: 700; color: #fff; margin-bottom: 10px; }
 .step-text { font-size: 0.85rem; color: var(--muted); line-height: 1.6; }
 .step-accent { position: absolute; bottom: 0; left: 0; right: 0; height: 2px; background: var(--acid); transform: scaleX(0); transition: transform 0.3s; }

@@ -128,11 +128,11 @@ function renderGamesGrid(torneosActivos) {
       <div class="game-card" onclick="openGameModal('${game.id}')">
         ${hasImg ? `<img class="game-card-img" src="${game.imagen}" alt="${game.nombre}"
             onerror="this.style.display='none';document.getElementById('gemoji-${game.id}').style.display='flex'">` : ''}
-        <div class="game-card-emoji" id="gemoji-${game.id}" ${hasImg ? 'style="display:none"' : ''}>${game.emoji || '🎮'}</div>
+        <div class="game-card-emoji" id="gemoji-${game.id}" ${hasImg ? 'style="display:none"' : ''}>${game.emoji || ''}</div>
         <div class="game-card-overlay"></div>
         <img class="game-card-logo" src="logo.png" alt="Nexus Arena">
         <span class="game-card-badge ${hasTorneo ? 'has-torneo' : 'no-torneo'}">
-          ${hasTorneo ? '🔥 Torneo activo' : 'Sin torneo'}
+          ${hasTorneo ? 'Torneo activo' : 'Sin torneo'}
         </span>
         <div class="game-card-title">${game.nombre}</div>
       </div>`;
@@ -177,11 +177,11 @@ window.openGameModal = function(gameId) {
         <div class="game-modal-tag">SIN TORNEOS ACTIVOS</div>
         <p style="color:var(--muted);margin-bottom:6px">No hay torneos de <strong style="color:#fff">${game.nombre}</strong> en este momento.</p>
         <p style="color:var(--muted);font-size:0.82rem;margin-bottom:20px">Seguinos o escribinos para saber cuándo viene el próximo.</p>
-        <button class="btn-secondary" onclick="document.getElementById('gameModal').classList.remove('active');toggleChat()">💬 Preguntar en el chat</button>
+        <button class="btn-secondary" onclick="document.getElementById('gameModal').classList.remove('active');toggleChat()">Preguntar en el chat</button>
       </div>`;
   } else {
     bodyEl.innerHTML = `
-      <div class="game-modal-tag" style="margin-bottom:16px">🔥 ${torneoDelJuego.length} TORNEO${torneoDelJuego.length > 1 ? 'S' : ''} DISPONIBLE${torneoDelJuego.length > 1 ? 'S' : ''}</div>
+      <div class="game-modal-tag" style="margin-bottom:16px">${torneoDelJuego.length} TORNEO${torneoDelJuego.length > 1 ? 'S' : ''} DISPONIBLE${torneoDelJuego.length > 1 ? 'S' : ''}</div>
       ${torneoDelJuego.map(t => {
         const fechaStr = t.fecha?.toDate
           ? t.fecha.toDate().toLocaleString('es-AR', { weekday: 'long', day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })
@@ -190,12 +190,12 @@ window.openGameModal = function(gameId) {
         const pct   = t.cupos_total > 0 ? (t.cupos_ocupados / t.cupos_total) * 100 : 0;
         return `
           <div class="game-modal-torneo-card">
-            <div style="color:var(--acid);font-family:'Barlow Condensed',sans-serif;font-size:0.78rem;letter-spacing:2px;margin-bottom:6px">📅 ${fechaStr}</div>
+            <div style="color:var(--acid);font-family:'Barlow Condensed',sans-serif;font-size:0.78rem;letter-spacing:2px;margin-bottom:6px">${fechaStr}</div>
             <div style="color:#fff;font-family:'Barlow Condensed',sans-serif;font-size:1.15rem;font-weight:700;margin-bottom:10px">${t.subtitulo || t.nombre}</div>
             <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px">
-              <span class="game-modal-tag-sm">${t.modalidad === 'presencial' ? '🏠 Presencial' : '🌐 Online'}</span>
+              <span class="game-modal-tag-sm">${t.modalidad === 'presencial' ? 'Presencial' : 'Online'}</span>
               <span class="game-modal-tag-sm">${t.plataforma || ''}</span>
-              <span class="game-modal-tag-sm" style="color:${libre <= 3 ? 'var(--red)' : 'var(--orange)'}">⚡ ${libre} cupos</span>
+              <span class="game-modal-tag-sm" style="color:${libre <= 3 ? 'var(--red)' : 'var(--orange)'}">${libre} cupos</span>
             </div>
             <div style="background:rgba(255,255,255,0.05);height:4px;margin-bottom:12px">
               <div style="height:100%;background:${pct >= 87 ? 'var(--red)' : pct >= 60 ? 'var(--orange)' : 'var(--acid)'};width:${pct}%;transition:width 0.5s"></div>
@@ -230,20 +230,20 @@ function renderPromoCarousel() {
     const libre = t.cupos_total - (t.cupos_ocupados || 0);
     const imgOrEmoji = t.imagen
       ? `<img class="promo-slide-img" src="${t.imagen}" alt="${t.nombre}"
-            onerror="this.outerHTML='<div class=\\'promo-slide-emoji\\'>${t.emoji || '🎮'}</div>'">`
-      : `<div class="promo-slide-emoji">${t.emoji || '🎮'}</div>`;
+            onerror="this.outerHTML='<div class=\\'promo-slide-emoji\\'>${t.emoji || ''}</div>'">`
+      : `<div class="promo-slide-emoji">${t.emoji || ''}</div>`;
     return `
       <div class="promo-slide">
         ${imgOrEmoji}
         <div class="promo-slide-content">
           <div class="promo-slide-game">${t.nombre}</div>
-          <div class="promo-slide-date">📅 ${fechaStr}</div>
+          <div class="promo-slide-date">${fechaStr}</div>
           <div class="promo-slide-meta">
             <span class="promo-meta-tag">${t.modalidad || 'online'}</span>
             <span class="promo-meta-tag">${t.plataforma || ''}</span>
           </div>
           <button class="promo-slide-btn" onclick="window.location='torneo.html?id=${t.id}'">INSCRIBIRME AHORA</button>
-          <div class="promo-slots">⚡ Solo quedan ${libre} cupos</div>
+          <div class="promo-slots">Solo quedan ${libre} cupos</div>
         </div>
       </div>`;
   }).join('');
@@ -346,7 +346,7 @@ function buildCard(t) {
     full:     { cls: 'status-full',     label: 'Cupos llenos' },
     finished: { cls: 'status-finished', label: 'Finalizado' },
   };
-  const platMap = { mobile: '📱 Mobile', console: '🎮 PS5', pc: '🖥 Crossplay' };
+  const platMap = { mobile: 'Mobile', console: 'Consola', pc: 'PC / Cross' };
 
   const st        = statusMap[t.estado] || statusMap.soon;
   const plt       = platMap[t.plataforma] || t.plataforma || '';
@@ -363,8 +363,8 @@ function buildCard(t) {
   const cardTop = t.imagen
     ? `<img src="${t.imagen}" alt="${t.nombre}" style="width:100%;height:100%;object-fit:cover;display:block"
           onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">
-       <div class="card-game-bg ${t.plataforma || 'console'}" style="display:none;position:absolute;inset:0">${t.emoji || '🎮'}</div>`
-    : `<div class="card-game-bg ${t.plataforma || 'console'}">${t.emoji || '🎮'}</div>`;
+       <div class="card-game-bg ${t.plataforma || 'console'}" style="display:none;position:absolute;inset:0">${t.emoji || ''}</div>`
+    : `<div class="card-game-bg ${t.plataforma || 'console'}">${t.emoji || ''}</div>`;
 
   return `
     <div class="tournament-card" data-cat="${t.categoria || ''}">
@@ -375,11 +375,11 @@ function buildCard(t) {
         <div class="card-overlay"></div>
       </div>
       <div class="card-body">
-        <div class="card-date">📅 ${fechaStr}</div>
+        <div class="card-date">${fechaStr}</div>
         <div class="card-title">${t.nombre}</div>
         <div class="card-subtitle">${t.subtitulo || ''}</div>
         <div class="card-meta">
-          <div class="meta-item"><span class="meta-label">Modalidad</span><span class="meta-value">${t.modalidad === 'presencial' ? '🏠 Local' : '🌐 Online'}</span></div>
+          <div class="meta-item"><span class="meta-label">Modalidad</span><span class="meta-value">${t.modalidad === 'presencial' ? 'Presencial' : 'Online'}</span></div>
           <div class="meta-item"><span class="meta-label">Cupos libres</span><span class="meta-value" style="${libre <= 3 ? 'color:var(--red)' : ''}">${libre}</span></div>
         </div>
         <div class="slots-bar">
@@ -575,11 +575,11 @@ async function submitInscripcion() {
 
     const msg =
       `¡Hola! Quiero inscribirme al torneo de *${torneoNombre}*.\n\n` +
-      `👤 Nombre: ${nombre}\n🎮 Gamertag: ${gamertag}\n📞 Contacto: ${contacto}\n\n` +
+      `Nombre: ${nombre}\nGamertag: ${gamertag}\nContacto: ${contacto}\n\n` +
       `¿Cómo coordino el pago de $${torneoPrecio.toLocaleString('es-AR')}?`;
 
     setTimeout(() => {
-      alert(`¡Listo, ${nombre}! 🎮\nTe mandamos a WhatsApp para coordinar el pago.`);
+      alert(`¡Listo, ${nombre}!\nTe mandamos a WhatsApp para coordinar el pago.`);
       window.open(`https://wa.me/${WA_NUMBER}?text=${encodeURIComponent(msg)}`, '_blank');
       loadAll();
     }, 300);
@@ -874,8 +874,8 @@ function maybeShowPopup() {
 
   const imgHtml = t.imagen
     ? `<img class="promo-popup-img" src="${t.imagen}" alt="${t.nombre}"
-          onerror="this.outerHTML='<div class=\\'promo-popup-emoji\\'>${t.emoji || '🎮'}</div>'">`
-    : `<div class="promo-popup-emoji">${t.emoji || '🎮'}</div>`;
+          onerror="this.outerHTML='<div class=\\'promo-popup-emoji\\'>${t.emoji || ''}</div>'">`
+    : `<div class="promo-popup-emoji">${t.emoji || ''}</div>`;
 
   const inner = document.getElementById('promoPopupInner');
   if (!inner) return;
@@ -883,10 +883,10 @@ function maybeShowPopup() {
   inner.innerHTML = `
     ${imgHtml}
     <div class="promo-popup-content">
-      <div class="promo-popup-tag">🔥 Inscripciones abiertas</div>
+      <div class="promo-popup-tag">Inscripciones abiertas</div>
       <div class="promo-popup-title">${t.nombre}</div>
-      <div class="promo-popup-date">📅 ${fechaStr}</div>
-      <div class="promo-popup-slots">⚡ Solo quedan ${libre} cupos disponibles</div>
+      <div class="promo-popup-date">${fechaStr}</div>
+      <div class="promo-popup-slots">Solo quedan ${libre} cupos disponibles</div>
       <button class="promo-popup-btn" onclick="window.location='torneo.html?id=${t.id}'">INSCRIBIRME AHORA →</button>
     </div>`;
 

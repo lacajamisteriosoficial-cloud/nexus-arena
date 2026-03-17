@@ -257,11 +257,11 @@ function renderBracketVisual(equipos, bracketGuardado, t) {
       </div>
       <div class="bracket-team ${ganadorFinal === finalistas[0] ? 'winner' : ganadorFinal ? 'loser' : (finalistas[0] === '?' ? 'tbd' : '')}">
         <span class="bracket-team-name">${finalistas[0] === '?' ? 'Por definir' : finalistas[0]}</span>
-        ${ganadorFinal === finalistas[0] ? '<span style="color:var(--acid);font-size:1rem">👑</span>' : ''}
+        ${ganadorFinal === finalistas[0] ? '<span style="color:var(--acid);font-size:1rem">&#9733;</span>' : ''}
       </div>
       <div class="bracket-team ${ganadorFinal === finalistas[1] ? 'winner' : ganadorFinal ? 'loser' : (finalistas[1] === '?' ? 'tbd' : '')}">
         <span class="bracket-team-name">${finalistas[1] === '?' ? 'Por definir' : finalistas[1]}</span>
-        ${ganadorFinal === finalistas[1] ? '<span style="color:var(--acid);font-size:1rem">👑</span>' : ''}
+        ${ganadorFinal === finalistas[1] ? '<span style="color:var(--acid);font-size:1rem">&#9733;</span>' : ''}
       </div>
     </div>` : '';
 

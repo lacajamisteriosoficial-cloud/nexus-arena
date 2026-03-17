@@ -247,7 +247,11 @@
 .pago-info-item:last-child { border-right: none; }
 .pago-info-item:hover { background: rgba(200,255,0,0.03); }
 
-.pago-icon { font-size: 2rem; }
+.pago-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--acid); font-size: 2rem; }
 
 .pago-info-item strong { display: block; color: #fff; font-family: 'Barlow Condensed', sans-serif; font-size: 1rem; letter-spacing: 1px; margin-bottom: 4px; }
 .pago-info-item p { font-size: 0.8rem; color: var(--muted); }
@@ -685,7 +689,11 @@
   flex-wrap: wrap;
 }
 
-.streaming-icon { font-size: 3rem; opacity: 0.5; }
+.streaming-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--acid); font-size: 3rem; opacity: 0.5; }
 
 .streaming-badge {
   margin-left: auto;
@@ -1228,7 +1236,10 @@ input[type="range"].img-slider::-webkit-slider-thumb {
 .equipo-opcion input:checked + .equipo-opcion-box {
   border-color: var(--acid); background: rgba(200,255,0,0.05);
 }
-.equipo-opcion-icon { font-size: 1.4rem; }
+.equipo-opcion-icon {
+  display: flex;
+  align-items: center;
+  color: var(--acid); font-size: 1.4rem; }
 .equipo-opcion-label { font-family: 'Barlow Condensed', sans-serif; font-size: 0.95rem; color: #fff; font-weight: 700; }
 .equipo-opcion-desc { font-size: 0.75rem; color: var(--muted); }
 
