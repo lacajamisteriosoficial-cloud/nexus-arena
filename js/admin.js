@@ -462,6 +462,8 @@ window.confirmDelete = function(tipo, id, nombre) {
         encuesta:      'encuestas',
         chat_mensajes: 'chat_mensajes',
         juego:         'juegos_catalogo',
+        jugador:       'jugadores',
+        temporada:     'temporadas',
       };
       const colName = colMap[tipo] || tipo;
 
@@ -492,6 +494,8 @@ window.confirmDelete = function(tipo, id, nombre) {
         encuesta:      loadEncuestasAdmin,
         chat_mensajes: loadChatAdmin,
         juego:         loadCatalogo,
+        jugador:       loadJugadores,
+        temporada:     loadTemporadas,
       };
       if (reloaders[tipo]) reloaders[tipo]();
 
@@ -500,6 +504,14 @@ window.confirmDelete = function(tipo, id, nombre) {
       showToast('Error al eliminar', true);
     }
   };
+};
+
+// Helper para botones con data-attributes (evita escaping de comillas)
+window.confirmDeleteFromBtn = function(btn) {
+  const tipo   = btn.dataset.tipo;
+  const id     = btn.dataset.id;
+  const nombre = btn.dataset.nombre || '';
+  confirmDelete(tipo, id, nombre);
 };
 
 window.closeDeleteModal = function() {
@@ -1202,22 +1214,25 @@ async function loadJugadores() {
 }
 
 function buildJugadorAdminCard(j) {
+  const inicial  = (j.gamertag || '?').charAt(0);
+  const avatarSt = 'width:44px;height:44px;border-radius:50%;background:rgba(200,255,0,0.1);display:flex;align-items:center;justify-content:center;font-size:1.2rem;color:var(--acid)';
   const fotoHtml = j.foto
-    ? '<img src="' + j.foto + '" style="width:44px;height:44px;border-radius:50%;object-fit:cover;border:2px solid var(--acid)" onerror="this.outerHTML='<div style=width:44px;height:44px;border-radius:50%;background:rgba(200,255,0,0.1);display:flex;align-items:center;justify-content:center;font-family:Bebas Neue,sans-serif;font-size:1.2rem;color:var(--acid)>' + (j.gamertag||'?').charAt(0) + '</div>'">'
-    : '<div style="width:44px;height:44px;border-radius:50%;background:rgba(200,255,0,0.1);display:flex;align-items:center;justify-content:center;font-family:'Bebas Neue',sans-serif;font-size:1.2rem;color:var(--acid)">' + (j.gamertag||'?').charAt(0) + '</div>';
+    ? '<img src="' + j.foto + '" style="width:44px;height:44px;border-radius:50%;object-fit:cover;border:2px solid var(--acid)" onerror="this.outerHTML=\'<div style=\\\'' + avatarSt + '\\\'>' + inicial + '</div>\'">'
+    : '<div style="' + avatarSt + '">' + inicial + '</div>';
+  const confirmCall = 'confirmDelete(&quot;jugador&quot;,&quot;' + j.id + '&quot;,&quot;' + (j.gamertag||'').replace(/"/g,'') + '&quot;)';
   return '<div class="admin-torneo-card" style="display:flex;align-items:center;gap:16px">'
     + fotoHtml
     + '<div style="flex:1">'
-    + '<div class="atc-title" style="margin-bottom:4px">' + (j.gamertag || '—') + '</div>'
+    + '<div class="atc-title" style="margin-bottom:4px">' + (j.gamertag || '\u2014') + '</div>'
     + '<div style="color:var(--muted);font-size:0.8rem">' + (j.nombre || '') + '</div>'
     + '</div>'
     + '<div style="text-align:right">'
-    + '<div style="font-family:'Bebas Neue',sans-serif;font-size:1.5rem;color:var(--acid);line-height:1">' + (j.ranking_points || 0) + '</div>'
+    + '<div style="font-size:1.5rem;color:var(--acid);line-height:1;font-weight:700">' + (j.ranking_points || 0) + '</div>'
     + '<div style="font-size:0.65rem;letter-spacing:2px;color:var(--muted)">PUNTOS</div>'
     + '</div>'
     + '<div class="tbl-actions">'
     + '<a class="btn-tbl" href="jugador.html?id=' + j.id + '" target="_blank" style="text-decoration:none">Ver perfil</a>'
-    + '<button class="btn-tbl delete" onclick="confirmDelete('jugador','' + j.id + '','' + (j.gamertag||'').replace(/'/g,"\'") + '')">Eliminar</button>'
+    + '<button class="btn-tbl delete" onclick="' + confirmCall + '">Eliminar</button>'
     + '</div>'
     + '</div>';
 }
@@ -1257,16 +1272,17 @@ async function loadRanking() {
       tbody.innerHTML = '<tr><td colspan="6" class="table-loading">Sin jugadores registrados</td></tr>';
       return;
     }
-    tbody.innerHTML = jugadores.map((j, idx) => {
+    tbody.innerHTML = jugadores.map(function(j, idx) {
+      const avatarSt = 'display:inline-flex;width:32px;height:32px;border-radius:50%;background:rgba(200,255,0,0.1);align-items:center;justify-content:center;color:var(--acid);vertical-align:middle;margin-right:8px';
       const fotoHtml = j.foto
         ? '<img src="' + j.foto + '" style="width:32px;height:32px;border-radius:50%;object-fit:cover;vertical-align:middle;margin-right:8px" onerror="this.remove()">'
-        : '<span style="display:inline-flex;width:32px;height:32px;border-radius:50%;background:rgba(200,255,0,0.1);align-items:center;justify-content:center;font-family:Bebas Neue,sans-serif;color:var(--acid);vertical-align:middle;margin-right:8px">' + (j.gamertag||'?').charAt(0) + '</span>';
-      const posColor = idx===0?'#FFD700':idx===1?'#C0C0C0':idx===2?'#CD7F32':'var(--muted)';
+        : '<span style="' + avatarSt + '">' + (j.gamertag||'?').charAt(0) + '</span>';
+      const posColor = idx===0 ? '#FFD700' : idx===1 ? '#C0C0C0' : idx===2 ? '#CD7F32' : 'var(--muted)';
       return '<tr>'
-        + '<td style="font-family:'Bebas Neue',sans-serif;font-size:1.2rem;color:' + posColor + '">' + (idx+1) + '</td>'
+        + '<td style="font-size:1.2rem;font-weight:700;color:' + posColor + '">' + (idx+1) + '</td>'
         + '<td>' + fotoHtml + '</td>'
-        + '<td style="font-family:'Barlow Condensed',sans-serif;font-weight:700;color:#fff">' + (j.gamertag||'—') + '</td>'
-        + '<td style="font-family:'Bebas Neue',sans-serif;font-size:1.3rem;color:var(--acid)">' + (j.ranking_points||0) + '</td>'
+        + '<td style="font-weight:700;color:#fff">' + (j.gamertag||'\u2014') + '</td>'
+        + '<td style="font-size:1.3rem;font-weight:700;color:var(--acid)">' + (j.ranking_points||0) + '</td>'
         + '<td>' + (j.victorias||0) + '</td>'
         + '<td>' + (j.torneos_jugados||0) + '</td>'
         + '</tr>';
@@ -1299,7 +1315,7 @@ async function loadTemporadas() {
         + '<div style="color:var(--muted);font-size:0.8rem;margin-top:4px">' + inicio + ' — ' + fin + '</div>'
         + '</div>'
         + '<span class="badge ' + (t.activa?'badge-confirmado':'badge-cancelado') + '">' + (t.activa?'Activa':'Cerrada') + '</span>'
-        + '<button class="btn-tbl delete" onclick="confirmDelete('temporada','' + t.id + '','' + (t.nombre||'').replace(/'/g,"\'") + '')">Eliminar</button>'
+        + '<button class="btn-tbl delete" data-tipo="temporada" data-id="' + t.id + '" data-nombre="' + (t.nombre||'').replace(/"/g,'&quot;') + '" onclick="confirmDeleteFromBtn(this)">Eliminar</button>'
         + '</div>';
     }).join('');
   } catch (err) {
