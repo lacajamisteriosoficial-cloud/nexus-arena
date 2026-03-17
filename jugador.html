@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>NEXUS ARENA — Jugador</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Barlow+Condensed:wght@400;600;700&family=Barlow:wght@300;400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/styles.css?v=19">
+<link rel="stylesheet" href="css/public.css?v=19">
+<style>
+.jugador-hero {
+  min-height: 280px;
+  display: flex;
+  align-items: flex-end;
+  padding: 40px 6vw 36px;
+  position: relative;
+  background: var(--dark2);
+  border-bottom: 2px solid var(--acid);
+  overflow: hidden;
+}
+.jugador-hero-bg {
+  position: absolute; inset: 0;
+  background: radial-gradient(ellipse 60% 80% at 30% 50%, rgba(200,255,0,0.06), transparent 70%);
+}
+.jugador-hero-content { position: relative; z-index: 2; display: flex; align-items: center; gap: 32px; flex-wrap: wrap; }
+.jugador-avatar {
+  width: 100px; height: 100px;
+  border-radius: 50%;
+  border: 3px solid var(--acid);
+  object-fit: cover;
+  flex-shrink: 0;
+  background: var(--dark3);
+}
+.jugador-avatar-placeholder {
+  width: 100px; height: 100px;
+  border-radius: 50%;
+  border: 3px solid var(--acid);
+  background: rgba(200,255,0,0.08);
+  display: flex; align-items: center; justify-content: center;
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 2.8rem;
+  color: var(--acid);
+  flex-shrink: 0;
+}
+.jugador-info { flex: 1; min-width: 200px; }
+.jugador-gamertag {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: clamp(2.5rem, 6vw, 4rem);
+  letter-spacing: 3px;
+  color: #fff;
+  line-height: 1;
+  margin-bottom: 6px;
+}
+.jugador-nombre { font-size: 0.9rem; color: var(--muted); margin-bottom: 12px; }
+.jugador-stats-row { display: flex; gap: 32px; flex-wrap: wrap; margin-top: 16px; }
+.jugador-stat { display: flex; flex-direction: column; }
+.jugador-stat-num {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 2rem;
+  color: var(--acid);
+  line-height: 1;
+}
+.jugador-stat-label { font-size: 0.65rem; letter-spacing: 2px; color: var(--muted); margin-top: 3px; }
+
+.jugador-back {
+  display: inline-flex; align-items: center; gap: 6px;
+  color: var(--muted); font-size: 0.8rem; letter-spacing: 2px;
+  text-decoration: none; margin-bottom: 24px;
+  font-family: 'Barlow Condensed', sans-serif;
+  transition: color 0.2s;
+}
+.jugador-back:hover { color: var(--acid); }
+
+.jugador-main { padding: 60px 6vw; }
+
+.historial-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 2px;
+  margin-top: 24px;
+}
+.historial-card {
+  background: var(--dark3);
+  border: 1px solid var(--gray);
+  padding: 20px;
+  transition: border-color 0.2s;
+}
+.historial-card:hover { border-color: rgba(200,255,0,0.2); }
+.historial-torneo {
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: 1rem; font-weight: 700;
+  color: #fff; margin-bottom: 6px;
+}
+.historial-fecha { font-size: 0.75rem; color: var(--muted); margin-bottom: 10px; }
+.historial-resultado {
+  display: inline-block;
+  padding: 3px 12px;
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: 0.7rem; letter-spacing: 2px;
+  clip-path: polygon(5px 0%, 100% 0%, calc(100% - 5px) 100%, 0% 100%);
+}
+.historial-resultado.campeon  { background: var(--acid); color: #000; }
+.historial-resultado.finalista { background: rgba(192,192,192,0.2); color: #C0C0C0; }
+.historial-resultado.participante { background: var(--gray); color: var(--muted); }
+
+.jugador-loading {
+  display: flex; align-items: center; justify-content: center;
+  min-height: 300px; flex-direction: column; gap: 16px;
+  color: var(--muted);
+}
+.jugador-error {
+  text-align: center; padding: 80px 6vw;
+  color: var(--muted); font-family: 'Barlow Condensed', sans-serif;
+  font-size: 1.2rem; letter-spacing: 2px;
+}
+
+.ranking-badge {
+  display: inline-flex; align-items: center; gap: 8px;
+  background: rgba(200,255,0,0.1);
+  border: 1px solid rgba(200,255,0,0.25);
+  padding: 6px 16px;
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: 0.8rem; letter-spacing: 3px;
+  color: var(--acid);
+}
+</style>
+</head>
+<body>
+
+<nav class="nav" id="nav">
+  <div class="logo"><img src="logo.png" alt="Nexus Arena" class="logo-img"></div>
+  <ul class="nav-links">
+    <li><a href="index.html#torneos">Torneos</a></li>
+    <li><a href="index.html#galardones">Hall of Fame</a></li>
+  </ul>
+  <button class="nav-cta" onclick="window.location='index.html#torneos'">Ver torneos</button>
+</nav>
+
+<div id="jugadorLoading" class="jugador-loading" style="margin-top:80px">
+  <div class="spinner"></div>
+  <p>Cargando perfil...</p>
+</div>
+
+<div id="jugadorContent" style="display:none">
+
+  <div class="jugador-hero">
+    <div class="jugador-hero-bg"></div>
+    <div class="jugador-hero-content">
+      <div id="jugadorAvatarWrap"></div>
+      <div class="jugador-info">
+        <a href="index.html" class="jugador-back">&#8592; Volver al inicio</a>
+        <div class="jugador-gamertag" id="jugadorGamertag">—</div>
+        <div class="jugador-nombre" id="jugadorNombre"></div>
+        <div id="jugadorRankingBadge"></div>
+        <div class="jugador-stats-row">
+          <div class="jugador-stat">
+            <span class="jugador-stat-num" id="jugadorPuntos">0</span>
+            <span class="jugador-stat-label">PUNTOS</span>
+          </div>
+          <div class="jugador-stat">
+            <span class="jugador-stat-num" id="jugadorVictorias">0</span>
+            <span class="jugador-stat-label">VICTORIAS</span>
+          </div>
+          <div class="jugador-stat">
+            <span class="jugador-stat-num" id="jugadorTorneos">0</span>
+            <span class="jugador-stat-label">TORNEOS</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="jugador-main">
+    <div class="section-label">Historial</div>
+    <h2 class="section-title">TORNEOS <span>JUGADOS</span></h2>
+    <div class="historial-grid" id="historialGrid">
+      <p style="color:var(--muted);grid-column:1/-1">Cargando historial...</p>
+    </div>
+  </div>
+
+</div>
+
+<div id="jugadorError" class="jugador-error" style="display:none">
+  Jugador no encontrado.
+  <br><br>
+  <a href="index.html" style="color:var(--acid);font-size:0.85rem">&#8592; Volver al inicio</a>
+</div>
+
+<script type="module" src="js/jugador.js"></script>
+</body>
+</html>
