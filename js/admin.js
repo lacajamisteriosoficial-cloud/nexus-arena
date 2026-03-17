@@ -1072,10 +1072,10 @@ window.abrirBracketAdmin = async function(torneoId, torneoNombre) {
       html += '<div style="padding:4px 12px;font-size:0.6rem;letter-spacing:2px;color:var(--muted);border-bottom:1px solid var(--gray)">PARTIDO ' + (idx+1) + '</div>';
       html += '<div style="display:flex;align-items:center;padding:8px 12px;gap:8px;border-bottom:1px solid rgba(255,255,255,0.05)">';
       html += '<span style="flex:1;font-family:Barlow Condensed,sans-serif;font-weight:700;color:' + (p.ganador===p.eq1?'var(--acid)':'#fff') + '">' + p.eq1 + '</span>';
-      html += '<button class="btn-tbl confirm" style="font-size:0.65rem;padding:3px 8px" onclick="marcarGanadorBracket('' + torneoId + '','' + p.key + '','' + p.eq1.replace(/'/g,"\'") + '')">Ganador</button></div>';
+      html += '<button class="btn-tbl confirm" style="font-size:0.65rem;padding:3px 8px" onclick="marcarGanadorBracket(&quot;' + torneoId + '&quot;,&quot;' + p.key + '&quot;,&quot;' + encodeURIComponent(p.eq1) + '&quot;)">Ganador</button></div>';
       html += '<div style="display:flex;align-items:center;padding:8px 12px;gap:8px">';
       html += '<span style="flex:1;font-family:Barlow Condensed,sans-serif;font-weight:700;color:' + (p.ganador===p.eq2?'var(--acid)':'#fff') + '">' + p.eq2 + '</span>';
-      html += '<button class="btn-tbl confirm" style="font-size:0.65rem;padding:3px 8px" onclick="marcarGanadorBracket('' + torneoId + '','' + p.key + '','' + p.eq2.replace(/'/g,"\'") + '')">Ganador</button></div>';
+      html += '<button class="btn-tbl confirm" style="font-size:0.65rem;padding:3px 8px" onclick="marcarGanadorBracket(&quot;' + torneoId + '&quot;,&quot;' + p.key + '&quot;,&quot;' + encodeURIComponent(p.eq2) + '&quot;)">Ganador</button></div>';
       if (p.ganador) html += '<div style="padding:4px 12px;font-size:0.65rem;color:var(--acid);background:rgba(200,255,0,0.05)">&#9733; ' + p.ganador + '</div>';
       html += '</div>';
     });
@@ -1107,7 +1107,8 @@ window.abrirBracketAdmin = async function(torneoId, torneoNombre) {
   }
 };
 
-window.marcarGanadorBracket = async function(torneoId, matchKey, ganador) {
+window.marcarGanadorBracket = async function(torneoId, matchKey, ganadorEncoded) {
+  const ganador = decodeURIComponent(ganadorEncoded);
   try {
     const snap = await getDoc(doc(db, 'torneos', torneoId));
     if (!snap.exists()) return;
@@ -1133,17 +1134,43 @@ window.marcarGanadorBracket = async function(torneoId, matchKey, ganador) {
 
 window.marcarGanadorFinal = async function(torneoId, ganador, finalistasStr) {
   try {
+    const finalistas = finalistasStr.split(',');
     await updateDoc(doc(db, 'torneos', torneoId), {
       'bracket.ganador_final': ganador,
-      'bracket.finalistas': finalistasStr.split(','),
+      'bracket.finalistas':    finalistas,
     });
-    showToast('Campeón registrado: ' + ganador);
+
+    // Asignar puntos automáticamente
+    // Campeón: 100 pts · Finalista: 50 pts · Participante en bracket: 10 pts
+    const PUNTOS = { campeon: 100, finalista: 50, participante: 10 };
+    const jugSnap = await getDocs(collection(db, 'jugadores'));
+    const jugadores = jugSnap.docs.map(d => ({ id: d.id, ...d.data() }));
+
+    const updates = [];
+    for (const j of jugadores) {
+      const gt = j.gamertag || '';
+      if (gt === ganador) {
+        updates.push(updateDoc(doc(db, 'jugadores', j.id), {
+          ranking_points:  (j.ranking_points  || 0) + PUNTOS.campeon,
+          victorias:       (j.victorias       || 0) + 1,
+          torneos_jugados: (j.torneos_jugados || 0) + 1,
+        }));
+      } else if (finalistas.includes(gt)) {
+        updates.push(updateDoc(doc(db, 'jugadores', j.id), {
+          ranking_points:  (j.ranking_points  || 0) + PUNTOS.finalista,
+          torneos_jugados: (j.torneos_jugados || 0) + 1,
+        }));
+      }
+    }
+    if (updates.length > 0) await Promise.all(updates);
+
+    showToast('Campeon: ' + ganador + (updates.length > 0 ? ' · Puntos asignados ✓' : ''));
     const title = document.getElementById('bracketModalTitle');
     const nombre = title ? title.textContent.replace('BRACKET — ','') : '';
     abrirBracketAdmin(torneoId, nombre);
   } catch (err) {
     console.error(err);
-    showToast('Error al guardar campeón', true);
+    showToast('Error al guardar campeon', true);
   }
 };
 
@@ -1186,6 +1213,7 @@ function buildJugadorAdminCard(j) {
     + '<div style="font-size:0.65rem;letter-spacing:2px;color:var(--muted)">PUNTOS</div>'
     + '</div>'
     + '<div class="tbl-actions">'
+    + '<a class="btn-tbl" href="jugador.html?id=' + j.id + '" target="_blank" style="text-decoration:none">Ver perfil</a>'
     + '<button class="btn-tbl delete" onclick="confirmDelete('jugador','' + j.id + '','' + (j.gamertag||'').replace(/'/g,"\'") + '')">Eliminar</button>'
     + '</div>'
     + '</div>';
