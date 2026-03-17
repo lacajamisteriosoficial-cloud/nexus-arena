@@ -30,11 +30,25 @@ document.addEventListener('DOMContentLoaded', () => {
   loadAll();
   setTimeout(maybeShowPopup, 2500);
   setupChat();
+  setupReveal();
   setTimeout(() => {
     const u = document.getElementById('chatUnread');
     if (u) u.style.display = 'flex';
   }, 4000);
 });
+
+// ── REVEAL ON SCROLL ─────────────────────────────────────────
+function setupReveal() {
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        entry.target.classList.add('visible');
+        observer.unobserve(entry.target);
+      }
+    });
+  }, { threshold: 0.08, rootMargin: '0px 0px -40px 0px' });
+  document.querySelectorAll('.reveal').forEach(el => observer.observe(el));
+}
 
 // ── CARGA DE DATOS ───────────────────────────────────────────
 async function loadAll() {
@@ -756,7 +770,7 @@ function renderGalardones() {
         + "<div class=\"hof-trono-glow " + tipoTrono + "-glow\"></div>"
         + "</div>"
         + "<div class=\"hof-trono-label\" style=\"" + colorSt + "\">" + posLabel + "</div>"
-        + "<div class=\"hof-trono-name-real\">" + (g.gamertag || "") + "</div>"
+        + "<div class=\"hof-trono-name-real\">" + (g.jugador_id ? "<a href='jugador.html?id=" + g.jugador_id + "' style='color:inherit;text-decoration:none;border-bottom:1px solid rgba(200,255,0,0.4)'>" + (g.gamertag || "") + "</a>" : (g.gamertag || "")) + "</div>"
         + "<div class=\"hof-trono-torneo\">" + (g.torneo_nombre || "") + "</div>"
         + "<div class=\"hof-trono-fecha\">" + fechaStr + "</div>"
         + "</div>";
