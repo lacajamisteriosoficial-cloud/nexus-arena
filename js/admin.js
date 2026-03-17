@@ -1090,7 +1090,7 @@ window.abrirBracketAdmin = async function(torneoId, torneoNombre) {
         const f = finalistas[fi];
         html += '<div style="display:flex;align-items:center;padding:10px 14px;gap:8px;' + (fi===0?'border-bottom:1px solid rgba(255,255,255,0.05)':'') + '">';
         html += '<span style="flex:1;font-family:Barlow Condensed,sans-serif;font-size:1.1rem;font-weight:700;color:' + (ganadorFinal===f?'var(--acid)':'#fff') + '">' + f + '</span>';
-        html += '<button class="btn-tbl confirm" style="font-size:0.65rem" onclick="marcarGanadorFinal('' + torneoId + '','' + f.replace(/'/g,"\'") + '','' + finalistas.join(',').replace(/'/g,"\'") + '')">Campeón</button></div>';
+        html += '<button class="btn-tbl confirm" style="font-size:0.65rem" onclick="marcarGanadorFinal(this)" data-tid="' + torneoId + '" data-ganador="' + encodeURIComponent(f) + '" data-finalistas="' + encodeURIComponent(finalistas.join('|')) + '">Camp&eacute;on</button></div>';
       });
       if (ganadorFinal) html += '<div style="padding:6px 14px;font-size:0.7rem;color:var(--acid);background:rgba(200,255,0,0.08)">&#9733; CAMPEÓN: ' + ganadorFinal + '</div>';
       html += '</div></div>';
@@ -1132,7 +1132,10 @@ window.marcarGanadorBracket = async function(torneoId, matchKey, ganadorEncoded)
   }
 };
 
-window.marcarGanadorFinal = async function(torneoId, ganador, finalistasStr) {
+window.marcarGanadorFinal = async function(btn) {
+  const torneoId      = btn.dataset.tid;
+  const ganador       = decodeURIComponent(btn.dataset.ganador);
+  const finalistasStr = decodeURIComponent(btn.dataset.finalistas).replace(/\|/g, ',');
   try {
     const finalistas = finalistasStr.split(',');
     await updateDoc(doc(db, 'torneos', torneoId), {
