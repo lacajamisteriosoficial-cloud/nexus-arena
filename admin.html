@@ -452,17 +452,71 @@
       <div class="admin-header">
         <h1 class="admin-title">Configuración</h1>
       </div>
-      <div class="form-card" style="max-width:600px">
+
+      <!-- TICKER -->
+      <div class="form-card" style="max-width:760px;margin-bottom:2px">
         <div class="admin-subtitle">Ticker de juegos</div>
         <p style="color:var(--muted);font-size:0.85rem;margin-bottom:16px">La barra animada que corre en la parte superior. Un nombre por línea.</p>
         <div class="form-group">
-          <textarea class="form-input form-textarea" id="tickerItems" style="height:160px;font-family:monospace"
+          <textarea class="form-input form-textarea" id="tickerItems" style="height:120px;font-family:monospace"
             placeholder="Wild Rift&#10;PUBG Mobile&#10;Fortnite&#10;FIFA 23"></textarea>
         </div>
         <div class="form-actions">
-          <button class="btn-admin-primary" onclick="saveTicker()">💾 Guardar ticker</button>
+          <button class="btn-admin-primary" onclick="saveTicker()">Guardar ticker</button>
         </div>
       </div>
+
+      <!-- HOMEPAGE HERO -->
+      <div class="form-card" style="max-width:760px;margin-bottom:2px;margin-top:2px">
+        <div class="admin-subtitle">Hero — Página principal</div>
+        <p style="color:var(--muted);font-size:0.85rem;margin-bottom:20px">Textos del hero. Dejar vacío para usar el texto por defecto.</p>
+        <div class="form-row" style="margin-bottom:16px">
+          <div class="form-group" style="margin-bottom:0">
+            <label class="form-label">Badge (ej: Torneos privados — Villa de Mayo)</label>
+            <input type="text" class="form-input" id="cfgHeroBadge" placeholder="Torneos privados — Villa de Mayo, Buenos Aires">
+          </div>
+          <div class="form-group" style="margin-bottom:0">
+            <label class="form-label">Subtítulo hero</label>
+            <input type="text" class="form-input" id="cfgHeroSub" placeholder="Torneos competitivos online y presenciales...">
+          </div>
+        </div>
+        <div class="form-row" style="margin-bottom:16px">
+          <div class="form-group" style="margin-bottom:0">
+            <label class="form-label">Botón CTA principal</label>
+            <input type="text" class="form-input" id="cfgHeroCta1" placeholder="Ver torneos activos">
+          </div>
+          <div class="form-group" style="margin-bottom:0">
+            <label class="form-label">Botón CTA secundario</label>
+            <input type="text" class="form-input" id="cfgHeroCta2" placeholder="Cómo funciona">
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Footer tagline</label>
+          <input type="text" class="form-input" id="cfgFooterTagline" placeholder="Torneos privados de videojuegos. Online y presencial. Villa de Mayo, GBA.">
+        </div>
+        <div class="form-actions">
+          <button class="btn-admin-primary" onclick="saveHomepage()">Guardar homepage</button>
+        </div>
+      </div>
+
+      <!-- SECCIONES ACTIVAS -->
+      <div class="form-card" style="max-width:760px;margin-top:2px">
+        <div class="admin-subtitle">Secciones visibles</div>
+        <p style="color:var(--muted);font-size:0.85rem;margin-bottom:20px">Activá o desactivá secciones de la página pública.</p>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:24px">
+          <label class="cfg-toggle"><input type="checkbox" id="secJuegos" checked> <span>Catálogo de juegos</span></label>
+          <label class="cfg-toggle"><input type="checkbox" id="secTorneos" checked> <span>Torneos activos</span></label>
+          <label class="cfg-toggle"><input type="checkbox" id="secGalardones" checked> <span>Hall of Fame</span></label>
+          <label class="cfg-toggle"><input type="checkbox" id="secResenas" checked> <span>Reseñas</span></label>
+          <label class="cfg-toggle"><input type="checkbox" id="secEncuestas" checked> <span>Encuestas</span></label>
+          <label class="cfg-toggle"><input type="checkbox" id="secComoFunciona" checked> <span>Cómo funciona</span></label>
+          <label class="cfg-toggle"><input type="checkbox" id="secReglas" checked> <span>Reglas del juego</span></label>
+        </div>
+        <div class="form-actions">
+          <button class="btn-admin-primary" onclick="saveSecciones()">Guardar secciones</button>
+        </div>
+      </div>
+
     </section>
 
   </main>

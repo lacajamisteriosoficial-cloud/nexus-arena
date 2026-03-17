@@ -69,6 +69,39 @@ async function loadAll() {
       }
     }
 
+    // ── CONFIG HOMEPAGE ──────────────────────────────────────
+    const homepageDoc = configSnap.docs.find(d => d.id === 'homepage');
+    if (homepageDoc) {
+      const hp = homepageDoc.data();
+      if (hp.hero_badge)    { const el = document.querySelector('.hero-badge');   if (el) el.textContent = hp.hero_badge; }
+      if (hp.hero_title)    { const el = document.querySelector('.hero h1');      if (el) el.innerHTML   = hp.hero_title; }
+      if (hp.hero_sub)      { const el = document.querySelector('.hero-sub');     if (el) el.innerHTML   = hp.hero_sub; }
+      if (hp.hero_cta1)     { const el = document.querySelector('.btn-primary');  if (el) el.textContent = hp.hero_cta1; }
+      if (hp.hero_cta2)     { const el = document.querySelector('.btn-secondary');if (el) el.textContent = hp.hero_cta2; }
+      if (hp.footer_tagline){ const el = document.querySelector('.footer-tagline');if (el) el.textContent = hp.footer_tagline; }
+    }
+
+    // ── CONFIG SECCIONES ─────────────────────────────────────
+    const seccionesDoc = configSnap.docs.find(d => d.id === 'secciones');
+    if (seccionesDoc) {
+      const sec = seccionesDoc.data();
+      const secciones = [
+        { id: 'juegos',        key: 'juegos' },
+        { id: 'torneos',       key: 'torneos' },
+        { id: 'galardones',    key: 'galardones' },
+        { id: 'resenas',       key: 'resenas' },
+        { id: 'encuestas',     key: 'encuestas' },
+        { id: 'como-funciona', key: 'como_funciona' },
+        { id: 'reglas',        key: 'reglas' },
+      ];
+      secciones.forEach(s => {
+        if (sec[s.key] === false) {
+          const el = document.getElementById(s.id);
+          if (el) el.style.display = 'none';
+        }
+      });
+    }
+
     galardones = galardonSnap.docs
       .map(d => ({ id: d.id, ...d.data() }))
       .sort((a, b) => (b.fecha?.toDate?.()?.getTime() || 0) - (a.fecha?.toDate?.()?.getTime() || 0));

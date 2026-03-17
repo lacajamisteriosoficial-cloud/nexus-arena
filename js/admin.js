@@ -989,15 +989,8 @@ window.saveNuevoJuego = async function() {
 
 // ── CONFIG / TICKER ──────────────────────────────────────────
 async function loadConfig() {
-  try {
-    const snap      = await getDocs(collection(db, 'config'));
-    const tickerDoc = snap.docs.find(d => d.id === 'ticker');
-    if (tickerDoc) {
-      const items = tickerDoc.data().items || [];
-      const el    = document.getElementById('tickerItems');
-      if (el) el.value = items.join('\n');
-    }
-  } catch (err) { console.error(err); }
+  // Delegar en loadConfigSection que ya tiene toda la lógica
+  loadConfigSection();
 }
 
 window.saveTicker = async function() {
@@ -1012,6 +1005,85 @@ window.saveTicker = async function() {
     console.error(err);
   }
 };
+
+// ── CONFIG HOMEPAGE ─────────────────────────────────────────
+window.saveHomepage = async function() {
+  const data = {
+    hero_badge:     document.getElementById('cfgHeroBadge')?.value.trim()    || '',
+    hero_sub:       document.getElementById('cfgHeroSub')?.value.trim()      || '',
+    hero_cta1:      document.getElementById('cfgHeroCta1')?.value.trim()     || '',
+    hero_cta2:      document.getElementById('cfgHeroCta2')?.value.trim()     || '',
+    footer_tagline: document.getElementById('cfgFooterTagline')?.value.trim()|| '',
+  };
+  try {
+    await setDoc(doc(db, 'config', 'homepage'), data);
+    showToast('Homepage guardada ✓');
+  } catch (err) {
+    showToast('Error al guardar', true);
+    console.error(err);
+  }
+};
+
+// ── CONFIG SECCIONES ─────────────────────────────────────────
+window.saveSecciones = async function() {
+  const data = {
+    juegos:        document.getElementById('secJuegos')?.checked       ?? true,
+    torneos:       document.getElementById('secTorneos')?.checked      ?? true,
+    galardones:    document.getElementById('secGalardones')?.checked   ?? true,
+    resenas:       document.getElementById('secResenas')?.checked      ?? true,
+    encuestas:     document.getElementById('secEncuestas')?.checked    ?? true,
+    como_funciona: document.getElementById('secComoFunciona')?.checked ?? true,
+    reglas:        document.getElementById('secReglas')?.checked       ?? true,
+  };
+  try {
+    await setDoc(doc(db, 'config', 'secciones'), data);
+    showToast('Secciones guardadas ✓');
+  } catch (err) {
+    showToast('Error al guardar', true);
+    console.error(err);
+  }
+};
+
+// Carga los valores actuales de config al entrar a la sección
+async function loadConfigSection() {
+  try {
+    const safe = p => p.catch(() => null);
+    const [hpSnap, secSnap, tickerSnap] = await Promise.all([
+      safe(getDoc(doc(db, 'config', 'homepage'))),
+      safe(getDoc(doc(db, 'config', 'secciones'))),
+      safe(getDoc(doc(db, 'config', 'ticker'))),
+    ]);
+
+    if (hpSnap && hpSnap.exists()) {
+      const hp = hpSnap.data();
+      const set = (id, val) => { const el = document.getElementById(id); if (el) el.value = val || ''; };
+      set('cfgHeroBadge',     hp.hero_badge);
+      set('cfgHeroSub',       hp.hero_sub);
+      set('cfgHeroCta1',      hp.hero_cta1);
+      set('cfgHeroCta2',      hp.hero_cta2);
+      set('cfgFooterTagline', hp.footer_tagline);
+    }
+
+    if (secSnap && secSnap.exists()) {
+      const sec = secSnap.data();
+      const setChk = (id, val) => { const el = document.getElementById(id); if (el) el.checked = val !== false; };
+      setChk('secJuegos',       sec.juegos);
+      setChk('secTorneos',      sec.torneos);
+      setChk('secGalardones',   sec.galardones);
+      setChk('secResenas',      sec.resenas);
+      setChk('secEncuestas',    sec.encuestas);
+      setChk('secComoFunciona', sec.como_funciona);
+      setChk('secReglas',       sec.reglas);
+    }
+
+    if (tickerSnap && tickerSnap.exists()) {
+      const el = document.getElementById('tickerItems');
+      if (el) el.value = (tickerSnap.data().items || []).join('\n');
+    }
+  } catch (err) {
+    console.error('loadConfigSection error:', err);
+  }
+}
 
 // ── CORRECCIÓN MANUAL DE CUPOS ───────────────────────────────
 
