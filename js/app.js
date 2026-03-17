@@ -465,6 +465,7 @@ function buildCard(t) {
         <div class="card-subtitle">${t.subtitulo || ''}</div>
         <div class="card-meta">
           <div class="meta-item"><span class="meta-label">Modalidad</span><span class="meta-value">${t.modalidad === 'presencial' ? 'Presencial' : 'Online'}</span></div>
+          <div class="meta-item"><span class="meta-label">Entrada</span><span class="meta-value ${t.precio === 0 ? 'prize' : ''}">${t.precio === 0 ? 'GRATIS' : '$' + (t.precio || 0).toLocaleString('es-AR')}</span></div>
           <div class="meta-item"><span class="meta-label">Cupos libres</span><span class="meta-value" style="${libre <= 3 ? 'color:var(--red)' : ''}">${libre}</span></div>
         </div>
         <div class="slots-bar">
@@ -506,14 +507,14 @@ window.openModal = function(torneoId) {
   const fechaStr = t.fecha?.toDate
     ? t.fecha.toDate().toLocaleString('es-AR', { weekday: 'long', day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })
     : '';
-  const premio = t.premio || Math.round(t.cupos_total * (t.precio || 5000) * 0.8);
+  const premio = t.precio === 0 ? 0 : (t.premio || Math.round(t.cupos_total * (t.precio || 0) * 0.8));
 
   document.getElementById('modalTitle').textContent   = 'INSCRIPCIÓN — ' + t.nombre.toUpperCase();
   document.getElementById('modalGame').textContent    = t.nombre;
   document.getElementById('modalDate').textContent    = fechaStr;
   document.getElementById('modalMode').textContent    = t.modalidad === 'presencial' ? 'Presencial — Villa de Mayo' : 'Online';
-  document.getElementById('modalPrize').textContent   = `$${premio.toLocaleString('es-AR')}`;
-  document.getElementById('modalEntrada').textContent = `$${(t.precio || 5000).toLocaleString('es-AR')}`;
+  document.getElementById('modalPrize').textContent   = t.precio === 0 ? 'Torneo gratuito' : `$${premio.toLocaleString('es-AR')}`;
+  document.getElementById('modalEntrada').textContent = t.precio === 0 ? 'GRATIS' : `$${(t.precio || 0).toLocaleString('es-AR')}`;
   document.getElementById('modalPremioTC').textContent = `$${premio.toLocaleString('es-AR')}`;
   document.getElementById('modalCuposTC').textContent  = t.cupos_total;
 
@@ -615,7 +616,7 @@ async function submitInscripcion() {
   // closeModal() pone selectedTorneo = null, si se llama antes de usar estos datos → crash
   const torneoId     = selectedTorneo.id;
   const torneoNombre = selectedTorneo.nombre;
-  const torneoPrecio = selectedTorneo.precio || 5000;
+  const torneoPrecio = selectedTorneo.precio || 0;
 
   btn.disabled    = true;
   btn.textContent = 'Guardando...';
@@ -661,10 +662,10 @@ async function submitInscripcion() {
     const msg =
       `¡Hola! Quiero inscribirme al torneo de *${torneoNombre}*.\n\n` +
       `Nombre: ${nombre}\nGamertag: ${gamertag}\nContacto: ${contacto}\n\n` +
-      `¿Cómo coordino el pago de $${torneoPrecio.toLocaleString('es-AR')}?`;
+      (torneoPrecio === 0 ? '¡Es un torneo gratuito! ¿Cómo coordino mi inscripción?' : `¿Cómo coordino el pago de $${torneoPrecio.toLocaleString('es-AR')}?`);
 
     setTimeout(() => {
-      alert(`¡Listo, ${nombre}!\nTe mandamos a WhatsApp para coordinar el pago.`);
+      alert(`¡Listo, ${nombre}!\n${torneoPrecio === 0 ? 'Te mandamos a WhatsApp para confirmar tu inscripción.' : 'Te mandamos a WhatsApp para coordinar el pago.'}`);
       window.open(`https://wa.me/${WA_NUMBER}?text=${encodeURIComponent(msg)}`, '_blank');
       loadAll();
     }, 300);
@@ -987,7 +988,7 @@ window.closePromoPopup = function(e) {
 
 // ── CHAT ─────────────────────────────────────────────────────
 const FAQ = [
-  { q: '¿Cuánto sale la entrada?',      a: 'El precio de entrada varía por torneo. Lo ves cuando te querés inscribir. Generalmente desde $5.000.' },
+  { q: '¿Cuánto sale la entrada?',      a: 'Depende del torneo. Algunos son gratuitos, otros tienen entrada. Lo ves en la página del torneo al inscribirte.' },
   { q: '¿Cómo pago?',                   a: 'Por transferencia bancaria (acreditación hasta 48hs hábiles) o efectivo según disponibilidad. Te coordinamos por WhatsApp.' },
   { q: '¿Cuándo cobro si gano?',        a: 'El premio se acredita dentro de las 48hs hábiles de finalizado el torneo. Transferencia o efectivo.' },
   { q: '¿Qué pasa si no puedo jugar?',  a: 'No hay devoluciones, pero podés ceder tu lugar a otra persona antes de que cierren las inscripciones.' },

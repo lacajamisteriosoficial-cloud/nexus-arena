@@ -12,6 +12,10 @@
 </head>
 <body>
 
+<div id="fb-root"></div>
+<!-- REEMPLAZÁ 1234567890 con tu APP_ID de Facebook Developers -->
+<script async defer crossorigin="anonymous" src="https://connect.facebook.net/es_LA/sdk.js#xfbml=1&version=v25.0&appId=1234567890"></script>
+
 <nav class="nav" id="nav">
   <div class="logo"><img src="logo.png" alt="Nexus Arena" class="logo-img"></div>
   <ul class="nav-links">
@@ -169,6 +173,32 @@
   <div id="encuestasContainer"><div class="loading-state"><div class="spinner"></div><p>Cargando...</p></div></div>
 </section>
 
+<!-- FACEBOOK WIDGET -->
+<section style="padding:40px 6vw;background:var(--dark2);border-top:1px solid rgba(255,255,255,0.04)">
+  <div style="display:flex;align-items:flex-start;gap:48px;flex-wrap:wrap">
+    <div style="flex:1;min-width:200px">
+      <div class="section-label" style="margin-bottom:8px">Seguinos</div>
+      <h3 style="font-family:'Bebas Neue',sans-serif;font-size:1.8rem;letter-spacing:3px;color:#fff;margin-bottom:6px">NEXUS ARENA<br><span style="color:var(--acid)">EN FACEBOOK</span></h3>
+      <p style="color:var(--muted);font-size:0.85rem">Seguí la página para enterarte de los próximos torneos, resultados y novedades.</p>
+    </div>
+    <div style="flex-shrink:0">
+      <div class="fb-page"
+        data-href="https://www.facebook.com/profile.php?id=61582193072472"
+        data-tabs="timeline"
+        data-width="300"
+        data-height="200"
+        data-small-header="true"
+        data-adapt-container-width="true"
+        data-hide-cover="false"
+        data-show-facepile="true">
+        <blockquote cite="https://www.facebook.com/profile.php?id=61582193072472" class="fb-xfbml-parse-ignore">
+          <a href="https://www.facebook.com/profile.php?id=61582193072472">NEXUS ARENA</a>
+        </blockquote>
+      </div>
+    </div>
+  </div>
+</section>
+
 <!-- FOOTER -->
 <footer>
   <div class="footer-top">
@@ -184,6 +214,21 @@
       <li><a href="https://wa.me/5491157687215" target="_blank" id="footerWA">WhatsApp</a></li>
       <li><a href="#" id="igLink">Instagram</a></li>
     </ul></div>
+    <div class="footer-fb">
+      <div class="fb-page"
+        data-href="https://www.facebook.com/profile.php?id=61582193072472"
+        data-tabs="timeline"
+        data-width="280"
+        data-height="160"
+        data-small-header="true"
+        data-adapt-container-width="false"
+        data-hide-cover="false"
+        data-show-facepile="false">
+        <blockquote cite="https://www.facebook.com/profile.php?id=61582193072472" class="fb-xfbml-parse-ignore">
+          <a href="https://www.facebook.com/profile.php?id=61582193072472">NEXUS ARENA</a>
+        </blockquote>
+      </div>
+    </div>
   </div>
   <div class="footer-bottom">
     <p class="footer-copy" id="footerCopy">© 2025 NexusArena</p>

@@ -203,7 +203,7 @@ function buildAdminCard(t) {
       <div class="atc-meta">
         <span class="atc-tag">${t.plataforma || ''}</span>
         <span class="atc-tag">${t.modalidad || ''}</span>
-        <span class="atc-tag">$${(t.precio || 0).toLocaleString('es-AR')}</span>
+        <span class="atc-tag">${t.precio === 0 ? 'GRATIS' : '$' + (t.precio || 0).toLocaleString('es-AR')}</span>
       </div>
       <div class="atc-slots">🎟 ${t.cupos_ocupados || 0} / ${t.cupos_total} cupos · ${libre} libres</div>
       <div style="display:flex;align-items:center;gap:8px;margin:10px 0;padding:10px;background:rgba(200,255,0,0.04);border:1px solid rgba(200,255,0,0.12)">
@@ -302,7 +302,8 @@ async function saveTorneo() {
   const modalidad  = document.getElementById('tModalidad').value;
   const categoria  = document.getElementById('tCategoria').value;
   const cupos      = parseInt(document.getElementById('tCupos').value);
-  const precio     = parseInt(document.getElementById('tPrecio').value);
+  const precioRaw  = document.getElementById('tPrecio').value;
+  const precio     = precioRaw === '' ? 0 : (parseInt(precioRaw) || 0);
   const emoji      = document.getElementById('tEmoji').value.trim() || '';
   const estado     = document.getElementById('tEstado').value;
   const desc       = document.getElementById('tDescripcion').value.trim();
@@ -311,7 +312,7 @@ async function saveTorneo() {
   const errEl      = document.getElementById('formTorneoError');
 
   errEl.style.display = 'none';
-  if (!nombre || !fechaVal || !plataforma || !cupos || !precio) {
+  if (!nombre || !fechaVal || !plataforma || !cupos) {
     errEl.textContent = 'Completá los campos obligatorios (*)';
     errEl.style.display = 'block';
     return;
@@ -331,7 +332,7 @@ async function saveTorneo() {
     descripcion: desc, imagen: imagen || '',
     fecha: new Date(fechaVal),
     alias_mp:             aliasMP,
-    premio:               premio || Math.round(cupos * precio * 0.8),
+    premio:               precio === 0 ? 0 : (premio || Math.round(cupos * precio * 0.8)),
     jugadores_por_equipo: jpe,
     frase_pago_titulo:      frasePagoTitulo,
     frase_pago_desc:        frasePagoDesc,
@@ -375,7 +376,7 @@ window.editTorneo = async function(id) {
     document.getElementById('tModalidad').value     = t.modalidad || 'online';
     document.getElementById('tCategoria').value     = t.categoria || 'console';
     document.getElementById('tCupos').value         = t.cupos_total || '';
-    document.getElementById('tPrecio').value        = t.precio || 5000;
+    document.getElementById('tPrecio').value        = (t.precio !== undefined ? t.precio : 0);
     document.getElementById('tEmoji').value         = t.emoji || '';
     document.getElementById('tEstado').value        = t.estado || 'open';
     document.getElementById('tDescripcion').value   = t.descripcion || '';
@@ -426,7 +427,7 @@ window.resetTorneoForm = function() {
   ['tNombre', 'tSubtitulo', 'tFecha', 'tCupos', 'tEmoji', 'tDescripcion', 'tImagen'].forEach(id => {
     document.getElementById(id).value = '';
   });
-  document.getElementById('tPrecio').value    = '5000';
+  document.getElementById('tPrecio').value    = '0';
   document.getElementById('tPlatforma').value  = '';
   document.getElementById('tEstado').value    = 'open';
   const aliasReset = document.getElementById('tAliasMP');
