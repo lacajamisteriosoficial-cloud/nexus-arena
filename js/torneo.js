@@ -86,7 +86,7 @@ function renderInfo() {
   const t     = torneoData;
   const libre = t.cupos_total - (t.cupos_ocupados || 0);
   const pct   = t.cupos_total > 0 ? (t.cupos_ocupados / t.cupos_total) * 100 : 0;
-  const premio = t.premio || Math.round(t.cupos_total * (t.precio || 5000) * 0.8);
+  const premio = t.precio === 0 ? 0 : (t.premio || Math.round(t.cupos_total * (t.precio || 0) * 0.8));
 
   // Descripcion
   if (t.descripcion) {
@@ -107,21 +107,45 @@ function renderInfo() {
     btn.textContent  = t.estado === 'full' ? 'Cupos llenos' : t.estado === 'finished' ? 'Torneo finalizado' : 'No disponible aún';
   }
 
-  // Premio
-  document.getElementById('premioBig').textContent  = `$${premio.toLocaleString('es-AR')}`;
-  document.getElementById('precioShow').textContent = `$${(t.precio || 5000).toLocaleString('es-AR')}`;
+  // Premio — ocultar todo si es torneo gratuito
+  const esGratis = t.precio === 0;
+  const prizeBigEl    = document.getElementById('prizeBigWrap');
+  const aliasBlockEl  = document.getElementById('aliasBlock');
+  const aliasValEl    = document.getElementById('aliasVal');
+  const terminosEl    = document.getElementById('terminosTC');
+  const galardonEl    = document.getElementById('galardonNote');
 
-  // Alias — siempre visible
-  const aliasValEl = document.getElementById('aliasVal');
-  const aliasBlockEl = document.getElementById('aliasBlock');
-  if (aliasValEl && aliasBlockEl) {
-    aliasValEl.textContent    = t.alias_mp || 'Nexus.arena';
-    aliasBlockEl.style.display = 'block';
+  const precioEntradaWrap = document.getElementById('precioEntradaWrap');
+
+  if (esGratis) {
+    // Ocultar TODO lo de dinero
+    if (prizeBigEl)        prizeBigEl.style.display        = 'none';
+    if (aliasBlockEl)      aliasBlockEl.style.display      = 'none';
+    if (terminosEl)        terminosEl.style.display        = 'none';
+    if (precioEntradaWrap) precioEntradaWrap.style.display = 'none';
+
+    // Mostrar banner especial de torneo gratuito
+    const precioShowEl = document.getElementById('precioShow');
+    if (precioShowEl) {
+      precioShowEl.textContent = 'GRATIS';
+      precioShowEl.style.color = 'var(--acid)';
+    }
+    // Nota HOF épica para torneos gratuitos
+    if (galardonEl) {
+      galardonEl.innerHTML = '<strong style="color:var(--acid)">Entrada libre.</strong> Ganá y tu nombre queda grabado para siempre en el Hall of Fame de Nexus Arena.';
+    }
+  } else {
+    if (prizeBigEl)        prizeBigEl.style.display        = '';
+    if (aliasBlockEl)      aliasBlockEl.style.display      = 'block';
+    if (terminosEl)        terminosEl.style.display        = '';
+    if (precioEntradaWrap) precioEntradaWrap.style.display = '';
+
+    document.getElementById('premioBig').textContent  = '$' + premio.toLocaleString('es-AR');
+    document.getElementById('precioShow').textContent = '$' + (t.precio || 0).toLocaleString('es-AR');
+    if (aliasValEl) aliasValEl.textContent = t.alias_mp || 'Nexus.arena';
+    if (terminosEl) terminosEl.textContent =
+      '* El premio de $' + premio.toLocaleString('es-AR') + ' se acredita únicamente al llenarse el cupo de ' + t.cupos_total + ' jugadores. Sin cupo completo el monto puede variar proporcionalmente. Premio acreditado en hasta 48hs hábiles post-torneo. Evento privado.';
   }
-
-  // TC
-  document.getElementById('terminosTC').textContent =
-    `* El premio de $${premio.toLocaleString('es-AR')} se acredita únicamente al llenarse el cupo de ${t.cupos_total} jugadores. Sin cupo completo el monto puede variar proporcionalmente. Premio acreditado en hasta 48hs hábiles post-torneo. Evento privado.`;
 }
 
 // ── BRACKET ──────────────────────────────────────────────────
@@ -283,7 +307,7 @@ window.abrirInscripcion = function() {
 
   const t      = torneoData;
   const libre  = t.cupos_total - (t.cupos_ocupados || 0);
-  const premio = t.premio || Math.round(t.cupos_total * (t.precio || 5000) * 0.8);
+  const premio = t.precio === 0 ? 0 : (t.premio || Math.round(t.cupos_total * (t.precio || 0) * 0.8));
 
   const fechaStr = t.fecha?.toDate
     ? t.fecha.toDate().toLocaleString('es-AR', { weekday: 'long', day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })
@@ -293,16 +317,41 @@ window.abrirInscripcion = function() {
   document.getElementById('modalGame').textContent    = t.nombre;
   document.getElementById('modalDate').textContent    = fechaStr;
   document.getElementById('modalMode').textContent    = t.modalidad === 'presencial' ? 'Presencial — Villa de Mayo' : 'Online';
-  document.getElementById('modalPrize').textContent   = `$${premio.toLocaleString('es-AR')}`;
-  document.getElementById('modalEntrada').textContent = `$${(t.precio || 5000).toLocaleString('es-AR')}`;
-  document.getElementById('modalPremioTC').textContent = `$${premio.toLocaleString('es-AR')}`;
-  document.getElementById('modalCuposTC').textContent  = t.cupos_total;
+  const esGratisModal = t.precio === 0;
 
+  // Premio en modal — ocultar bloque completo si es gratis
+  const modalPrizeBlock = document.querySelector('.modal-prize-block');
+  const modalPrizeEl    = document.getElementById('modalPrize');
+  if (esGratisModal) {
+    if (modalPrizeBlock) modalPrizeBlock.style.display = 'none';
+  } else {
+    if (modalPrizeBlock) modalPrizeBlock.style.display = '';
+    if (modalPrizeEl) modalPrizeEl.textContent = '$' + premio.toLocaleString('es-AR');
+    document.getElementById('modalEntrada').textContent = '$' + (t.precio || 0).toLocaleString('es-AR');
+    document.getElementById('modalPremioTC').textContent = '$' + premio.toLocaleString('es-AR');
+    document.getElementById('modalCuposTC').textContent  = t.cupos_total;
+  }
+
+  // Términos del modal — ocultar si es gratis
+  const modalTC = document.querySelector('.modal-terminos');
+  if (modalTC) modalTC.style.display = esGratisModal ? 'none' : '';
+
+  // Nota galardon en modal — cambiar si es gratis
+  const modalGalardonNote = document.querySelector('.modal-galardon-note');
+  if (modalGalardonNote && esGratisModal) {
+    modalGalardonNote.innerHTML = '<strong style="color:var(--acid)">Entrada libre.</strong> Ganá y tu nombre queda grabado en el Hall of Fame de Nexus Arena.';
+  }
+
+  // Alias MP — ocultar si es gratis
   const aliasBlock = document.getElementById('modalAliasBlock');
   const aliasEl    = document.getElementById('modalAlias');
-  if (aliasBlock && aliasEl) {
-    aliasEl.textContent      = t.alias_mp || 'Nexus.arena';
-    aliasBlock.style.display = 'block';
+  if (aliasBlock) {
+    if (esGratisModal) {
+      aliasBlock.style.display = 'none';
+    } else {
+      aliasEl.textContent      = t.alias_mp || 'Nexus.arena';
+      aliasBlock.style.display = 'block';
+    }
   }
 
   const jpe = t.jugadores_por_equipo || 1;
@@ -379,7 +428,7 @@ async function submitInscripcion() {
   // Guardar datos locales antes de cualquier async
   const tId      = torneoData.id;
   const tNombre  = torneoData.nombre;
-  const tPrecio  = torneoData.precio || 5000;
+  const tPrecio  = torneoData.precio || 0;
   const tAlias   = torneoData.alias_mp || 'a confirmar';
 
   btn.disabled = true; btn.textContent = 'Guardando...';
