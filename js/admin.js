@@ -1342,6 +1342,32 @@ window.showNuevaTemporada = function() {
   });
 };
 
+// ── STREAMING ────────────────────────────────────────────────
+window.saveStreaming = async function() {
+  const url    = document.getElementById('cfgStreamUrl')?.value.trim()   || '';
+  const titulo = document.getElementById('cfgStreamTitulo')?.value.trim()|| '';
+  const activo = document.getElementById('cfgStreamActivo')?.checked     || false;
+  try {
+    await setDoc(doc(db, 'config', 'streaming'), { url, titulo, activo });
+    showToast(activo ? 'Stream activado ✓ — ya se ve en la página' : 'Streaming guardado ✓');
+  } catch (err) {
+    showToast('Error al guardar', true);
+    console.error(err);
+  }
+};
+
+window.desactivarStreaming = async function() {
+  try {
+    await setDoc(doc(db, 'config', 'streaming'), { url: '', titulo: '', activo: false });
+    const el = document.getElementById('cfgStreamActivo');
+    if (el) el.checked = false;
+    showToast('Streaming desactivado ✓');
+  } catch (err) {
+    showToast('Error', true);
+    console.error(err);
+  }
+};
+
 // ── REGLAS EDITABLES ─────────────────────────────────────────
 let reglaRows = [];
 
@@ -1433,12 +1459,13 @@ window.saveSecciones = async function() {
 async function loadConfigSection() {
   try {
     const safe = p => p.catch(() => null);
-    const [hpSnap, secSnap, tickerSnap, reglasSnap, footerSnap] = await Promise.all([
+    const [hpSnap, secSnap, tickerSnap, reglasSnap, footerSnap, streamSnap] = await Promise.all([
       safe(getDoc(doc(db, 'config', 'homepage'))),
       safe(getDoc(doc(db, 'config', 'secciones'))),
       safe(getDoc(doc(db, 'config', 'ticker'))),
       safe(getDoc(doc(db, 'config', 'reglas'))),
       safe(getDoc(doc(db, 'config', 'footer'))),
+      safe(getDoc(doc(db, 'config', 'streaming'))),
     ]);
 
     if (hpSnap && hpSnap.exists()) {
@@ -1489,6 +1516,14 @@ async function loadConfigSection() {
       setV('cfgIG',   ft.instagram_url);
       setV('cfgCopy', ft.copy_text);
       setV('cfgNote', ft.note_text);
+    }
+    if (streamSnap && streamSnap.exists()) {
+      const st = streamSnap.data();
+      const setV = (id, val) => { const el = document.getElementById(id); if (el) el.value = val||''; };
+      setV('cfgStreamUrl',    st.url);
+      setV('cfgStreamTitulo', st.titulo);
+      const chk = document.getElementById('cfgStreamActivo');
+      if (chk) chk.checked = st.activo === true;
     }
   } catch (err) {
     console.error('loadConfigSection error:', err);

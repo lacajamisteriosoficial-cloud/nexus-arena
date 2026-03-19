@@ -520,6 +520,33 @@
         </div>
       </div>
 
+      <!-- STREAMING -->
+      <div class="form-card" style="max-width:760px;margin-bottom:2px">
+        <div class="admin-subtitle">Streaming en vivo</div>
+        <p style="color:var(--muted);font-size:0.85rem;margin-bottom:20px">Pegá la URL de Twitch o YouTube. Activalo cuando estés transmitiendo y desactivalo al terminar.</p>
+        <div class="form-group">
+          <label class="form-label">URL del stream (Twitch o YouTube)</label>
+          <input type="text" class="form-input" id="cfgStreamUrl"
+            placeholder="https://www.twitch.tv/nexusarena_ &nbsp;o&nbsp; https://www.youtube.com/watch?v=XXX">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Título del stream (opcional)</label>
+          <input type="text" class="form-input" id="cfgStreamTitulo"
+            placeholder="NEXUS ARENA — Wild Rift Tournament EN VIVO">
+        </div>
+        <div style="display:flex;align-items:center;gap:16px;margin-bottom:20px">
+          <label class="cfg-toggle" style="margin-bottom:0">
+            <input type="checkbox" id="cfgStreamActivo">
+            <span>Stream activo — mostrar en la página</span>
+          </label>
+          <span style="font-size:0.75rem;color:var(--muted)">Desactivalo cuando termines la transmisión</span>
+        </div>
+        <div class="form-actions">
+          <button class="btn-admin-primary" onclick="saveStreaming()">Guardar streaming</button>
+          <button class="btn-admin-secondary" onclick="desactivarStreaming()">Desactivar ahora</button>
+        </div>
+      </div>
+
       <!-- REGLAS -->
       <div class="form-card" style="max-width:760px;margin-top:2px">
         <div class="admin-subtitle">Reglas del juego</div>

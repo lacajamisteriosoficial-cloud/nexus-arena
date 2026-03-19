@@ -1474,3 +1474,23 @@ input[type="range"].img-slider::-webkit-slider-thumb {
   .modal-info-row { flex-direction: column; gap: 8px; }
   .equipo-opciones { flex-direction: column; }
 }
+
+/* ── STREAMING EMBED ─────────────────────────────────────── */
+.streaming-embed-wrap {
+  position: relative;
+  width: 100%;
+  padding-bottom: 56.25%; /* 16:9 */
+  height: 0;
+  overflow: hidden;
+  background: #000;
+  border: 1px solid rgba(255,255,255,0.08);
+}
+.streaming-embed-wrap iframe {
+  position: absolute;
+  top: 0; left: 0;
+  width: 100%; height: 100%;
+  border: none;
+}
+@media (max-width: 768px) {
+  .streaming-embed-wrap { padding-bottom: 65%; }
+}
