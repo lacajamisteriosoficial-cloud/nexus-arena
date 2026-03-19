@@ -1494,3 +1494,51 @@ input[type="range"].img-slider::-webkit-slider-thumb {
 @media (max-width: 768px) {
   .streaming-embed-wrap { padding-bottom: 65%; }
 }
+
+/* ── SECCIÓN COMUNIDAD ───────────────────────────────────── */
+.comunidad-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 14px;
+  padding: 18px 32px;
+  text-decoration: none;
+  color: #fff;
+  border: 1px solid rgba(255,255,255,0.1);
+  background: rgba(255,255,255,0.03);
+  transition: all 0.25s ease;
+  min-width: 220px;
+  position: relative;
+  overflow: hidden;
+}
+.comunidad-btn::after {
+  content: '';
+  position: absolute;
+  bottom: 0; left: 0; right: 0;
+  height: 2px;
+  transform: scaleX(0);
+  transition: transform 0.3s ease;
+}
+.comunidad-btn:hover { transform: translateY(-4px); }
+.comunidad-btn:hover::after { transform: scaleX(1); }
+
+/* Facebook */
+.comunidad-fb:hover {
+  background: rgba(24,119,242,0.1);
+  border-color: rgba(24,119,242,0.4);
+  box-shadow: 0 8px 32px rgba(24,119,242,0.15);
+}
+.comunidad-fb::after { background: #1877f2; }
+.comunidad-fb svg { color: #1877f2; }
+
+/* Twitch */
+.comunidad-twitch:hover {
+  background: rgba(145,71,255,0.1);
+  border-color: rgba(145,71,255,0.4);
+  box-shadow: 0 8px 32px rgba(145,71,255,0.15);
+}
+.comunidad-twitch::after { background: #9147ff; }
+.comunidad-twitch svg { color: #9147ff; }
+
+@media (max-width: 768px) {
+  .comunidad-btn { min-width: 100%; justify-content: center; }
+}

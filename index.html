@@ -13,9 +13,6 @@
 </head>
 <body>
 
-<div id="fb-root"></div>
-<!-- REEMPLAZÁ 1234567890 con tu APP_ID de Facebook Developers -->
-<script async defer crossorigin="anonymous" src="https://connect.facebook.net/es_LA/sdk.js#xfbml=1&version=v25.0&appId=1234567890"></script>
 
 <nav class="nav" id="nav">
   <div class="logo"><img src="logo.png" alt="Nexus Arena" class="logo-img"></div>
@@ -40,6 +37,16 @@
     <div class="hero-actions">
       <button class="btn-primary" onclick="scrollToId('torneos')">Ver torneos activos</button>
       <button class="btn-secondary" onclick="scrollToId('como-funciona')">Cómo funciona</button>
+    </div>
+    <div style="margin-top:16px;animation:fadeUp 0.7s ease 0.35s both">
+      <a href="https://www.facebook.com/profile.php?id=61582193072472"
+        target="_blank" rel="noopener"
+        style="display:inline-flex;align-items:center;gap:10px;color:var(--muted);font-family:'Barlow Condensed',sans-serif;font-size:0.8rem;letter-spacing:2px;text-decoration:none;border:1px solid rgba(255,255,255,0.1);padding:8px 18px;transition:all 0.2s"
+        onmouseover="this.style.borderColor='rgba(200,255,0,0.3)';this.style.color='var(--acid)'"
+        onmouseout="this.style.borderColor='rgba(255,255,255,0.1)';this.style.color='var(--muted)'">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z"/></svg>
+        SEGUIR EN FACEBOOK
+      </a>
     </div>
     <div class="hero-stats">
       <div class="stat-item"><span class="stat-num" id="statTorneos">—</span><span class="stat-label">Torneos activos</span></div>
@@ -154,8 +161,7 @@
     <div class="streaming-embed-wrap">
       <iframe id="streamingIframe"
         src=""
-        allowfullscreen
-        allow="autoplay; fullscreen"
+        allow="autoplay; fullscreen; allowfullscreen"
         style="border:none;width:100%;height:100%">
       </iframe>
     </div>
@@ -167,6 +173,53 @@
       </a>
       <span style="font-size:0.75rem;color:var(--muted)">Si el embed no carga, usá el enlace directo.</span>
     </div>
+  </div>
+
+</section>
+
+
+<!-- COMUNIDAD -->
+<section id="comunidad" class="reveal" style="padding:80px 6vw;background:var(--dark);position:relative;overflow:hidden">
+
+  <!-- Fondo decorativo -->
+  <div style="position:absolute;inset:0;background:radial-gradient(ellipse 70% 60% at 50% 50%,rgba(200,255,0,0.04),transparent 70%);pointer-events:none"></div>
+  <div style="position:absolute;right:-60px;top:50%;transform:translateY(-50%);font-family:'Bebas Neue',sans-serif;font-size:18rem;color:rgba(200,255,0,0.03);line-height:1;pointer-events:none;letter-spacing:-8px">NA</div>
+
+  <div style="position:relative;z-index:2;max-width:900px;margin:0 auto;text-align:center">
+    <div class="section-label">Comunidad</div>
+    <h2 class="section-title" style="margin-bottom:16px">UNITE A LA <span>ARENA</span></h2>
+    <p style="color:var(--muted);font-size:1rem;max-width:520px;margin:0 auto 56px;line-height:1.7">
+      Seguinos para enterarte primero de los próximos torneos, ver los resultados en vivo y ser parte de la comunidad gamer de Nexus Arena.
+    </p>
+
+    <div style="display:flex;gap:16px;justify-content:center;flex-wrap:wrap">
+
+      <!-- Facebook -->
+      <a href="https://www.facebook.com/profile.php?id=61582193072472"
+        target="_blank" rel="noopener" class="comunidad-btn comunidad-fb">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor"><path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z"/></svg>
+        <div>
+          <div style="font-size:0.65rem;letter-spacing:3px;opacity:0.6;margin-bottom:2px">SEGUIR EN</div>
+          <div style="font-family:'Bebas Neue',sans-serif;font-size:1.3rem;letter-spacing:2px">FACEBOOK</div>
+        </div>
+      </a>
+
+      <!-- Twitch -->
+      <a href="https://www.twitch.tv/nexusarena_"
+        target="_blank" rel="noopener" class="comunidad-btn comunidad-twitch">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor"><path d="M21 2H3v16h5v4l4-4h5l4-4V2zm-10 9V7m5 4V7"/><path d="M11 11V7"/><path d="M16 11V7"/></svg>
+        <div>
+          <div style="font-size:0.65rem;letter-spacing:3px;opacity:0.6;margin-bottom:2px">SEGUIR EN</div>
+          <div style="font-family:'Bebas Neue',sans-serif;font-size:1.3rem;letter-spacing:2px">TWITCH</div>
+        </div>
+      </a>
+
+    </div>
+
+    <!-- Mensaje debajo -->
+    <p style="color:rgba(255,255,255,0.15);font-size:0.75rem;margin-top:40px;letter-spacing:2px">
+      CUANDO HAYA TORNEO EN VIVO, LO VAS A VER PRIMERO AHÍ
+    </p>
   </div>
 
 </section>
@@ -205,30 +258,6 @@
 </section>
 
 <!-- FACEBOOK WIDGET -->
-<section style="padding:40px 6vw;background:var(--dark2);border-top:1px solid rgba(255,255,255,0.04)">
-  <div style="display:flex;align-items:flex-start;gap:48px;flex-wrap:wrap">
-    <div style="flex:1;min-width:200px">
-      <div class="section-label" style="margin-bottom:8px">Seguinos</div>
-      <h3 style="font-family:'Bebas Neue',sans-serif;font-size:1.8rem;letter-spacing:3px;color:#fff;margin-bottom:6px">NEXUS ARENA<br><span style="color:var(--acid)">EN FACEBOOK</span></h3>
-      <p style="color:var(--muted);font-size:0.85rem">Seguí la página para enterarte de los próximos torneos, resultados y novedades.</p>
-    </div>
-    <div style="flex-shrink:0">
-      <div class="fb-page"
-        data-href="https://www.facebook.com/profile.php?id=61582193072472"
-        data-tabs="timeline"
-        data-width="300"
-        data-height="200"
-        data-small-header="true"
-        data-adapt-container-width="true"
-        data-hide-cover="false"
-        data-show-facepile="true">
-        <blockquote cite="https://www.facebook.com/profile.php?id=61582193072472" class="fb-xfbml-parse-ignore">
-          <a href="https://www.facebook.com/profile.php?id=61582193072472">NEXUS ARENA</a>
-        </blockquote>
-      </div>
-    </div>
-  </div>
-</section>
 
 <!-- FOOTER -->
 <footer>
@@ -244,21 +273,22 @@
     <div class="footer-links"><h4>Contacto</h4><ul>
       <li><a href="https://wa.me/5491157687215" target="_blank" id="footerWA">WhatsApp</a></li>
       <li><a href="#" id="igLink">Instagram</a></li>
+      <li>
+        <a href="https://www.facebook.com/profile.php?id=61582193072472" target="_blank" rel="noopener"
+          style="display:inline-flex;align-items:center;gap:6px;color:inherit;text-decoration:none">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" style="flex-shrink:0"><path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z"/></svg>
+          Facebook
+        </a>
+      </li>
     </ul></div>
     <div class="footer-fb">
-      <div class="fb-page"
-        data-href="https://www.facebook.com/profile.php?id=61582193072472"
-        data-tabs="timeline"
-        data-width="280"
-        data-height="160"
-        data-small-header="true"
-        data-adapt-container-width="false"
-        data-hide-cover="false"
-        data-show-facepile="false">
-        <blockquote cite="https://www.facebook.com/profile.php?id=61582193072472" class="fb-xfbml-parse-ignore">
-          <a href="https://www.facebook.com/profile.php?id=61582193072472">NEXUS ARENA</a>
-        </blockquote>
-      </div>
+      <a href="https://www.facebook.com/profile.php?id=61582193072472" target="_blank" rel="noopener"
+        style="display:flex;align-items:center;gap:10px;color:var(--muted);text-decoration:none;font-family:'Barlow Condensed',sans-serif;font-size:0.85rem;letter-spacing:1px;border:1px solid var(--gray);padding:10px 16px;transition:all 0.2s"
+        onmouseover="this.style.borderColor='rgba(200,255,0,0.3)';this.style.color='#fff'"
+        onmouseout="this.style.borderColor='var(--gray)';this.style.color='var(--muted)'">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z"/></svg>
+        Seguinos en Facebook
+      </a>
     </div>
   </div>
   <div class="footer-bottom">

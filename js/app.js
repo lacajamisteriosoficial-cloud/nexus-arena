@@ -83,6 +83,55 @@ async function loadAll() {
       }
     }
 
+    // ── CONFIG STREAMING ─────────────────────────────────────
+    const streamingDoc = configSnap.docs.find(d => d.id === 'streaming');
+    if (streamingDoc) {
+      const st = streamingDoc.data();
+      const url = (st.url || '').trim();
+      const activo = st.activo === true && url.length > 0;
+
+      const comingSoon = document.getElementById('streamingComingSoon');
+      const liveBlock  = document.getElementById('streamingLive');
+
+      if (activo && comingSoon && liveBlock) {
+        comingSoon.style.display = 'none';
+        liveBlock.style.display  = 'block';
+
+        // Título
+        const tituloEl = document.getElementById('streamingTitulo');
+        if (tituloEl && st.titulo) tituloEl.textContent = st.titulo;
+
+        // Link directo
+        const linkEl = document.getElementById('streamingLink');
+        if (linkEl) linkEl.href = url;
+
+        // Generar embed URL
+        const iframe = document.getElementById('streamingIframe');
+        if (iframe) {
+          let embedUrl = '';
+
+          // Twitch: https://www.twitch.tv/canal
+          const twitchMatch = url.match(/twitch\.tv\/([a-zA-Z0-9_]+)/);
+          if (twitchMatch) {
+            const canal = twitchMatch[1];
+            const parent = window.location.hostname || 'localhost';
+            embedUrl = 'https://player.twitch.tv/?channel=' + canal + '&parent=' + parent + '&autoplay=false';
+          }
+
+          // YouTube: https://www.youtube.com/watch?v=XXX o https://youtu.be/XXX
+          const ytMatch = url.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/)([a-zA-Z0-9_-]+)/);
+          if (ytMatch) {
+            embedUrl = 'https://www.youtube.com/embed/' + ytMatch[1] + '?autoplay=0';
+          }
+
+          if (embedUrl) iframe.src = embedUrl;
+        }
+      } else if (comingSoon && liveBlock) {
+        comingSoon.style.display = '';
+        liveBlock.style.display  = 'none';
+      }
+    }
+
     // ── CONFIG REGLAS ────────────────────────────────────────
     const reglasDoc = configSnap.docs.find(d => d.id === 'reglas');
     if (reglasDoc) {
@@ -662,7 +711,10 @@ async function submitInscripcion() {
     const msg =
       `¡Hola! Quiero inscribirme al torneo de *${torneoNombre}*.\n\n` +
       `Nombre: ${nombre}\nGamertag: ${gamertag}\nContacto: ${contacto}\n\n` +
-      (torneoPrecio === 0 ? '¡Es un torneo gratuito! ¿Cómo coordino mi inscripción?' : `¿Cómo coordino el pago de $${torneoPrecio.toLocaleString('es-AR')}?`);
+      (torneoPrecio === 0
+        ? '¡Es un torneo gratuito! ¿Cómo confirmo mi inscripción?'
+        : `¿Cómo coordino el pago de $${torneoPrecio.toLocaleString('es-AR')}?`) +
+      `\n\n---\nSeguime en Facebook y Twitch para ver los resultados en vivo:\nfacebook.com/profile.php?id=61582193072472\ntwitch.tv/nexusarena_`;
 
     setTimeout(() => {
       alert(`¡Listo, ${nombre}!\n${torneoPrecio === 0 ? 'Te mandamos a WhatsApp para confirmar tu inscripción.' : 'Te mandamos a WhatsApp para coordinar el pago.'}`);
