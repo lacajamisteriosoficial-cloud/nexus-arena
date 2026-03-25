@@ -495,7 +495,7 @@ function buildCard(t) {
     : '';
 
   const cardTop = t.imagen
-    ? `<img src="${t.imagen}" alt="${t.nombre}" style="width:100%;height:100%;object-fit:cover;display:block"
+    ? `<img src="${t.imagen}" alt="${t.nombre}" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;display:block"
           onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">
        <div class="card-game-bg ${t.plataforma || 'console'}" style="display:none;position:absolute;inset:0">${t.emoji || ''}</div>`
     : `<div class="card-game-bg ${t.plataforma || 'console'}">${t.emoji || ''}</div>`;
