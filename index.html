@@ -330,15 +330,20 @@
             <span class="modal-alias-val" id="modalAlias">—</span>
             <button class="modal-alias-copy" onclick="copyAlias()">Copiar</button>
           </div>
-          <span class="modal-alias-note">Realizá la transferencia y adjuntá el comprobante al contactarnos.</span>
+          <span class="modal-alias-note">Realizá la transferencia. Adjuntá el comprobante al contactarnos por WhatsApp.</span>
         </div>
         <!-- GALARDON NOTE -->
         <div class="modal-galardon-note">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6"/><path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18"/><path d="M4 22h16"/><path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22"/><path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22"/><path d="M18 2H6v7a6 6 0 0 0 12 0V2Z"/></svg> El ganador del torneo será <strong>Galardonado en nuestra sección Hall of Fame</strong>
         </div>
-        <!-- TERMINOS -->
-        <div class="modal-terminos">
+        <!-- TERMINOS pago (se oculta en torneos gratis) -->
+        <div class="modal-terminos" id="modalTerminos">
           * El premio de <span id="modalPremioTC">—</span> se acredita únicamente al llenarse el cupo de <span id="modalCuposTC">—</span> jugadores. Sin cupo completo el monto puede variar. Pago en hasta 48hs hábiles post-torneo.
+        </div>
+        <!-- NOTA torneos gratis (se muestra solo si precio=0) -->
+        <div class="modal-terminos" id="modalGratisNote" style="display:none;background:rgba(200,255,0,0.05);border-color:rgba(200,255,0,0.2);color:var(--text)">
+          &#10003; <strong>Entrada libre.</strong> Cupo limitado — se confirma por orden de inscripción.<br>
+          <span style="color:var(--muted)">Te enviamos los datos de la sala y el bracket por WhatsApp antes del torneo.</span>
         </div>
       </div>
 

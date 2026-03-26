@@ -567,17 +567,24 @@ window.openModal = function(torneoId) {
   document.getElementById('modalPremioTC').textContent = `$${premio.toLocaleString('es-AR')}`;
   document.getElementById('modalCuposTC').textContent  = t.cupos_total;
 
-  // Alias MP
+  // Alias MP y bloques según precio
+  const esGratis   = (t.precio || 0) === 0;
   const aliasBlock = document.getElementById('modalAliasBlock');
   const aliasEl    = document.getElementById('modalAlias');
+  const terminosEl = document.getElementById('modalTerminos');
+  const gratisEl   = document.getElementById('modalGratisNote');
+
   if (aliasBlock && aliasEl) {
-    if (t.alias_mp) {
+    if (!esGratis && t.alias_mp) {
       aliasEl.textContent      = t.alias_mp;
       aliasBlock.style.display = 'block';
     } else {
       aliasBlock.style.display = 'none';
     }
   }
+  // Términos de pago vs nota gratuita
+  if (terminosEl) terminosEl.style.display = esGratis ? 'none' : 'block';
+  if (gratisEl)   gratisEl.style.display   = esGratis ? 'block' : 'none';
 
   // Equipo (solo si hay jugadores_por_equipo > 1)
   const jpe = t.jugadores_por_equipo || 1;

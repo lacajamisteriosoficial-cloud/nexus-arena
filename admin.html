@@ -131,8 +131,33 @@
             <option value="confirmado">Confirmado</option>
             <option value="cancelado">Cancelado</option>
           </select>
+          <button class="btn-admin-primary" id="btnNotificar" onclick="toggleNotificarPanel()" style="display:none">
+            Notificar inscriptos
+          </button>
         </div>
       </div>
+
+      <!-- PANEL NOTIFICADOR -->
+      <div id="notificarPanel" style="display:none;margin-bottom:2px">
+        <div class="form-card" style="max-width:100%;border-color:rgba(200,255,0,0.25)">
+          <div class="admin-subtitle" style="margin-top:0">Mensaje para inscriptos confirmados</div>
+          <p style="color:var(--muted);font-size:0.82rem;margin-bottom:16px">
+            Se arma automáticamente con los datos del torneo. Podés editarlo antes de enviar.
+            Cada botón abre WhatsApp con el mensaje listo — solo tocás Enviar.
+          </p>
+          <div class="form-group">
+            <label class="form-label">Mensaje (editable)</label>
+            <textarea class="form-input form-textarea" id="notificarMensaje" style="height:140px;font-family:monospace;font-size:0.82rem"></textarea>
+          </div>
+          <div style="display:flex;gap:10px;align-items:center;margin-bottom:20px;flex-wrap:wrap">
+            <button class="btn-admin-secondary" onclick="regenerarMensaje()">Regenerar mensaje</button>
+            <span style="font-size:0.75rem;color:var(--muted)" id="notificarCount"></span>
+          </div>
+          <!-- LISTA DE JUGADORES -->
+          <div id="notificarLista" style="display:flex;flex-direction:column;gap:2px"></div>
+        </div>
+      </div>
+
       <div class="table-wrap">
         <table class="admin-table">
           <thead>
@@ -632,9 +657,7 @@
         <h1 class="admin-title" style="color:var(--orange)">&#9881; Modo Prueba</h1>
         <span style="font-size:0.8rem;color:var(--muted)">Simulá un torneo completo sin afectar datos reales</span>
       </div>
-
-      <!-- ADVERTENCIA -->
-      <div id="mpWarning" style="background:rgba(255,109,0,0.08);border:1px solid rgba(255,109,0,0.3);padding:20px 24px;margin-bottom:24px;max-width:760px">
+      <div style="background:rgba(255,109,0,0.08);border:1px solid rgba(255,109,0,0.3);padding:20px 24px;margin-bottom:24px;max-width:760px">
         <div style="font-family:'Barlow Condensed',sans-serif;font-size:1rem;letter-spacing:2px;color:var(--orange);margin-bottom:8px">AVISO IMPORTANTE</div>
         <p style="color:var(--text);font-size:0.85rem;line-height:1.7;margin:0">
           Todo lo que se genere acá queda marcado con <code style="color:var(--orange)">test_mode: true</code> en Firestore.
@@ -642,8 +665,6 @@
           Los torneos, jugadores e inscripciones reales <strong>no se tocan</strong>.
         </p>
       </div>
-
-      <!-- PASO 1: CONFIGURAR -->
       <div class="form-card" style="max-width:760px;margin-bottom:2px">
         <div class="admin-subtitle">Paso 1 — Configurar torneo de prueba</div>
         <div class="form-row">
@@ -652,7 +673,7 @@
             <input type="text" class="form-input" id="mpNombre" value="TEST — Wild Rift Prueba">
           </div>
           <div class="form-group">
-            <label class="form-label">Cantidad de bots (jugadores simulados)</label>
+            <label class="form-label">Cantidad de bots</label>
             <select class="form-select" id="mpCantBots">
               <option value="4">4 jugadores</option>
               <option value="8" selected>8 jugadores</option>
@@ -679,60 +700,40 @@
           </div>
         </div>
         <div class="form-actions">
-          <button class="btn-admin-primary" style="background:var(--orange);clip-path:polygon(7px 0%,100% 0%,calc(100% - 7px) 100%,0% 100%)" onclick="mpCrearTorneo()">
-            Crear torneo de prueba
-          </button>
+          <button class="btn-admin-primary" style="background:var(--orange);clip-path:polygon(7px 0%,100% 0%,calc(100% - 7px) 100%,0% 100%)" onclick="mpCrearTorneo()">Crear torneo de prueba</button>
         </div>
       </div>
-
-      <!-- ESTADO / LOG -->
-      <div class="form-card" style="max-width:760px;margin-bottom:2px" id="mpEstadoCard">
+      <div class="form-card" style="max-width:760px;margin-bottom:2px">
         <div class="admin-subtitle">Estado de la prueba</div>
-        <div id="mpLog" style="font-family:monospace;font-size:0.8rem;color:var(--muted);line-height:2;min-height:60px">
-          Todavía no iniciaste ninguna prueba.
-        </div>
-        <div style="display:flex;gap:24px;flex-wrap:wrap;margin-top:16px" id="mpLinks" style="display:none"></div>
+        <div id="mpLog" style="font-family:monospace;font-size:0.8rem;color:var(--muted);line-height:2;min-height:60px">Todavía no iniciaste ninguna prueba.</div>
+        <div style="display:flex;gap:16px;flex-wrap:wrap;margin-top:12px" id="mpLinks"></div>
       </div>
-
-      <!-- PASO 2: BRACKET -->
       <div class="form-card" id="mpBracketCard" style="max-width:760px;margin-bottom:2px;display:none">
         <div class="admin-subtitle">Paso 2 — Simular bracket</div>
-        <p style="color:var(--muted);font-size:0.85rem;margin-bottom:20px">
-          Elegí los ganadores manualmente o usá "Simular aleatorio" para que se elijan solos.
-        </p>
+        <p style="color:var(--muted);font-size:0.85rem;margin-bottom:20px">Elegí los ganadores manualmente o usá "Simular aleatorio".</p>
         <div id="mpBracketContent"></div>
         <div class="form-actions" style="margin-top:20px">
           <button class="btn-admin-secondary" onclick="mpSimularAleatorio()">Simular aleatorio</button>
-          <button class="btn-admin-primary" style="background:var(--orange);clip-path:polygon(7px 0%,100% 0%,calc(100% - 7px) 100%,0% 100%)" onclick="mpFinalizarTorneo()">
-            Finalizar y asignar puntos
-          </button>
+          <button class="btn-admin-primary" style="background:var(--orange);clip-path:polygon(7px 0%,100% 0%,calc(100% - 7px) 100%,0% 100%)" onclick="mpFinalizarTorneo()">Finalizar y asignar puntos</button>
         </div>
       </div>
-
-      <!-- PASO 3: RESULTADOS -->
       <div class="form-card" id="mpResultadosCard" style="max-width:760px;margin-bottom:2px;display:none">
         <div class="admin-subtitle">Paso 3 — Verificar resultados</div>
         <div id="mpResultadosContent"></div>
         <div class="form-actions" style="margin-top:20px">
-          <button class="btn-admin-secondary" onclick="mpVerRanking()">Ver ranking global</button>
-          <button class="btn-admin-secondary" onclick="mpVerGalardones()">Ver Hall of Fame</button>
-          <button class="btn-admin-secondary" onclick="mpVerPaginaPublica()">Ver página pública</button>
+          <button class="btn-admin-secondary" onclick="showSection('ranking')">Ver ranking global</button>
+          <button class="btn-admin-secondary" onclick="showSection('galardones')">Ver Hall of Fame</button>
+          <button class="btn-admin-secondary" onclick="window.open('index.html','_blank')">Ver página pública</button>
         </div>
       </div>
-
-      <!-- LIMPIEZA -->
-      <div class="form-card" style="max-width:760px;border-color:rgba(255,23,68,0.2)" id="mpLimpiezaCard">
+      <div class="form-card" style="max-width:760px;border-color:rgba(255,23,68,0.2)">
         <div class="admin-subtitle" style="color:var(--red)">Limpiar datos de prueba</div>
-        <p style="color:var(--muted);font-size:0.85rem;margin-bottom:20px">
-          Borra <strong style="color:#fff">solo</strong> los torneos, jugadores, inscripciones y galardones marcados como test.
-          Los datos reales quedan intactos.
-        </p>
+        <p style="color:var(--muted);font-size:0.85rem;margin-bottom:16px">Borra <strong style="color:#fff">solo</strong> los documentos marcados como test. Los datos reales quedan intactos.</p>
         <div id="mpLimpiezaLog" style="font-size:0.8rem;color:var(--muted);margin-bottom:16px;min-height:20px"></div>
         <div class="form-actions">
           <button class="btn-danger" onclick="mpLimpiar()">Limpiar todo lo de prueba</button>
         </div>
       </div>
-
     </section>
 
   </main>
