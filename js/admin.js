@@ -1563,3 +1563,444 @@ window.sincCuposReales = async function(torneoId) {
     showToast('Error al sincronizar', true);
   }
 };
+
+// ============================================================
+//  MODO PRUEBA — Simulador de torneo completo
+// ============================================================
+
+// Estado global del modo prueba
+const MP = {
+  torneoId:   null,
+  botIds:     [],   // IDs de jugadores bot en Firestore
+  inscripIds: [],   // IDs de inscripciones de prueba
+  galardonId: null,
+  bots:       [],   // { id, gamertag }
+  campeon:    null,
+  finalistas: [],
+};
+
+const BOT_NAMES = [
+  'BotNexus_01','BotNexus_02','BotNexus_03','BotNexus_04',
+  'BotNexus_05','BotNexus_06','BotNexus_07','BotNexus_08',
+  'BotNexus_09','BotNexus_10','BotNexus_11','BotNexus_12',
+  'BotNexus_13','BotNexus_14','BotNexus_15','BotNexus_16',
+];
+
+function mpLog(msg, ok = true) {
+  const el = document.getElementById('mpLog');
+  if (!el) return;
+  const color = ok ? 'var(--acid)' : 'var(--red)';
+  el.innerHTML += `<div style="color:${color}">› ${msg}</div>`;
+  el.scrollTop = el.scrollHeight;
+}
+
+function mpReset() {
+  MP.torneoId   = null;
+  MP.botIds     = [];
+  MP.inscripIds = [];
+  MP.galardonId = null;
+  MP.bots       = [];
+  MP.campeon    = null;
+  MP.finalistas = [];
+  const log = document.getElementById('mpLog');
+  if (log) log.innerHTML = '';
+  const links = document.getElementById('mpLinks');
+  if (links) { links.innerHTML = ''; links.style.display = 'none'; }
+  ['mpBracketCard','mpResultadosCard'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.style.display = 'none';
+  });
+}
+
+window.mpCrearTorneo = async function() {
+  mpReset();
+
+  const nombre    = document.getElementById('mpNombre')?.value.trim() || 'TEST — Torneo Prueba';
+  const cantBots  = parseInt(document.getElementById('mpCantBots')?.value  || 8);
+  const precio    = parseInt(document.getElementById('mpPrecio')?.value    || 0);
+  const plataforma = document.getElementById('mpPlataforma')?.value || 'mobile';
+
+  mpLog('Creando torneo de prueba...');
+
+  try {
+    // 1. Crear torneo
+    const torneoRef = await addDoc(collection(db, 'torneos'), {
+      nombre,
+      subtitulo:        'Torneo de prueba — no publicar',
+      fecha:            serverTimestamp(),
+      estado:           'open',
+      precio,
+      cupos_total:      cantBots,
+      cupos_ocupados:   0,
+      plataforma,
+      modalidad:        'online',
+      categoria:        plataforma,
+      emoji:            '🤖',
+      imagen:           '',
+      descripcion:      'Torneo generado por Modo Prueba. Se puede eliminar.',
+      alias_mp:         'test.prueba',
+      premio:           precio * cantBots * 0.8,
+      jugadores_por_equipo: 1,
+      test_mode:        true,
+      bracket:          {},
+    });
+    MP.torneoId = torneoRef.id;
+    mpLog(`Torneo creado: "${nombre}" (ID: ${torneoRef.id})`);
+
+    // 2. Crear bots como jugadores
+    mpLog(`Creando ${cantBots} jugadores bot...`);
+    const botsUsados = BOT_NAMES.slice(0, cantBots);
+    for (const gt of botsUsados) {
+      const jRef = await addDoc(collection(db, 'jugadores'), {
+        gamertag:        gt,
+        nombre:          gt + ' (bot)',
+        foto:            '',
+        ranking_points:  0,
+        victorias:       0,
+        torneos_jugados: 0,
+        fecha_registro:  serverTimestamp(),
+        test_mode:       true,
+      });
+      MP.botIds.push(jRef.id);
+      MP.bots.push({ id: jRef.id, gamertag: gt });
+    }
+    mpLog(`${cantBots} bots registrados como jugadores ✓`);
+
+    // 3. Crear inscripciones
+    mpLog('Inscribiendo bots al torneo...');
+    for (const bot of MP.bots) {
+      const iRef = await addDoc(collection(db, 'inscripciones'), {
+        nombre:            bot.gamertag,
+        gamertag:          bot.gamertag,
+        contacto:          'bot@test.com',
+        whatsapp:          '1100000000',
+        mail:              'bot@test.com',
+        torneo_id:         MP.torneoId,
+        torneo_nombre:     nombre,
+        estado:            'confirmado',
+        fecha_inscripcion: serverTimestamp(),
+        test_mode:         true,
+      });
+      MP.inscripIds.push(iRef.id);
+    }
+    await updateDoc(doc(db, 'torneos', MP.torneoId), { cupos_ocupados: cantBots });
+    mpLog(`${cantBots} inscripciones confirmadas ✓`);
+
+    // 4. Mostrar links
+    const links = document.getElementById('mpLinks');
+    if (links) {
+      links.style.display = 'flex';
+      links.innerHTML =
+        `<a href="torneo.html?id=${MP.torneoId}" target="_blank" class="btn-admin-secondary" style="text-decoration:none;font-size:0.75rem">Ver página del torneo →</a>` +
+        `<a href="index.html" target="_blank" class="btn-admin-secondary" style="text-decoration:none;font-size:0.75rem">Ver página pública →</a>`;
+    }
+
+    mpLog('✓ Todo listo. Ahora armá el bracket en Paso 2.');
+
+    // 5. Mostrar y renderizar bracket
+    await mpRenderBracket();
+    const bracketCard = document.getElementById('mpBracketCard');
+    if (bracketCard) bracketCard.style.display = 'block';
+
+  } catch (err) {
+    console.error('mpCrearTorneo:', err);
+    mpLog('Error: ' + (err.message || err), false);
+  }
+};
+
+async function mpRenderBracket() {
+  const content = document.getElementById('mpBracketContent');
+  if (!content || !MP.torneoId) return;
+
+  const snap = await getDoc(doc(db, 'torneos', MP.torneoId));
+  if (!snap.exists()) return;
+  const bracket   = snap.data().bracket || {};
+  const ganadores = bracket.ganadores   || {};
+
+  const partidos = [];
+  for (let i = 0; i < MP.bots.length; i += 2) {
+    if (MP.bots[i] && MP.bots[i+1]) {
+      const key     = 'match_' + Math.floor(i/2);
+      const ganador = ganadores[key] || '';
+      partidos.push({ eq1: MP.bots[i].gamertag, eq2: MP.bots[i+1].gamertag, key, ganador });
+    }
+  }
+
+  const ganadorFinal = bracket.ganador_final || '';
+  const finalistas   = bracket.finalistas    || partidos.map(p => p.ganador).filter(Boolean);
+
+  let html = '<div style="display:flex;gap:16px;flex-wrap:wrap">';
+  html += '<div style="flex:1;min-width:240px">';
+  html += '<div style="font-size:0.65rem;letter-spacing:3px;color:var(--orange);margin-bottom:12px">FASE 1 — CRUCES</div>';
+  partidos.forEach((p, idx) => {
+    html += `<div style="background:var(--dark);border:1px solid var(--gray);margin-bottom:8px">`;
+    html += `<div style="padding:3px 10px;font-size:0.6rem;letter-spacing:2px;color:var(--muted);border-bottom:1px solid var(--gray)">PARTIDO ${idx+1}</div>`;
+    [p.eq1, p.eq2].forEach(eq => {
+      const esGanador = p.ganador === eq;
+      html += `<div style="display:flex;align-items:center;padding:7px 10px;gap:8px;border-bottom:1px solid rgba(255,255,255,0.04)">`;
+      html += `<span style="flex:1;font-family:'Barlow Condensed',sans-serif;font-weight:700;color:${esGanador ? 'var(--orange)' : '#fff'}">${eq}</span>`;
+      html += `<button class="btn-tbl confirm" style="font-size:0.65rem;padding:3px 8px" onclick="mpMarcarGanador('${p.key}','${encodeURIComponent(eq)}')">Ganador</button>`;
+      html += `</div>`;
+    });
+    if (p.ganador) html += `<div style="padding:3px 10px;font-size:0.65rem;color:var(--orange);background:rgba(255,109,0,0.05)">&#9733; ${p.ganador}</div>`;
+    html += `</div>`;
+  });
+  html += '</div>';
+
+  // Gran final
+  if (finalistas.length >= 2) {
+    html += '<div style="min-width:240px;flex:1">';
+    html += '<div style="font-size:0.65rem;letter-spacing:3px;color:var(--orange);margin-bottom:12px">GRAN FINAL</div>';
+    html += '<div style="background:var(--dark);border:1px solid rgba(255,109,0,0.4)">';
+    [0,1].forEach(fi => {
+      const f = finalistas[fi] || '?';
+      html += `<div style="display:flex;align-items:center;padding:10px 12px;gap:8px;${fi===0?'border-bottom:1px solid rgba(255,255,255,0.06)':''}">`;
+      html += `<span style="flex:1;font-family:'Barlow Condensed',sans-serif;font-size:1.05rem;font-weight:700;color:${ganadorFinal===f?'var(--orange)':'#fff'}">${f}</span>`;
+      if (f !== '?') {
+        html += `<button class="btn-tbl confirm" onclick="mpMarcarCampeon('${encodeURIComponent(f)}','${encodeURIComponent(finalistas.join('|'))}')">Campeón</button>`;
+      }
+      html += `</div>`;
+    });
+    if (ganadorFinal) html += `<div style="padding:5px 12px;font-size:0.7rem;color:var(--orange);background:rgba(255,109,0,0.08)">&#9733; CAMPEÓN: ${ganadorFinal}</div>`;
+    html += '</div></div>';
+  }
+
+  html += '</div>';
+  content.innerHTML = html;
+}
+
+window.mpMarcarGanador = async function(matchKey, ganadorEncoded) {
+  if (!MP.torneoId) return;
+  const ganador = decodeURIComponent(ganadorEncoded);
+  try {
+    const snap     = await getDoc(doc(db, 'torneos', MP.torneoId));
+    const bracket  = snap.data().bracket || {};
+    const gans     = bracket.ganadores   || {};
+    gans[matchKey] = ganador;
+    const allGans  = Object.values(gans).filter(Boolean);
+    await updateDoc(doc(db, 'torneos', MP.torneoId), {
+      'bracket.ganadores':  gans,
+      'bracket.finalistas': allGans,
+    });
+    await mpRenderBracket();
+  } catch (err) {
+    console.error(err);
+    showToast('Error al guardar ganador', true);
+  }
+};
+
+window.mpMarcarCampeon = async function(ganadorEncoded, finalistasEncoded) {
+  if (!MP.torneoId) return;
+  const ganador    = decodeURIComponent(ganadorEncoded);
+  const finalistas = decodeURIComponent(finalistasEncoded).split('|');
+  try {
+    await updateDoc(doc(db, 'torneos', MP.torneoId), {
+      'bracket.ganador_final': ganador,
+      'bracket.finalistas':    finalistas,
+    });
+    MP.campeon    = ganador;
+    MP.finalistas = finalistas;
+    await mpRenderBracket();
+    showToast('Campeón marcado: ' + ganador);
+  } catch (err) {
+    console.error(err);
+    showToast('Error al guardar campeón', true);
+  }
+};
+
+window.mpSimularAleatorio = async function() {
+  if (!MP.torneoId || MP.bots.length === 0) {
+    showToast('Primero creá el torneo de prueba', true);
+    return;
+  }
+
+  mpLog('Simulando bracket aleatorio...');
+
+  try {
+    // Armar partidos y elegir ganadores random
+    const ganadores = {};
+    const gansFase1 = [];
+    for (let i = 0; i < MP.bots.length; i += 2) {
+      if (MP.bots[i] && MP.bots[i+1]) {
+        const key    = 'match_' + Math.floor(i/2);
+        const winner = Math.random() > 0.5 ? MP.bots[i].gamertag : MP.bots[i+1].gamertag;
+        ganadores[key] = winner;
+        gansFase1.push(winner);
+      }
+    }
+
+    // Gran final: de los ganadores, elegir uno random
+    const campeon    = gansFase1[Math.floor(Math.random() * gansFase1.length)];
+    const finalistas = gansFase1.slice(0, 2);
+
+    await updateDoc(doc(db, 'torneos', MP.torneoId), {
+      'bracket.ganadores':    ganadores,
+      'bracket.finalistas':   finalistas,
+      'bracket.ganador_final': campeon,
+    });
+
+    MP.campeon    = campeon;
+    MP.finalistas = finalistas;
+
+    await mpRenderBracket();
+    mpLog(`Simulación completa. Campeón elegido: ${campeon} ✓`);
+    showToast('Bracket simulado ✓');
+  } catch (err) {
+    console.error(err);
+    mpLog('Error en simulación: ' + err.message, false);
+  }
+};
+
+window.mpFinalizarTorneo = async function() {
+  if (!MP.torneoId) { showToast('Primero creá el torneo', true); return; }
+
+  // Leer bracket actual de Firestore
+  const snap = await getDoc(doc(db, 'torneos', MP.torneoId));
+  const bracket = snap.data()?.bracket || {};
+  const campeon = bracket.ganador_final || MP.campeon;
+  const finalistas = bracket.finalistas || MP.finalistas || [];
+
+  if (!campeon) {
+    showToast('Marcá un campeón antes de finalizar', true);
+    return;
+  }
+
+  mpLog('Asignando puntos al ranking...');
+
+  try {
+    const PUNTOS = { campeon: 100, finalista: 50, participante: 10 };
+    const jugSnap = await getDocs(collection(db, 'jugadores'));
+    const updates = [];
+
+    jugSnap.docs.forEach(d => {
+      const j  = { id: d.id, ...d.data() };
+      if (!j.test_mode) return; // solo tocar bots de prueba
+      const gt = j.gamertag || '';
+      if (gt === campeon) {
+        updates.push(updateDoc(doc(db, 'jugadores', j.id), {
+          ranking_points:  (j.ranking_points  || 0) + PUNTOS.campeon,
+          victorias:       (j.victorias       || 0) + 1,
+          torneos_jugados: (j.torneos_jugados || 0) + 1,
+        }));
+      } else if (finalistas.includes(gt)) {
+        updates.push(updateDoc(doc(db, 'jugadores', j.id), {
+          ranking_points:  (j.ranking_points  || 0) + PUNTOS.finalista,
+          torneos_jugados: (j.torneos_jugados || 0) + 1,
+        }));
+      } else {
+        updates.push(updateDoc(doc(db, 'jugadores', j.id), {
+          ranking_points:  (j.ranking_points  || 0) + PUNTOS.participante,
+          torneos_jugados: (j.torneos_jugados || 0) + 1,
+        }));
+      }
+    });
+    await Promise.all(updates);
+    mpLog(`Puntos asignados: campeón +100 / finalista +50 / participante +10 ✓`);
+
+    // Marcar torneo como finished
+    await updateDoc(doc(db, 'torneos', MP.torneoId), { estado: 'finished' });
+
+    // Crear galardón de prueba
+    const gRef = await addDoc(collection(db, 'galardones'), {
+      gamertag:     campeon,
+      torneo_nombre: snap.data()?.nombre || 'TEST Torneo',
+      fecha:         serverTimestamp(),
+      emoji:         '🤖',
+      foto:          '',
+      test_mode:     true,
+    });
+    MP.galardonId = gRef.id;
+    mpLog(`Galardón creado para ${campeon} ✓`);
+
+    // Mostrar resultados
+    const torneoSnap = await getDoc(doc(db, 'torneos', MP.torneoId));
+    const jugSnap2   = await getDocs(collection(db, 'jugadores'));
+    const botsData   = jugSnap2.docs
+      .map(d => ({ id: d.id, ...d.data() }))
+      .filter(j => j.test_mode)
+      .sort((a, b) => (b.ranking_points || 0) - (a.ranking_points || 0));
+
+    const resCard = document.getElementById('mpResultadosCard');
+    const resCont = document.getElementById('mpResultadosContent');
+    if (resCard && resCont) {
+      resCard.style.display = 'block';
+      const campeonData = botsData.find(j => j.gamertag === campeon);
+      resCont.innerHTML =
+        `<div style="display:flex;gap:16px;align-items:flex-start;flex-wrap:wrap">` +
+        `<div style="flex:1;min-width:200px">` +
+        `<div style="font-size:0.65rem;letter-spacing:3px;color:var(--orange);margin-bottom:12px">PODIO</div>` +
+        `<div style="background:rgba(255,215,0,0.08);border:1px solid rgba(255,215,0,0.3);padding:14px 16px;margin-bottom:8px">` +
+        `<div style="font-size:0.65rem;letter-spacing:2px;color:#FFD700;margin-bottom:4px">&#127881; CAMPEÓN</div>` +
+        `<div style="font-size:1.4rem;font-family:'Bebas Neue',sans-serif;color:#fff">${campeon}</div>` +
+        `<div style="font-size:0.8rem;color:var(--acid)">+100 puntos</div>` +
+        `</div>` +
+        finalistas.filter(f => f !== campeon).slice(0, 1).map(f =>
+          `<div style="background:var(--dark3);border:1px solid var(--gray);padding:10px 16px;margin-bottom:8px">` +
+          `<div style="font-size:0.65rem;letter-spacing:2px;color:#C0C0C0;margin-bottom:4px">FINALISTA</div>` +
+          `<div style="font-size:1.1rem;font-family:'Bebas Neue',sans-serif;color:#fff">${f}</div>` +
+          `<div style="font-size:0.8rem;color:var(--muted)">+50 puntos</div>` +
+          `</div>`
+        ).join('') +
+        `</div>` +
+        `<div style="flex:2;min-width:240px">` +
+        `<div style="font-size:0.65rem;letter-spacing:3px;color:var(--orange);margin-bottom:12px">RANKING DE BOTS (TEST)</div>` +
+        `<div style="border:1px solid var(--gray)">` +
+        botsData.slice(0, 8).map((j, i) =>
+          `<div style="display:flex;align-items:center;gap:12px;padding:8px 14px;border-bottom:1px solid rgba(42,42,42,0.5)">` +
+          `<span style="font-size:1rem;font-weight:700;color:${i===0?'#FFD700':i===1?'#C0C0C0':i===2?'#CD7F32':'var(--muted)'};min-width:20px">${i+1}</span>` +
+          `<span style="flex:1;font-family:'Barlow Condensed',sans-serif;font-size:0.9rem;color:#fff">${j.gamertag}</span>` +
+          `<span style="color:var(--acid);font-weight:700">${j.ranking_points || 0}</span>` +
+          `<a href="jugador.html?id=${j.id}" target="_blank" class="btn-tbl" style="font-size:0.65rem;text-decoration:none">Ver perfil</a>` +
+          `</div>`
+        ).join('') +
+        `</div></div></div>` +
+        `<div style="margin-top:16px;padding:12px 16px;background:rgba(200,255,0,0.05);border:1px solid rgba(200,255,0,0.15);font-size:0.82rem;color:var(--text)">` +
+        `&#10003; Galardón creado en Hall of Fame. &#10003; Perfil de cada bot disponible. &#10003; Ranking global actualizado.` +
+        `<br><strong style="color:var(--acid)">Todo funcionó correctamente.</strong> Cuando termines, usá "Limpiar datos de prueba" abajo.` +
+        `</div>`;
+    }
+
+    mpLog('===== SIMULACIÓN COMPLETADA =====');
+    mpLog(`Campeón: ${campeon} | Galardón creado | Ranking actualizado`);
+    mpLog('Verificá ranking, Hall of Fame y perfil de jugadores. Luego limpiá.');
+
+  } catch (err) {
+    console.error('mpFinalizarTorneo:', err);
+    mpLog('Error al finalizar: ' + err.message, false);
+  }
+};
+
+window.mpVerRanking = function() { showSection('ranking'); };
+window.mpVerGalardones = function() { showSection('galardones'); };
+window.mpVerPaginaPublica = function() { window.open('index.html', '_blank'); };
+
+window.mpLimpiar = async function() {
+  if (!confirm('¿Borrar TODOS los datos marcados como test_mode? Los datos reales no se tocan.')) return;
+  const logEl = document.getElementById('mpLimpiezaLog');
+  if (logEl) logEl.textContent = 'Borrando...';
+
+  try {
+    const colecciones = ['torneos', 'inscripciones', 'jugadores', 'galardones'];
+    let totalBorrados = 0;
+
+    for (const col of colecciones) {
+      const snap = await getDocs(collection(db, col));
+      const aBorrar = snap.docs.filter(d => d.data().test_mode === true);
+      for (const d of aBorrar) {
+        await deleteDoc(doc(db, col, d.id));
+        totalBorrados++;
+      }
+    }
+
+    if (logEl) logEl.innerHTML = `<span style="color:var(--acid)">&#10003; ${totalBorrados} documentos de prueba eliminados.</span>`;
+    showToast(`Limpieza completa: ${totalBorrados} docs borrados ✓`);
+    mpReset();
+    const log = document.getElementById('mpLog');
+    if (log) log.innerHTML = '<span style="color:var(--muted)">Datos limpiados. Podés hacer otra prueba.</span>';
+
+  } catch (err) {
+    console.error('mpLimpiar:', err);
+    if (logEl) logEl.innerHTML = `<span style="color:var(--red)">Error: ${err.message}</span>`;
+    showToast('Error al limpiar: ' + err.message, true);
+  }
+};
