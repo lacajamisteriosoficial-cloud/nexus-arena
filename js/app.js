@@ -28,6 +28,7 @@ document.addEventListener('DOMContentLoaded', () => {
   setupReseñaModal();
   renderGamesGrid([]);
   loadAll();
+  initMusic();
   setTimeout(maybeShowPopup, 2500);
   setupChat();
   setupReveal();
@@ -582,7 +583,6 @@ window.openModal = function(torneoId) {
       aliasBlock.style.display = 'none';
     }
   }
-  // Términos de pago vs nota gratuita
   if (terminosEl) terminosEl.style.display = esGratis ? 'none' : 'block';
   if (gratisEl)   gratisEl.style.display   = esGratis ? 'block' : 'none';
 
@@ -1175,4 +1175,92 @@ window.copyAlias = function() {
     const btn = document.querySelector('.modal-alias-copy');
     if (btn) { btn.textContent = '¡Copiado!'; setTimeout(() => btn.textContent = 'Copiar', 1500); }
   }).catch(() => {});
+};
+
+
+// ── MÚSICA DE FONDO ──────────────────────────────────────────
+let _musicPlaying  = false;
+let _musicDismissed = false;
+
+async function initMusic() {
+  try {
+    // Leer config de Firestore
+    const snap = await getDocs(collection(db, 'config'));
+    const musicDoc = snap.docs.find(d => d.id === 'musica');
+    if (!musicDoc) return;
+
+    const cfg = musicDoc.data();
+    if (!cfg.activa) return; // admin lo desactivó
+
+    const audio   = document.getElementById('bgMusic');
+    const player  = document.getElementById('musicPlayer');
+    const volEl   = document.getElementById('musicVolume');
+    const titleEl = document.getElementById('musicTitle');
+    const srcEl   = document.getElementById('bgMusicSrc');
+
+    if (!audio || !player) return;
+
+    // Aplicar config
+    const vol = (cfg.volumen ?? 30) / 100;
+    audio.volume = vol;
+    if (volEl) volEl.value = cfg.volumen ?? 30;
+
+    if (cfg.titulo && titleEl) titleEl.textContent = cfg.titulo;
+    if (cfg.archivo && srcEl) {
+      srcEl.src = cfg.archivo;
+      audio.load();
+    }
+
+    // Mostrar player
+    player.style.display = 'flex';
+
+    // Intentar autoplay (puede bloquearse hasta que el usuario interactúe)
+    const tryPlay = () => {
+      if (_musicPlaying || _musicDismissed) return;
+      audio.play().then(() => {
+        _musicPlaying = true;
+        document.getElementById('musicIconPlay').style.display  = 'none';
+        document.getElementById('musicIconPause').style.display = 'block';
+      }).catch(() => {
+        // Autoplay bloqueado — el usuario toca play manualmente
+      });
+    };
+
+    // Intentar al primer click/scroll del usuario
+    const unlock = () => { tryPlay(); document.removeEventListener('click', unlock); document.removeEventListener('scroll', unlock); };
+    document.addEventListener('click',  unlock, { once: true });
+    document.addEventListener('scroll', unlock, { once: true });
+    tryPlay(); // intento inmediato (funciona en algunos browsers)
+
+  } catch (e) { /* silencioso — música es opcional */ }
+}
+
+window.toggleMusic = function() {
+  const audio = document.getElementById('bgMusic');
+  if (!audio) return;
+  if (_musicPlaying) {
+    audio.pause();
+    _musicPlaying = false;
+    document.getElementById('musicIconPlay').style.display  = 'block';
+    document.getElementById('musicIconPause').style.display = 'none';
+  } else {
+    audio.play().then(() => {
+      _musicPlaying = true;
+      document.getElementById('musicIconPlay').style.display  = 'none';
+      document.getElementById('musicIconPause').style.display = 'block';
+    });
+  }
+};
+
+window.setMusicVolume = function(val) {
+  const audio = document.getElementById('bgMusic');
+  if (audio) audio.volume = val / 100;
+};
+
+window.closeMusicPlayer = function() {
+  const audio  = document.getElementById('bgMusic');
+  const player = document.getElementById('musicPlayer');
+  if (audio)  { audio.pause(); _musicPlaying = false; }
+  if (player) player.style.display = 'none';
+  _musicDismissed = true;
 };

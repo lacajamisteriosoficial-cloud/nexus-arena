@@ -224,6 +224,13 @@
 
 </section>
 
+<!-- ENCUESTAS -->
+<section id="encuestas" class="reveal section-dark">
+  <div class="section-label">Tu opinión importa</div>
+  <h2 class="section-title">ENCUESTAS <span>ACTIVAS</span></h2>
+  <div id="encuestasContainer"><div class="loading-state"><div class="spinner"></div><p>Cargando...</p></div></div>
+</section>
+
 <!-- COMO FUNCIONA -->
 <section id="como-funciona" class="reveal">
   <div class="section-label">El proceso</div>
@@ -248,13 +255,6 @@
     <div class="rule-item"><div class="rule-num">05</div><div class="rule-title">Premio a confirmar</div><div class="rule-text">El monto final se determina al cerrar inscripciones según total de participantes.</div></div>
     <div class="rule-item"><div class="rule-num">06</div><div class="rule-title">Acreditación hasta 48hs</div><div class="rule-text">Los premios se pagan en hasta 48hs hábiles. Efectivo según stock, consultá antes.</div></div>
   </div>
-</section>
-
-<!-- ENCUESTAS -->
-<section id="encuestas" class="reveal">
-  <div class="section-label">Tu opinión importa</div>
-  <h2 class="section-title">ENCUESTAS <span>ACTIVAS</span></h2>
-  <div id="encuestasContainer"><div class="loading-state"><div class="spinner"></div><p>Cargando...</p></div></div>
 </section>
 
 <!-- FACEBOOK WIDGET -->
@@ -330,20 +330,15 @@
             <span class="modal-alias-val" id="modalAlias">—</span>
             <button class="modal-alias-copy" onclick="copyAlias()">Copiar</button>
           </div>
-          <span class="modal-alias-note">Realizá la transferencia. Adjuntá el comprobante al contactarnos por WhatsApp.</span>
+          <span class="modal-alias-note">Realizá la transferencia y adjuntá el comprobante al contactarnos.</span>
         </div>
         <!-- GALARDON NOTE -->
         <div class="modal-galardon-note">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6"/><path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18"/><path d="M4 22h16"/><path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22"/><path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22"/><path d="M18 2H6v7a6 6 0 0 0 12 0V2Z"/></svg> El ganador del torneo será <strong>Galardonado en nuestra sección Hall of Fame</strong>
         </div>
-        <!-- TERMINOS pago (se oculta en torneos gratis) -->
-        <div class="modal-terminos" id="modalTerminos">
+        <!-- TERMINOS -->
+        <div class="modal-terminos">
           * El premio de <span id="modalPremioTC">—</span> se acredita únicamente al llenarse el cupo de <span id="modalCuposTC">—</span> jugadores. Sin cupo completo el monto puede variar. Pago en hasta 48hs hábiles post-torneo.
-        </div>
-        <!-- NOTA torneos gratis (se muestra solo si precio=0) -->
-        <div class="modal-terminos" id="modalGratisNote" style="display:none;background:rgba(200,255,0,0.05);border-color:rgba(200,255,0,0.2);color:var(--text)">
-          &#10003; <strong>Entrada libre.</strong> Cupo limitado — se confirma por orden de inscripción.<br>
-          <span style="color:var(--muted)">Te enviamos los datos de la sala y el bracket por WhatsApp antes del torneo.</span>
         </div>
       </div>
 
@@ -468,6 +463,31 @@
     <button class="promo-popup-close" onclick="closePromoPopup()">✕</button>
     <div id="promoPopupInner"></div>
   </div>
+</div>
+
+<!-- REPRODUCTOR MÚSICA DE FONDO -->
+<audio id="bgMusic" loop preload="auto">
+  <source id="bgMusicSrc" src="music/background.mp3" type="audio/mpeg">
+</audio>
+
+<!-- Control flotante de música -->
+<div id="musicPlayer" style="display:none;position:fixed;bottom:96px;left:24px;z-index:490;display:flex;align-items:center;gap:8px;background:rgba(10,10,10,0.92);border:1px solid rgba(200,255,0,0.25);padding:8px 14px;backdrop-filter:blur(8px)">
+  <button id="musicToggleBtn" onclick="toggleMusic()"
+    style="background:none;border:none;color:var(--acid);cursor:pointer;display:flex;align-items:center;padding:0;transition:transform 0.2s"
+    onmouseover="this.style.transform='scale(1.15)'" onmouseout="this.style.transform='scale(1)'">
+    <svg id="musicIconPlay" width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>
+    <svg id="musicIconPause" width="18" height="18" viewBox="0 0 24 24" fill="currentColor" style="display:none"><path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/></svg>
+  </button>
+  <div style="display:flex;flex-direction:column;gap:2px">
+    <span style="font-family:'Barlow Condensed',sans-serif;font-size:0.68rem;letter-spacing:2px;color:var(--acid)">NEXUS ARENA</span>
+    <span id="musicTitle" style="font-size:0.65rem;color:rgba(255,255,255,0.4);letter-spacing:1px">FINAL BOSS</span>
+  </div>
+  <input type="range" id="musicVolume" min="0" max="100" value="30"
+    oninput="setMusicVolume(this.value)"
+    style="width:60px;accent-color:var(--acid);cursor:pointer;opacity:0.7">
+  <button onclick="closeMusicPlayer()"
+    style="background:none;border:none;color:rgba(255,255,255,0.3);cursor:pointer;font-size:0.85rem;padding:0;margin-left:2px;transition:color 0.2s"
+    onmouseover="this.style.color='var(--red)'" onmouseout="this.style.color='rgba(255,255,255,0.3)'">✕</button>
 </div>
 
 <script type="module" src="js/app.js?v=20"></script>

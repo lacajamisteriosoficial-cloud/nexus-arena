@@ -218,6 +218,7 @@ function buildAdminCard(t) {
         <a class="btn-tbl" href="torneo.html?id=${t.id}" target="_blank" style="text-decoration:none;display:inline-block">Ver</a>
         <button class="btn-tbl" onclick="abrirBracketAdmin('${t.id}', '${t.nombre}')">Bracket</button>
         <button class="btn-tbl" onclick="toggleEstado('${t.id}', '${t.estado}')">Estado</button>
+        <button class="btn-tbl" onclick="generarFlyerTorneo('${t.id}')" title="Generar imagen 1200x630 para compartir en Facebook">Flyer</button>
         <button class="btn-tbl delete" onclick="confirmDelete('torneo', '${t.id}', '${t.nombre}')">Eliminar</button>
       </div>
     </div>`;
@@ -1564,12 +1565,187 @@ window.sincCuposReales = async function(torneoId) {
   }
 };
 
-// ============================================================
-//  NOTIFICADOR DE INSCRIPTOS — WhatsApp masivo por torneo
-// ============================================================
 
-let _notificarInscriptos = [];  // cache de inscriptos del torneo seleccionado
-let _notificarTorneo     = null; // datos del torneo seleccionado
+// ── MÚSICA — Admin ────────────────────────────────────────────
+window.saveMusica = async function() {
+  const archivo = document.getElementById('cfgMusicaArchivo')?.value.trim() || 'music/background.mp3';
+  const titulo  = document.getElementById('cfgMusicaTitulo')?.value.trim()  || 'NEXUS ARENA';
+  const volumen = parseInt(document.getElementById('cfgMusicaVolumen')?.value || 30);
+  const activa  = document.getElementById('cfgMusicaActiva')?.checked ?? true;
+  try {
+    await setDoc(doc(db, 'config', 'musica'), { archivo, titulo, volumen, activa });
+    showToast('Música guardada ✓');
+  } catch (err) {
+    console.error(err);
+    showToast('Error al guardar música', true);
+  }
+};
+
+// Cargar config música al entrar a Config
+const _origLoadConfig = window.loadConfig || null;
+
+// ── FLYER GENERATOR — Preview para Facebook ───────────────────
+// Genera un PNG 1200x630 con Canvas para usar como OG image
+window.generarFlyerTorneo = async function(torneoId) {
+  const snap = await getDoc(doc(db, 'torneos', torneoId));
+  if (!snap.exists()) { showToast('Torneo no encontrado', true); return; }
+  const t = { id: snap.id, ...snap.data() };
+
+  const W = 1200, H = 630;
+  const canvas = document.createElement('canvas');
+  canvas.width = W; canvas.height = H;
+  const ctx = canvas.getContext('2d');
+
+  // Fondo negro
+  ctx.fillStyle = '#0a0a0a';
+  ctx.fillRect(0, 0, W, H);
+
+  // Grid decorativo
+  ctx.strokeStyle = 'rgba(200,255,0,0.04)';
+  ctx.lineWidth = 1;
+  for (let x = 0; x < W; x += 48) { ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, H); ctx.stroke(); }
+  for (let y = 0; y < H; y += 48) { ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(W, y); ctx.stroke(); }
+
+  // Intentar cargar imagen del juego
+  const drawContent = () => {
+    // Franja ácida izquierda
+    ctx.fillStyle = '#C8FF00';
+    ctx.fillRect(0, 0, 8, H);
+
+    // Degradado lateral derecho decorativo
+    const grad = ctx.createLinearGradient(W * 0.5, 0, W, 0);
+    grad.addColorStop(0, 'rgba(200,255,0,0)');
+    grad.addColorStop(1, 'rgba(200,255,0,0.06)');
+    ctx.fillStyle = grad;
+    ctx.fillRect(0, 0, W, H);
+
+    // Badge INSCRIPCIÓN ABIERTA
+    if (t.estado === 'open') {
+      ctx.fillStyle = '#C8FF00';
+      ctx.fillRect(60, 48, 260, 34);
+      ctx.fillStyle = '#000';
+      ctx.font = 'bold 14px "Arial Narrow", Arial';
+      ctx.letterSpacing = '3px';
+      ctx.fillText('INSCRIPCIÓN ABIERTA', 76, 71);
+    }
+
+    // Nombre del torneo
+    ctx.fillStyle = '#ffffff';
+    ctx.font = 'bold 88px "Arial Black", Arial';
+    const nombre = (t.nombre || 'TORNEO').toUpperCase();
+    // Wrap si es muy largo
+    if (ctx.measureText(nombre).width > 680) {
+      ctx.font = 'bold 64px "Arial Black", Arial';
+    }
+    ctx.fillText(nombre, 60, 220);
+
+    // Línea ácida bajo el título
+    ctx.fillStyle = '#C8FF00';
+    ctx.fillRect(60, 238, Math.min(ctx.measureText(nombre).width, 680), 4);
+
+    // Fecha
+    const fechaStr = t.fecha?.toDate
+      ? t.fecha.toDate().toLocaleString('es-AR', { weekday:'long', day:'numeric', month:'long', hour:'2-digit', minute:'2-digit' })
+      : '';
+    ctx.fillStyle = 'rgba(200,255,0,0.85)';
+    ctx.font = '28px Arial';
+    ctx.fillText(fechaStr.toUpperCase(), 60, 296);
+
+    // Metadata — plataforma, modalidad, entrada
+    const platMap = { mobile:'Mobile', console:'Consola', pc:'PC / Cross' };
+    const plat = platMap[t.plataforma] || t.plataforma || '';
+    const mod  = t.modalidad === 'presencial' ? 'Presencial' : 'Online';
+    const precio = (t.precio || 0) === 0 ? 'GRATIS' : '$' + (t.precio).toLocaleString('es-AR');
+
+    const tags = [plat, mod, precio].filter(Boolean);
+    let tagX = 60;
+    tags.forEach(tag => {
+      const tw = ctx.measureText(tag).width + 28;
+      ctx.fillStyle = 'rgba(255,255,255,0.08)';
+      ctx.fillRect(tagX, 330, tw, 36);
+      ctx.strokeStyle = 'rgba(255,255,255,0.15)';
+      ctx.lineWidth = 1;
+      ctx.strokeRect(tagX, 330, tw, 36);
+      ctx.fillStyle = '#fff';
+      ctx.font = 'bold 16px Arial';
+      ctx.fillText(tag, tagX + 14, 354);
+      tagX += tw + 8;
+    });
+
+    // Cupos
+    const libre = t.cupos_total - (t.cupos_ocupados || 0);
+    ctx.fillStyle = libre <= 3 ? '#ff1744' : '#C8FF00';
+    ctx.font = 'bold 20px Arial';
+    ctx.fillText(`${libre} CUPOS DISPONIBLES`, 60, 415);
+
+    // NEXUS ARENA branding abajo
+    ctx.fillStyle = '#C8FF00';
+    ctx.font = 'bold 52px "Arial Black", Arial';
+    ctx.fillText('NEXUS', 60, 560);
+    ctx.fillStyle = '#ffffff';
+    ctx.fillText(' ARENA', 60 + ctx.measureText('NEXUS').width, 560);
+
+    ctx.fillStyle = 'rgba(255,255,255,0.25)';
+    ctx.font = '16px Arial';
+    ctx.fillText('lacajamisteriosoficial-cloud.github.io/nexus-arena', 60, 592);
+
+    // Botón de descarga
+    canvas.toBlob(blob => {
+      const url = URL.createObjectURL(blob);
+      const a   = document.createElement('a');
+      a.href     = url;
+      a.download = `nexus-arena-${(t.nombre || 'torneo').toLowerCase().replace(/[^a-z0-9]/g,'-')}.png`;
+      a.click();
+      URL.revokeObjectURL(url);
+      showToast('Flyer descargado ✓ Subilo a Imgur y pegá la URL como imagen del torneo');
+    }, 'image/png');
+  };
+
+  // Si hay imagen del juego, dibujarla a la derecha
+  if (t.imagen) {
+    const img = new Image();
+    img.crossOrigin = 'anonymous';
+    img.onload = () => {
+      // Imagen a la derecha, con degradado encima
+      ctx.drawImage(img, W * 0.48, 0, W * 0.52, H);
+      const fadeGrad = ctx.createLinearGradient(W * 0.48, 0, W * 0.75, 0);
+      fadeGrad.addColorStop(0, '#0a0a0a');
+      fadeGrad.addColorStop(1, 'rgba(10,10,10,0)');
+      ctx.fillStyle = fadeGrad;
+      ctx.fillRect(W * 0.48, 0, W * 0.27, H);
+      drawContent();
+    };
+    img.onerror = () => drawContent();
+    img.src = t.imagen;
+  } else {
+    drawContent();
+  }
+};
+
+// ── MÚSICA — cargar config al abrir Config ────────────────────
+const _origLoadConfigSection = window.loadConfigSection;
+window.loadConfigSection = async function() {
+  if (_origLoadConfigSection) await _origLoadConfigSection();
+  try {
+    const snap = await getDoc(doc(db, 'config', 'musica'));
+    if (!snap.exists()) return;
+    const m = snap.data();
+    const arch = document.getElementById('cfgMusicaArchivo');
+    const tit  = document.getElementById('cfgMusicaTitulo');
+    const vol  = document.getElementById('cfgMusicaVolumen');
+    const volV = document.getElementById('cfgMusicaVolVal');
+    const act  = document.getElementById('cfgMusicaActiva');
+    if (arch) arch.value     = m.archivo  || 'music/background.mp3';
+    if (tit)  tit.value      = m.titulo   || '';
+    if (vol)  { vol.value    = m.volumen  ?? 30; }
+    if (volV) volV.textContent = (m.volumen ?? 30) + '%';
+    if (act)  act.checked    = m.activa   !== false;
+  } catch(e) { /* no hay config todavía */ }
+};
+
+// ── NOTIFICADOR DE INSCRIPTOS ─────────────────────────────────
+let _notificarInscriptos = [];
+let _notificarTorneo     = null;
 
 window.toggleNotificarPanel = function() {
   const panel = document.getElementById('notificarPanel');
@@ -1581,420 +1757,184 @@ window.toggleNotificarPanel = function() {
 
 async function construirNotificarPanel() {
   const filterTorneo = document.getElementById('filterTorneo')?.value;
-  const lista        = document.getElementById('notificarLista');
-  const countEl      = document.getElementById('notificarCount');
+  const lista  = document.getElementById('notificarLista');
+  const countEl = document.getElementById('notificarCount');
   if (!lista) return;
-
   lista.innerHTML = '<p style="color:var(--muted);font-size:0.85rem">Cargando...</p>';
-
   try {
-    // Necesitamos el torneo seleccionado para armar el mensaje
     if (!filterTorneo || filterTorneo === 'all') {
-      lista.innerHTML = '<p style="color:var(--orange);font-size:0.85rem">Seleccioná un torneo específico en el filtro de arriba para notificar.</p>';
+      lista.innerHTML = '<p style="color:var(--orange);font-size:0.85rem">Seleccioná un torneo específico en el filtro para notificar.</p>';
       document.getElementById('notificarMensaje').value = '';
       return;
     }
-
-    // Cargar torneo
     const torneoSnap = await getDoc(doc(db, 'torneos', filterTorneo));
     _notificarTorneo = torneoSnap.exists() ? { id: torneoSnap.id, ...torneoSnap.data() } : null;
-
-    // Cargar inscriptos confirmados del torneo
     const inscSnap = await getDocs(collection(db, 'inscripciones'));
-    _notificarInscriptos = inscSnap.docs
-      .map(d => ({ id: d.id, ...d.data() }))
+    _notificarInscriptos = inscSnap.docs.map(d => ({ id: d.id, ...d.data() }))
       .filter(i => i.torneo_id === filterTorneo && i.estado === 'confirmado' && (i.whatsapp || i.contacto));
-
     if (_notificarInscriptos.length === 0) {
-      lista.innerHTML = '<p style="color:var(--muted);font-size:0.85rem">No hay inscriptos confirmados con número de WhatsApp en este torneo.</p>';
+      lista.innerHTML = '<p style="color:var(--muted);font-size:0.85rem">No hay inscriptos confirmados con WhatsApp en este torneo.</p>';
       if (countEl) countEl.textContent = '';
       document.getElementById('notificarMensaje').value = '';
       return;
     }
-
-    // Generar mensaje automático
     regenerarMensaje();
-
-    // Renderizar lista
     renderNotificarLista();
     if (countEl) countEl.textContent = `${_notificarInscriptos.length} inscripto${_notificarInscriptos.length !== 1 ? 's' : ''} confirmado${_notificarInscriptos.length !== 1 ? 's' : ''}`;
-
   } catch (err) {
-    console.error('construirNotificarPanel:', err);
-    lista.innerHTML = '<p style="color:var(--red);font-size:0.85rem">Error al cargar. Intentá de nuevo.</p>';
+    lista.innerHTML = '<p style="color:var(--red);font-size:0.85rem">Error al cargar.</p>';
   }
 }
 
 window.regenerarMensaje = function() {
   const t = _notificarTorneo;
   if (!t) return;
-
   const fechaStr = t.fecha?.toDate
-    ? t.fecha.toDate().toLocaleString('es-AR', { weekday: 'long', day: 'numeric', month: 'long', hour: '2-digit', minute: '2-digit' })
+    ? t.fecha.toDate().toLocaleString('es-AR', { weekday:'long', day:'numeric', month:'long', hour:'2-digit', minute:'2-digit' })
     : '(fecha a confirmar)';
-
   const esPago = (t.precio || 0) > 0;
-  const linea_pago = esPago
+  const lineaPago = esPago
     ? `💳 *Pago:* $${(t.precio).toLocaleString('es-AR')}` + (t.alias_mp ? `\n📲 *Alias MP:* ${t.alias_mp}` : '')
     : `✅ *Entrada libre* — sin costo`;
-
   const msg =
     `🎮 *NEXUS ARENA — ${t.nombre.toUpperCase()}*\n\n` +
     `¡Hola! Tu inscripción fue *confirmada*. Estos son los datos del torneo:\n\n` +
     `📅 *Fecha:* ${fechaStr}\n` +
     `🕹️ *Plataforma:* ${t.plataforma || 'a confirmar'}\n` +
     `🌐 *Modalidad:* ${t.modalidad === 'presencial' ? 'Presencial — Villa de Mayo' : 'Online'}\n` +
-    linea_pago + `\n\n` +
+    lineaPago + `\n\n` +
     `📋 *Próximos pasos:*\n` +
-    `• Te vamos a enviar el bracket y los datos de la sala por este medio antes del torneo.\n` +
+    `• Te enviamos el bracket y los datos de la sala por este medio antes del torneo.\n` +
     `• Estar disponible 15 minutos antes del inicio.\n` +
     `• Ante cualquier duda respondé este mensaje.\n\n` +
-    `¡Mucha suerte! 🏆\n` +
-    `— Nexus Arena`;
-
+    `¡Mucha suerte! 🏆\n— Nexus Arena`;
   const textarea = document.getElementById('notificarMensaje');
   if (textarea) textarea.value = msg;
-
-  // Re-renderizar lista con mensaje actualizado
   if (_notificarInscriptos.length > 0) renderNotificarLista();
 };
 
 function renderNotificarLista() {
   const lista = document.getElementById('notificarLista');
   if (!lista || _notificarInscriptos.length === 0) return;
-
   lista.innerHTML =
-    `<div style="font-size:0.65rem;letter-spacing:3px;color:var(--acid);margin-bottom:12px;padding-bottom:8px;border-bottom:1px solid var(--gray)">` +
-    `${_notificarInscriptos.length} INSCRIPTOS — HACÉ CLIC EN ENVIAR PARA ABRIR WHATSAPP</div>` +
-    _notificarInscriptos.map((i, idx) => {
-      const numero  = (i.whatsapp || i.contacto || '').replace(/\D/g, '');
-      const waNum   = numero.startsWith('54') ? numero : '549' + numero.replace(/^0/, '');
+    `<div style="font-size:0.65rem;letter-spacing:3px;color:var(--acid);margin-bottom:12px;padding-bottom:8px;border-bottom:1px solid var(--gray)">${_notificarInscriptos.length} INSCRIPTOS — CLIC EN ENVIAR PARA ABRIR WHATSAPP</div>` +
+    _notificarInscriptos.map((i) => {
+      const numero = (i.whatsapp || i.contacto || '').replace(/\D/g, '');
+      const waNum  = numero.startsWith('54') ? numero : '549' + numero.replace(/^0/, '');
       return `<div style="display:flex;align-items:center;gap:12px;padding:10px 14px;background:var(--dark);border:1px solid var(--gray);margin-bottom:2px;flex-wrap:wrap">` +
         `<span style="font-family:'Barlow Condensed',sans-serif;font-size:0.95rem;font-weight:700;color:#fff;min-width:140px">${i.gamertag}</span>` +
         `<span style="font-size:0.8rem;color:var(--muted);flex:1">${i.nombre} · ${i.whatsapp || i.contacto || '—'}</span>` +
-        `<button class="btn-admin-primary" style="clip-path:polygon(6px 0%,100% 0%,calc(100% - 6px) 100%,0% 100%);padding:7px 18px;font-size:0.75rem;white-space:nowrap" ` +
-        `onclick="enviarWA('${waNum}', ${idx})">` +
-        `Enviar →</button>` +
+        `<button class="btn-admin-primary" style="clip-path:polygon(6px 0%,100% 0%,calc(100% - 6px) 100%,0% 100%);padding:7px 18px;font-size:0.75rem" onclick="enviarWA('${waNum}')">Enviar →</button>` +
         `</div>`;
     }).join('');
 }
 
-window.enviarWA = function(numero, inscripIdx) {
+window.enviarWA = function(numero) {
   const mensaje = document.getElementById('notificarMensaje')?.value || '';
   if (!mensaje.trim()) { showToast('El mensaje está vacío', true); return; }
-  if (!numero || numero.length < 10) { showToast('Número inválido para este inscripto', true); return; }
-  const url = `https://wa.me/${numero}?text=${encodeURIComponent(mensaje)}`;
-  window.open(url, '_blank');
+  if (!numero || numero.length < 10) { showToast('Número inválido', true); return; }
+  window.open(`https://wa.me/${numero}?text=${encodeURIComponent(mensaje)}`, '_blank');
 };
 
-// Mostrar/ocultar botón Notificar según si hay torneo seleccionado
-const _origLoadInscripciones = window.loadInscripciones;
+const _origLoadInscr = window.loadInscripciones;
 window.loadInscripciones = async function() {
-  if (_origLoadInscripciones) await _origLoadInscripciones();
+  if (_origLoadInscr) await _origLoadInscr();
   const filterTorneo = document.getElementById('filterTorneo')?.value;
   const btn = document.getElementById('btnNotificar');
   if (btn) btn.style.display = (filterTorneo && filterTorneo !== 'all') ? 'inline-flex' : 'none';
-  // Ocultar panel si cambia el filtro
   const panel = document.getElementById('notificarPanel');
   if (panel) panel.style.display = 'none';
 };
 
-// ============================================================
-//  MODO PRUEBA — Simulador de torneo completo
-// ============================================================
-
+// ── MODO PRUEBA ───────────────────────────────────────────────
 const MP = {
-  torneoId: null, botIds: [], inscripIds: [],
-  galardonId: null, bots: [], campeon: null, finalistas: [],
+  torneoId:null, botIds:[], inscripIds:[],
+  galardonId:null, bots:[], campeon:null, finalistas:[],
 };
+const BOT_NAMES = ['BotNexus_01','BotNexus_02','BotNexus_03','BotNexus_04','BotNexus_05','BotNexus_06','BotNexus_07','BotNexus_08','BotNexus_09','BotNexus_10','BotNexus_11','BotNexus_12','BotNexus_13','BotNexus_14','BotNexus_15','BotNexus_16'];
 
-const BOT_NAMES = [
-  'BotNexus_01','BotNexus_02','BotNexus_03','BotNexus_04',
-  'BotNexus_05','BotNexus_06','BotNexus_07','BotNexus_08',
-  'BotNexus_09','BotNexus_10','BotNexus_11','BotNexus_12',
-  'BotNexus_13','BotNexus_14','BotNexus_15','BotNexus_16',
-];
-
-function mpLog(msg, ok = true) {
+function mpLog(msg, ok=true) {
   const el = document.getElementById('mpLog');
   if (!el) return;
-  if (el.textContent === 'Todavía no iniciaste ninguna prueba.') el.innerHTML = '';
-  el.innerHTML += `<div style="color:${ok ? 'var(--acid)' : 'var(--red)'}">› ${msg}</div>`;
-  el.scrollTop = el.scrollHeight;
+  if (el.textContent.includes('no iniciaste')) el.innerHTML = '';
+  el.innerHTML += `<div style="color:${ok?'var(--acid)':'var(--red)'}">› ${msg}</div>`;
 }
-
 function mpReset() {
-  Object.assign(MP, { torneoId:null, botIds:[], inscripIds:[], galardonId:null, bots:[], campeon:null, finalistas:[] });
-  const log = document.getElementById('mpLog');
-  if (log) log.innerHTML = '';
-  const links = document.getElementById('mpLinks');
-  if (links) links.innerHTML = '';
-  ['mpBracketCard','mpResultadosCard'].forEach(id => {
-    const el = document.getElementById(id);
-    if (el) el.style.display = 'none';
-  });
+  Object.assign(MP,{torneoId:null,botIds:[],inscripIds:[],galardonId:null,bots:[],campeon:null,finalistas:[]});
+  const log=document.getElementById('mpLog'); if(log) log.innerHTML='';
+  const lnk=document.getElementById('mpLinks'); if(lnk) lnk.innerHTML='';
+  ['mpBracketCard','mpResultadosCard'].forEach(id=>{const el=document.getElementById(id);if(el)el.style.display='none';});
 }
-
 window.mpCrearTorneo = async function() {
   mpReset();
-  const nombre     = document.getElementById('mpNombre')?.value.trim()    || 'TEST — Torneo Prueba';
-  const cantBots   = parseInt(document.getElementById('mpCantBots')?.value  || 8);
-  const precio     = parseInt(document.getElementById('mpPrecio')?.value    || 0);
-  const plataforma = document.getElementById('mpPlataforma')?.value         || 'mobile';
-
+  const nombre=document.getElementById('mpNombre')?.value.trim()||'TEST — Torneo Prueba';
+  const cantBots=parseInt(document.getElementById('mpCantBots')?.value||8);
+  const precio=parseInt(document.getElementById('mpPrecio')?.value||0);
+  const plataforma=document.getElementById('mpPlataforma')?.value||'mobile';
   mpLog('Creando torneo de prueba...');
   try {
-    const torneoRef = await addDoc(collection(db, 'torneos'), {
-      nombre, subtitulo: 'Torneo de prueba — no publicar',
-      fecha: serverTimestamp(), estado: 'open', precio,
-      cupos_total: cantBots, cupos_ocupados: 0, plataforma,
-      modalidad: 'online', categoria: plataforma, emoji: '🤖',
-      imagen: '', descripcion: 'Generado por Modo Prueba.',
-      alias_mp: precio > 0 ? 'test.prueba' : '',
-      premio: precio * cantBots * 0.8,
-      jugadores_por_equipo: 1, test_mode: true, bracket: {},
-    });
-    MP.torneoId = torneoRef.id;
-    mpLog(`Torneo creado: "${nombre}"`);
-
-    mpLog(`Creando ${cantBots} bots...`);
-    for (const gt of BOT_NAMES.slice(0, cantBots)) {
-      const jRef = await addDoc(collection(db, 'jugadores'), {
-        gamertag: gt, nombre: gt + ' (bot)', foto: '',
-        ranking_points: 0, victorias: 0, torneos_jugados: 0,
-        fecha_registro: serverTimestamp(), test_mode: true,
-      });
-      MP.botIds.push(jRef.id);
-      MP.bots.push({ id: jRef.id, gamertag: gt });
+    const tRef=await addDoc(collection(db,'torneos'),{nombre,subtitulo:'Torneo de prueba',fecha:serverTimestamp(),estado:'open',precio,cupos_total:cantBots,cupos_ocupados:0,plataforma,modalidad:'online',categoria:plataforma,emoji:'🤖',imagen:'',descripcion:'Generado por Modo Prueba.',alias_mp:precio>0?'test.prueba':'',premio:precio*cantBots*0.8,jugadores_por_equipo:1,test_mode:true,bracket:{}});
+    MP.torneoId=tRef.id; mpLog(`Torneo: "${nombre}"`);
+    for(const gt of BOT_NAMES.slice(0,cantBots)){
+      const jRef=await addDoc(collection(db,'jugadores'),{gamertag:gt,nombre:gt+' (bot)',foto:'',ranking_points:0,victorias:0,torneos_jugados:0,fecha_registro:serverTimestamp(),test_mode:true});
+      MP.botIds.push(jRef.id); MP.bots.push({id:jRef.id,gamertag:gt});
     }
-    mpLog(`${cantBots} bots creados ✓`);
-
-    for (const bot of MP.bots) {
-      const iRef = await addDoc(collection(db, 'inscripciones'), {
-        nombre: bot.gamertag, gamertag: bot.gamertag,
-        contacto: 'bot@test.com', whatsapp: '1100000000', mail: 'bot@test.com',
-        torneo_id: MP.torneoId, torneo_nombre: nombre,
-        estado: 'confirmado', fecha_inscripcion: serverTimestamp(), test_mode: true,
-      });
+    mpLog(`${cantBots} bots ✓`);
+    for(const bot of MP.bots){
+      const iRef=await addDoc(collection(db,'inscripciones'),{nombre:bot.gamertag,gamertag:bot.gamertag,contacto:'bot@test.com',whatsapp:'1100000000',mail:'bot@test.com',torneo_id:MP.torneoId,torneo_nombre:nombre,estado:'confirmado',fecha_inscripcion:serverTimestamp(),test_mode:true});
       MP.inscripIds.push(iRef.id);
     }
-    await updateDoc(doc(db, 'torneos', MP.torneoId), { cupos_ocupados: cantBots });
-    mpLog(`${cantBots} inscripciones confirmadas ✓`);
-
-    const links = document.getElementById('mpLinks');
-    if (links) links.innerHTML =
-      `<a href="torneo.html?id=${MP.torneoId}" target="_blank" class="btn-admin-secondary" style="text-decoration:none;font-size:0.75rem">Ver página del torneo →</a>` +
-      `<a href="index.html" target="_blank" class="btn-admin-secondary" style="text-decoration:none;font-size:0.75rem">Ver página pública →</a>`;
-
-    mpLog('✓ Listo. Armá el bracket en Paso 2.');
+    await updateDoc(doc(db,'torneos',MP.torneoId),{cupos_ocupados:cantBots});
+    mpLog(`${cantBots} inscripciones ✓`);
+    const lnk=document.getElementById('mpLinks');
+    if(lnk) lnk.innerHTML=`<a href="torneo.html?id=${MP.torneoId}" target="_blank" class="btn-admin-secondary" style="text-decoration:none;font-size:0.75rem">Ver torneo →</a><a href="index.html" target="_blank" class="btn-admin-secondary" style="text-decoration:none;font-size:0.75rem">Ver página →</a>`;
+    mpLog('✓ Bracket en Paso 2');
     await mpRenderBracket();
-    const bc = document.getElementById('mpBracketCard');
-    if (bc) bc.style.display = 'block';
-  } catch (err) {
-    console.error(err);
-    mpLog('Error: ' + (err.message || err), false);
-  }
+    const bc=document.getElementById('mpBracketCard'); if(bc) bc.style.display='block';
+  } catch(err){ mpLog('Error: '+err.message,false); }
 };
-
 async function mpRenderBracket() {
-  const content = document.getElementById('mpBracketContent');
-  if (!content || !MP.torneoId) return;
-  const snap     = await getDoc(doc(db, 'torneos', MP.torneoId));
-  const bracket  = snap.data()?.bracket || {};
-  const ganadores = bracket.ganadores   || {};
-  const ganadorFinal = bracket.ganador_final || '';
-  const finalistas   = bracket.finalistas    || [];
-
-  const partidos = [];
-  for (let i = 0; i < MP.bots.length; i += 2) {
-    if (MP.bots[i] && MP.bots[i+1]) {
-      const key = 'match_' + Math.floor(i/2);
-      partidos.push({ eq1: MP.bots[i].gamertag, eq2: MP.bots[i+1].gamertag, key, ganador: ganadores[key] || '' });
+  const content=document.getElementById('mpBracketContent');
+  if(!content||!MP.torneoId) return;
+  const snap=await getDoc(doc(db,'torneos',MP.torneoId));
+  const bracket=snap.data()?.bracket||{};
+  const gans=bracket.ganadores||{};
+  const ganadorFinal=bracket.ganador_final||'';
+  const finalistas=bracket.finalistas||[];
+  const partidos=[];
+  for(let i=0;i<MP.bots.length;i+=2){
+    if(MP.bots[i]&&MP.bots[i+1]){
+      const key='match_'+Math.floor(i/2);
+      partidos.push({eq1:MP.bots[i].gamertag,eq2:MP.bots[i+1].gamertag,key,ganador:gans[key]||''});
     }
   }
-
-  let html = '<div style="display:flex;gap:16px;flex-wrap:wrap">';
-  html += '<div style="flex:1;min-width:240px">';
-  html += '<div style="font-size:0.65rem;letter-spacing:3px;color:var(--orange);margin-bottom:12px">FASE 1</div>';
-  partidos.forEach((p, idx) => {
-    html += `<div style="background:var(--dark);border:1px solid var(--gray);margin-bottom:8px">`;
-    html += `<div style="padding:3px 10px;font-size:0.6rem;letter-spacing:2px;color:var(--muted);border-bottom:1px solid var(--gray)">PARTIDO ${idx+1}</div>`;
-    [p.eq1, p.eq2].forEach(eq => {
-      html += `<div style="display:flex;align-items:center;padding:7px 10px;gap:8px;border-bottom:1px solid rgba(255,255,255,0.04)">`;
-      html += `<span style="flex:1;font-family:'Barlow Condensed',sans-serif;font-weight:700;color:${p.ganador===eq?'var(--orange)':'#fff'}">${eq}</span>`;
-      html += `<button class="btn-tbl confirm" style="font-size:0.65rem;padding:3px 8px" onclick="mpMarcarGanador('${p.key}','${encodeURIComponent(eq)}')">Ganador</button></div>`;
+  let html='<div style="display:flex;gap:16px;flex-wrap:wrap"><div style="flex:1;min-width:240px">';
+  html+='<div style="font-size:0.65rem;letter-spacing:3px;color:var(--orange);margin-bottom:12px">FASE 1</div>';
+  partidos.forEach((p,idx)=>{
+    html+=`<div style="background:var(--dark);border:1px solid var(--gray);margin-bottom:8px"><div style="padding:3px 10px;font-size:0.6rem;letter-spacing:2px;color:var(--muted);border-bottom:1px solid var(--gray)">PARTIDO ${idx+1}</div>`;
+    [p.eq1,p.eq2].forEach(eq=>{
+      html+=`<div style="display:flex;align-items:center;padding:7px 10px;gap:8px;border-bottom:1px solid rgba(255,255,255,0.04)"><span style="flex:1;font-family:'Barlow Condensed',sans-serif;font-weight:700;color:${p.ganador===eq?'var(--orange)':'#fff'}">${eq}</span><button class="btn-tbl confirm" style="font-size:0.65rem;padding:3px 8px" onclick="mpMarcarGanador('${p.key}','${encodeURIComponent(eq)}')">Ganador</button></div>`;
     });
-    if (p.ganador) html += `<div style="padding:3px 10px;font-size:0.65rem;color:var(--orange);background:rgba(255,109,0,0.05)">&#9733; ${p.ganador}</div>`;
-    html += `</div>`;
+    if(p.ganador) html+=`<div style="padding:3px 10px;font-size:0.65rem;color:var(--orange);background:rgba(255,109,0,0.05)">★ ${p.ganador}</div>`;
+    html+=`</div>`;
   });
-  html += '</div>';
-
-  if (finalistas.length >= 2) {
-    html += '<div style="min-width:240px;flex:1">';
-    html += '<div style="font-size:0.65rem;letter-spacing:3px;color:var(--orange);margin-bottom:12px">GRAN FINAL</div>';
-    html += '<div style="background:var(--dark);border:1px solid rgba(255,109,0,0.4)">';
-    [0,1].forEach(fi => {
-      const f = finalistas[fi] || '?';
-      html += `<div style="display:flex;align-items:center;padding:10px 12px;gap:8px;${fi===0?'border-bottom:1px solid rgba(255,255,255,0.06)':''}">`;
-      html += `<span style="flex:1;font-family:'Barlow Condensed',sans-serif;font-size:1.05rem;font-weight:700;color:${ganadorFinal===f?'var(--orange)':'#fff'}">${f}</span>`;
-      if (f !== '?') html += `<button class="btn-tbl confirm" onclick="mpMarcarCampeon('${encodeURIComponent(f)}','${encodeURIComponent(finalistas.join('|'))}')">Campeón</button>`;
-      html += `</div>`;
+  html+='</div>';
+  if(finalistas.length>=2){
+    html+='<div style="min-width:240px;flex:1"><div style="font-size:0.65rem;letter-spacing:3px;color:var(--orange);margin-bottom:12px">GRAN FINAL</div><div style="background:var(--dark);border:1px solid rgba(255,109,0,0.4)">';
+    [0,1].forEach(fi=>{
+      const f=finalistas[fi]||'?';
+      html+=`<div style="display:flex;align-items:center;padding:10px 12px;gap:8px;${fi===0?'border-bottom:1px solid rgba(255,255,255,0.06)':''}"><span style="flex:1;font-family:'Barlow Condensed',sans-serif;font-size:1.05rem;font-weight:700;color:${ganadorFinal===f?'var(--orange)':'#fff'}">${f}</span>`;
+      if(f!=='?') html+=`<button class="btn-tbl confirm" onclick="mpMarcarCampeon('${encodeURIComponent(f)}','${encodeURIComponent(finalistas.join('|'))}')">Campeón</button>`;
+      html+=`</div>`;
     });
-    if (ganadorFinal) html += `<div style="padding:5px 12px;font-size:0.7rem;color:var(--orange);background:rgba(255,109,0,0.08)">&#9733; CAMPEÓN: ${ganadorFinal}</div>`;
-    html += '</div></div>';
+    if(ganadorFinal) html+=`<div style="padding:5px 12px;font-size:0.7rem;color:var(--orange);background:rgba(255,109,0,0.08)">★ CAMPEÓN: ${ganadorFinal}</div>`;
+    html+='</div></div>';
   }
-  html += '</div>';
-  content.innerHTML = html;
+  html+='</div>';
+  content.innerHTML=html;
 }
-
-window.mpMarcarGanador = async function(matchKey, ganadorEncoded) {
-  if (!MP.torneoId) return;
-  const ganador = decodeURIComponent(ganadorEncoded);
-  try {
-    const snap  = await getDoc(doc(db, 'torneos', MP.torneoId));
-    const gans  = { ...(snap.data()?.bracket?.ganadores || {}), [matchKey]: ganador };
-    await updateDoc(doc(db, 'torneos', MP.torneoId), {
-      'bracket.ganadores':  gans,
-      'bracket.finalistas': Object.values(gans).filter(Boolean),
-    });
-    await mpRenderBracket();
-  } catch (err) { showToast('Error al guardar ganador', true); }
-};
-
-window.mpMarcarCampeon = async function(ganadorEncoded, finalistasEncoded) {
-  if (!MP.torneoId) return;
-  const ganador    = decodeURIComponent(ganadorEncoded);
-  const finalistas = decodeURIComponent(finalistasEncoded).split('|');
-  try {
-    await updateDoc(doc(db, 'torneos', MP.torneoId), {
-      'bracket.ganador_final': ganador, 'bracket.finalistas': finalistas,
-    });
-    MP.campeon = ganador; MP.finalistas = finalistas;
-    await mpRenderBracket();
-    showToast('Campeón: ' + ganador);
-  } catch (err) { showToast('Error al guardar campeón', true); }
-};
-
-window.mpSimularAleatorio = async function() {
-  if (!MP.torneoId || MP.bots.length === 0) { showToast('Primero creá el torneo', true); return; }
-  mpLog('Simulando bracket aleatorio...');
-  try {
-    const gans = {}, gansFase1 = [];
-    for (let i = 0; i < MP.bots.length; i += 2) {
-      if (MP.bots[i] && MP.bots[i+1]) {
-        const key = 'match_' + Math.floor(i/2);
-        const w   = Math.random() > 0.5 ? MP.bots[i].gamertag : MP.bots[i+1].gamertag;
-        gans[key] = w; gansFase1.push(w);
-      }
-    }
-    const campeon    = gansFase1[Math.floor(Math.random() * gansFase1.length)];
-    const finalistas = gansFase1.slice(0, 2);
-    await updateDoc(doc(db, 'torneos', MP.torneoId), {
-      'bracket.ganadores': gans, 'bracket.finalistas': finalistas, 'bracket.ganador_final': campeon,
-    });
-    MP.campeon = campeon; MP.finalistas = finalistas;
-    await mpRenderBracket();
-    mpLog(`Simulado. Campeón: ${campeon} ✓`);
-    showToast('Bracket simulado ✓');
-  } catch (err) { mpLog('Error: ' + err.message, false); }
-};
-
-window.mpFinalizarTorneo = async function() {
-  if (!MP.torneoId) { showToast('Primero creá el torneo', true); return; }
-  const snap    = await getDoc(doc(db, 'torneos', MP.torneoId));
-  const bracket = snap.data()?.bracket || {};
-  const campeon = bracket.ganador_final || MP.campeon;
-  if (!campeon) { showToast('Marcá un campeón antes de finalizar', true); return; }
-  const finalistas = bracket.finalistas || [];
-  mpLog('Asignando puntos...');
-  try {
-    const PUNTOS = { campeon: 100, finalista: 50, participante: 10 };
-    const jugSnap = await getDocs(collection(db, 'jugadores'));
-    const updates = jugSnap.docs
-      .map(d => ({ id: d.id, ...d.data() }))
-      .filter(j => j.test_mode)
-      .map(j => {
-        const gt  = j.gamertag || '';
-        const pts = gt === campeon ? PUNTOS.campeon : finalistas.includes(gt) ? PUNTOS.finalista : PUNTOS.participante;
-        const vic = gt === campeon ? 1 : 0;
-        return updateDoc(doc(db, 'jugadores', j.id), {
-          ranking_points:  (j.ranking_points  || 0) + pts,
-          victorias:       (j.victorias       || 0) + vic,
-          torneos_jugados: (j.torneos_jugados || 0) + 1,
-        });
-      });
-    await Promise.all(updates);
-    await updateDoc(doc(db, 'torneos', MP.torneoId), { estado: 'finished' });
-    const gRef = await addDoc(collection(db, 'galardones'), {
-      gamertag: campeon, torneo_nombre: snap.data()?.nombre || 'TEST',
-      fecha: serverTimestamp(), emoji: '🤖', foto: '', test_mode: true,
-    });
-    MP.galardonId = gRef.id;
-    mpLog(`Puntos asignados. Campeón: ${campeon}. Galardón creado ✓`);
-
-    const jugSnap2 = await getDocs(collection(db, 'jugadores'));
-    const botsData = jugSnap2.docs.map(d=>({id:d.id,...d.data()})).filter(j=>j.test_mode)
-      .sort((a,b)=>(b.ranking_points||0)-(a.ranking_points||0));
-
-    const resCard = document.getElementById('mpResultadosCard');
-    const resCont = document.getElementById('mpResultadosContent');
-    if (resCard && resCont) {
-      resCard.style.display = 'block';
-      resCont.innerHTML =
-        `<div style="display:flex;gap:16px;flex-wrap:wrap">` +
-        `<div style="flex:1;min-width:200px">` +
-        `<div style="font-size:0.65rem;letter-spacing:3px;color:var(--orange);margin-bottom:12px">PODIO</div>` +
-        `<div style="background:rgba(255,215,0,0.08);border:1px solid rgba(255,215,0,0.3);padding:14px 16px;margin-bottom:8px">` +
-        `<div style="font-size:0.65rem;letter-spacing:2px;color:#FFD700;margin-bottom:4px">&#127881; CAMPEÓN</div>` +
-        `<div style="font-size:1.4rem;font-family:'Bebas Neue',sans-serif;color:#fff">${campeon}</div>` +
-        `<div style="font-size:0.8rem;color:var(--acid)">+100 puntos</div></div>` +
-        finalistas.filter(f=>f!==campeon).slice(0,1).map(f=>
-          `<div style="background:var(--dark3);border:1px solid var(--gray);padding:10px 16px">` +
-          `<div style="font-size:0.65rem;letter-spacing:2px;color:#C0C0C0;margin-bottom:4px">FINALISTA</div>` +
-          `<div style="font-size:1.1rem;font-family:'Bebas Neue',sans-serif;color:#fff">${f}</div>` +
-          `<div style="font-size:0.8rem;color:var(--muted)">+50 puntos</div></div>`
-        ).join('') +
-        `</div>` +
-        `<div style="flex:2;min-width:240px">` +
-        `<div style="font-size:0.65rem;letter-spacing:3px;color:var(--orange);margin-bottom:12px">RANKING BOTS</div>` +
-        `<div style="border:1px solid var(--gray)">` +
-        botsData.slice(0,8).map((j,i)=>
-          `<div style="display:flex;align-items:center;gap:12px;padding:8px 14px;border-bottom:1px solid rgba(42,42,42,0.5)">` +
-          `<span style="font-size:1rem;font-weight:700;min-width:20px;color:${i===0?'#FFD700':i===1?'#C0C0C0':i===2?'#CD7F32':'var(--muted)'}">${i+1}</span>` +
-          `<span style="flex:1;font-family:'Barlow Condensed',sans-serif;color:#fff">${j.gamertag}</span>` +
-          `<span style="color:var(--acid);font-weight:700">${j.ranking_points||0}</span>` +
-          `<a href="jugador.html?id=${j.id}" target="_blank" class="btn-tbl" style="font-size:0.65rem;text-decoration:none">Ver perfil</a>` +
-          `</div>`
-        ).join('') +
-        `</div></div></div>` +
-        `<div style="margin-top:16px;padding:12px 16px;background:rgba(200,255,0,0.05);border:1px solid rgba(200,255,0,0.15);font-size:0.82rem;color:var(--text)">` +
-        `&#10003; Galardón creado &nbsp;&#10003; Ranking actualizado &nbsp;&#10003; Perfil de jugadores disponible<br>` +
-        `<strong style="color:var(--acid)">Todo funcionó. Cuando termines verificar, limpiá los datos de prueba abajo.</strong></div>`;
-    }
-    mpLog('===== SIMULACIÓN COMPLETA =====');
-  } catch (err) { mpLog('Error: ' + err.message, false); }
-};
-
-window.mpLimpiar = async function() {
-  if (!confirm('¿Borrar TODOS los datos con test_mode:true? Los datos reales no se tocan.')) return;
-  const logEl = document.getElementById('mpLimpiezaLog');
-  if (logEl) logEl.textContent = 'Borrando...';
-  try {
-    let total = 0;
-    for (const col of ['torneos','inscripciones','jugadores','galardones']) {
-      const snap = await getDocs(collection(db, col));
-      for (const d of snap.docs.filter(d => d.data().test_mode === true)) {
-        await deleteDoc(doc(db, col, d.id));
-        total++;
-      }
-    }
-    if (logEl) logEl.innerHTML = `<span style="color:var(--acid)">&#10003; ${total} documentos de prueba eliminados.</span>`;
-    showToast(`Limpieza completa: ${total} docs borrados ✓`);
-    mpReset();
-    const log = document.getElementById('mpLog');
-    if (log) log.innerHTML = '<span style="color:var(--muted)">Datos limpiados. Podés hacer otra prueba.</span>';
-  } catch (err) {
-    if (logEl) logEl.innerHTML = `<span style="color:var(--red)">Error: ${err.message}</span>`;
-    showToast('Error al limpiar: ' + err.message, true);
-  }
-};
+window.mpMarcarGanador=async function(k,ge){if(!MP.torneoId)return;const g=decodeURIComponent(ge);try{const s=await getDoc(doc(db,'torneos',MP.torneoId));const gs={...(s.data()?.bracket?.ganadores||{}),[k]:g};await updateDoc(doc(db,'torneos',MP.torneoId),{'bracket.ganadores':gs,'bracket.finalistas':Object.values(gs).filter(Boolean)});await mpRenderBracket();}catch(e){showToast('Error',true);}};
+window.mpMarcarCampeon=async function(ge,fe){if(!MP.torneoId)return;const g=decodeURIComponent(ge);const fs=decodeURIComponent(fe).split('|');try{await updateDoc(doc(db,'torneos',MP.torneoId),{'bracket.ganador_final':g,'bracket.finalistas':fs});MP.campeon=g;MP.finalistas=fs;await mpRenderBracket();showToast('Campeón: '+g);}catch(e){showToast('Error',true);}};
+window.mpSimularAleatorio=async function(){if(!MP.torneoId||MP.bots.length===0){showToast('Primero creá el torneo',true);return;}mpLog('Simulando...');try{const gs={},gf=[];for(let i=0;i<MP.bots.length;i+=2){if(MP.bots[i]&&MP.bots[i+1]){const k='match_'+Math.floor(i/2);const w=Math.random()>0.5?MP.bots[i].gamertag:MP.bots[i+1].gamertag;gs[k]=w;gf.push(w);}}const camp=gf[Math.floor(Math.random()*gf.length)];const fs=gf.slice(0,2);await updateDoc(doc(db,'torneos',MP.torneoId),{'bracket.ganadores':gs,'bracket.finalistas':fs,'bracket.ganador_final':camp});MP.campeon=camp;MP.finalistas=fs;await mpRenderBracket();mpLog(`Campeón: ${camp} ✓`);showToast('Simulado ✓');}catch(err){mpLog('Error: '+err.message,false);}};
+window.mpFinalizarTorneo=async function(){if(!MP.torneoId){showToast('Primero creá el torneo',true);return;}const sn=await getDoc(doc(db,'torneos',MP.torneoId));const br=sn.data()?.bracket||{};const camp=br.ganador_final||MP.campeon;if(!camp){showToast('Marcá un campeón',true);return;}const fs=br.finalistas||[];mpLog('Asignando puntos...');try{const P={campeon:100,finalista:50,participante:10};const js=await getDocs(collection(db,'jugadores'));const ups=js.docs.map(d=>({id:d.id,...d.data()})).filter(j=>j.test_mode).map(j=>{const gt=j.gamertag||'';const pts=gt===camp?P.campeon:fs.includes(gt)?P.finalista:P.participante;const vic=gt===camp?1:0;return updateDoc(doc(db,'jugadores',j.id),{ranking_points:(j.ranking_points||0)+pts,victorias:(j.victorias||0)+vic,torneos_jugados:(j.torneos_jugados||0)+1});});await Promise.all(ups);await updateDoc(doc(db,'torneos',MP.torneoId),{estado:'finished'});const gRef=await addDoc(collection(db,'galardones'),{gamertag:camp,torneo_nombre:sn.data()?.nombre||'TEST',fecha:serverTimestamp(),emoji:'🤖',foto:'',test_mode:true});MP.galardonId=gRef.id;mpLog(`✓ Campeón: ${camp} | Galardón creado | Puntos asignados`);const js2=await getDocs(collection(db,'jugadores'));const bots=js2.docs.map(d=>({id:d.id,...d.data()})).filter(j=>j.test_mode).sort((a,b)=>(b.ranking_points||0)-(a.ranking_points||0));const rc=document.getElementById('mpResultadosCard');const rco=document.getElementById('mpResultadosContent');if(rc&&rco){rc.style.display='block';rco.innerHTML=`<div style="padding:16px;background:rgba(200,255,0,0.05);border:1px solid rgba(200,255,0,0.15)"><strong style="color:var(--acid)">★ Campeón: ${camp}</strong> — todo funcionó correctamente.<br><span style="color:var(--muted);font-size:0.82rem">Verificá ranking, Hall of Fame y perfil de jugadores. Luego limpiá.</span></div><div style="margin-top:12px;border:1px solid var(--gray)">`+bots.slice(0,6).map((j,i)=>`<div style="display:flex;align-items:center;gap:12px;padding:8px 14px;border-bottom:1px solid rgba(42,42,42,0.5)"><span style="font-size:1rem;font-weight:700;min-width:20px;color:${i===0?'#FFD700':i===1?'#C0C0C0':i===2?'#CD7F32':'var(--muted)'}">${i+1}</span><span style="flex:1;font-family:'Barlow Condensed',sans-serif;color:#fff">${j.gamertag}</span><span style="color:var(--acid);font-weight:700">${j.ranking_points||0} pts</span><a href="jugador.html?id=${j.id}" target="_blank" class="btn-tbl" style="font-size:0.65rem;text-decoration:none">Ver perfil</a></div>`).join('')+'</div>';}mpLog('===== COMPLETADO =====');}catch(err){mpLog('Error: '+err.message,false);}};
+window.mpLimpiar=async function(){if(!confirm('¿Borrar todos los datos test_mode:true?'))return;const logEl=document.getElementById('mpLimpiezaLog');if(logEl)logEl.textContent='Borrando...';try{let total=0;for(const col of['torneos','inscripciones','jugadores','galardones']){const s=await getDocs(collection(db,col));for(const d of s.docs.filter(d=>d.data().test_mode===true)){await deleteDoc(doc(db,col,d.id));total++;}}if(logEl)logEl.innerHTML=`<span style="color:var(--acid)">✓ ${total} documentos eliminados.</span>`;showToast(`Limpieza: ${total} docs ✓`);mpReset();const log=document.getElementById('mpLog');if(log)log.innerHTML='<span style="color:var(--muted)">Limpiado. Podés hacer otra prueba.</span>';}catch(err){if(logEl)logEl.innerHTML=`<span style="color:var(--red)">Error: ${err.message}</span>`;showToast('Error: '+err.message,true);}};
