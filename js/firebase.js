@@ -1,9 +1,12 @@
 // ============================================================
-//  NEXUS ARENA — firebase.js  (inicialización Firebase)
+//  NEXUS ARENA — firebase.js
 // ============================================================
-import { initializeApp }    from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-import { getFirestore }     from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
-import { getAuth }          from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
+import { initializeApp }
+  from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+import { getFirestore }
+  from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+import { getAuth }
+  from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
 
 const firebaseConfig = {
   apiKey:            "AIzaSyC01z9nk8VIFbUM6pq0nN-Q-abOvjZt67U",
@@ -14,6 +17,6 @@ const firebaseConfig = {
   appId:             "1:352353749954:web:a26ee299f3413c8fdea45b"
 };
 
-const app  = initializeApp(firebaseConfig);
+const app = initializeApp(firebaseConfig);
 export const db   = getFirestore(app);
 export const auth = getAuth(app);
