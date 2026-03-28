@@ -470,25 +470,7 @@
   <source id="bgMusicSrc" src="music/background.mp3" type="audio/mpeg">
 </audio>
 
-<!-- Control flotante de música -->
-<div id="musicPlayer" style="display:none;position:fixed;bottom:96px;left:24px;z-index:490;display:flex;align-items:center;gap:8px;background:rgba(10,10,10,0.92);border:1px solid rgba(200,255,0,0.25);padding:8px 14px;backdrop-filter:blur(8px)">
-  <button id="musicToggleBtn" onclick="toggleMusic()"
-    style="background:none;border:none;color:var(--acid);cursor:pointer;display:flex;align-items:center;padding:0;transition:transform 0.2s"
-    onmouseover="this.style.transform='scale(1.15)'" onmouseout="this.style.transform='scale(1)'">
-    <svg id="musicIconPlay" width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>
-    <svg id="musicIconPause" width="18" height="18" viewBox="0 0 24 24" fill="currentColor" style="display:none"><path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/></svg>
-  </button>
-  <div style="display:flex;flex-direction:column;gap:2px">
-    <span style="font-family:'Barlow Condensed',sans-serif;font-size:0.68rem;letter-spacing:2px;color:var(--acid)">NEXUS ARENA</span>
-    <span id="musicTitle" style="font-size:0.65rem;color:rgba(255,255,255,0.4);letter-spacing:1px">FINAL BOSS</span>
-  </div>
-  <input type="range" id="musicVolume" min="0" max="100" value="30"
-    oninput="setMusicVolume(this.value)"
-    style="width:60px;accent-color:var(--acid);cursor:pointer;opacity:0.7">
-  <button onclick="closeMusicPlayer()"
-    style="background:none;border:none;color:rgba(255,255,255,0.3);cursor:pointer;font-size:0.85rem;padding:0;margin-left:2px;transition:color 0.2s"
-    onmouseover="this.style.color='var(--red)'" onmouseout="this.style.color='rgba(255,255,255,0.3)'">✕</button>
-</div>
+<!-- Player de música — controlado solo desde el admin -->
 
 <script type="module" src="js/app.js?v=20"></script>
 </body>

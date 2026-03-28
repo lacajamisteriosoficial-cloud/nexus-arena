@@ -109,10 +109,12 @@ window.showSection = function(name) {
   };
   if (loaders[name]) loaders[name]();
 
-  if (name === 'nuevo-torneo') {
+  // Solo resetear el form si NO viene de editTorneo() — en ese caso el id ya fue seteado
+  if (name === 'nuevo-torneo' && !window._editandoTorneo) {
     document.getElementById('formTorneoTitle').textContent = 'Nuevo Torneo';
     document.getElementById('editTorneoId').value = '';
   }
+  window._editandoTorneo = false;
 };
 
 // ── DASHBOARD ────────────────────────────────────────────────
@@ -322,6 +324,7 @@ async function saveTorneo() {
   const aliasMP  = document.getElementById('tAliasMP')?.value.trim() || '';
   const premio   = parseInt(document.getElementById('tPremio')?.value) || 0;
   const jpe      = parseInt(document.getElementById('tJugadoresPorEquipo')?.value) || 1;
+  const fotoEquipo = document.getElementById('tFotoEquipo')?.value.trim() || '';
   const frasePagoTitulo     = document.getElementById('tFrasePagoTitulo')?.value.trim() || '';
   const frasePagoDesc       = document.getElementById('tFrasePagoDesc')?.value.trim() || '';
   const fraseCompetirTitulo = document.getElementById('tFraseCompetirTitulo')?.value.trim() || '';
@@ -335,6 +338,7 @@ async function saveTorneo() {
     alias_mp:             aliasMP,
     premio:               precio === 0 ? 0 : (premio || Math.round(cupos * precio * 0.8)),
     jugadores_por_equipo: jpe,
+    foto_equipo:          fotoEquipo,
     frase_pago_titulo:      frasePagoTitulo,
     frase_pago_desc:        frasePagoDesc,
     frase_competir_titulo:  fraseCompetirTitulo,
@@ -388,6 +392,8 @@ window.editTorneo = async function(id) {
     if (premioEl) premioEl.value = t.premio || '';
     const jpeEl = document.getElementById('tJugadoresPorEquipo');
     if (jpeEl) jpeEl.value = t.jugadores_por_equipo || 1;
+    const fotoEquipoEl = document.getElementById('tFotoEquipo');
+    if (fotoEquipoEl) { fotoEquipoEl.value = t.foto_equipo || ''; previewFotoEquipo(t.foto_equipo || ''); }
     const fpt  = document.getElementById('tFrasePagoTitulo');
     const fpd  = document.getElementById('tFrasePagoDesc');
     const fct  = document.getElementById('tFraseCompetirTitulo');
@@ -405,6 +411,7 @@ window.editTorneo = async function(id) {
     }
 
     document.getElementById('formTorneoTitle').textContent = 'Editar Torneo';
+    window._editandoTorneo = true;
     showSection('nuevo-torneo');
   } catch (err) {
     console.error(err);
@@ -437,6 +444,8 @@ window.resetTorneoForm = function() {
   if (premioReset) premioReset.value = '';
   const jpeReset = document.getElementById('tJugadoresPorEquipo');
   if (jpeReset) jpeReset.value = '1';
+  const fotoEquipoReset = document.getElementById('tFotoEquipo');
+  if (fotoEquipoReset) { fotoEquipoReset.value = ''; previewFotoEquipo(''); }
   ['tFrasePagoTitulo','tFrasePagoDesc','tFraseCompetirTitulo','tFraseCompetirDesc'].forEach(id => {
     const el = document.getElementById(id);
     if (el) el.value = '';
@@ -534,6 +543,19 @@ window.previewImagen = function(url) {
     img.onerror        = () => { wrap.style.display = 'none'; };
   } else {
     wrap.style.display = 'none';
+  }
+};
+
+window.previewFotoEquipo = function(url) {
+  const wrap = document.getElementById('fotoEquipoPreview');
+  const img  = document.getElementById('fotoEquipoImg');
+  if (!wrap || !img) return;
+  if (url) {
+    img.src             = url;
+    wrap.style.display  = 'flex';
+    img.onerror         = () => { wrap.style.display = 'none'; };
+  } else {
+    wrap.style.display  = 'none';
   }
 };
 
@@ -1572,8 +1594,9 @@ window.saveMusica = async function() {
   const titulo  = document.getElementById('cfgMusicaTitulo')?.value.trim()  || 'NEXUS ARENA';
   const volumen = parseInt(document.getElementById('cfgMusicaVolumen')?.value || 30);
   const activa  = document.getElementById('cfgMusicaActiva')?.checked ?? true;
+  const loop    = document.getElementById('cfgMusicaLoop')?.checked ?? true;
   try {
-    await setDoc(doc(db, 'config', 'musica'), { archivo, titulo, volumen, activa });
+    await setDoc(doc(db, 'config', 'musica'), { archivo, titulo, volumen, activa, loop });
     showToast('Música guardada ✓');
   } catch (err) {
     console.error(err);
@@ -1740,6 +1763,8 @@ window.loadConfigSection = async function() {
     if (vol)  { vol.value    = m.volumen  ?? 30; }
     if (volV) volV.textContent = (m.volumen ?? 30) + '%';
     if (act)  act.checked    = m.activa   !== false;
+    const loopEl = document.getElementById('cfgMusicaLoop');
+    if (loopEl) loopEl.checked = m.loop !== false;
   } catch(e) { /* no hay config todavía */ }
 };
 

@@ -295,6 +295,31 @@
           </div>
         </div>
 
+        <!-- FOTO DEL EQUIPO / JUGADOR -->
+        <div style="margin-top:14px;padding:14px 16px;background:rgba(200,255,0,0.03);border:1px solid rgba(200,255,0,0.12)">
+          <label class="form-label" style="color:var(--acid);font-size:0.75rem;letter-spacing:2px;margin-bottom:8px">
+            FOTO DEL EQUIPO / JUGADOR — para torneos en equipo (5v5, 2v2, etc.)
+          </label>
+          <p style="font-size:0.78rem;color:var(--muted);margin-bottom:10px">
+            URL de la foto o logo del equipo. Usá Imgur, Discord CDN, o cualquier host de imágenes.
+            No se sube el archivo — solo pegás el link directo a la imagen.
+          </p>
+          <div style="display:flex;gap:10px;align-items:center">
+            <input type="text" class="form-input" id="tFotoEquipo"
+              placeholder="https://i.imgur.com/... (URL directa al logo del equipo)"
+              oninput="previewFotoEquipo(this.value)"
+              style="flex:1">
+            <button type="button" class="btn-admin-secondary"
+              onclick="document.getElementById('tFotoEquipo').value='';previewFotoEquipo('')"
+              style="white-space:nowrap">✕ Borrar</button>
+          </div>
+          <div id="fotoEquipoPreview" style="display:none;margin-top:10px;display:flex;align-items:center;gap:12px">
+            <img id="fotoEquipoImg" src="" alt="preview"
+              style="width:56px;height:56px;border-radius:50%;object-fit:cover;border:2px solid var(--acid)">
+            <span style="font-size:0.78rem;color:var(--muted)">Vista previa del logo del equipo</span>
+          </div>
+        </div>
+
         <!-- FRASES ÉPICAS v3 -->
         <div style="margin-top:16px">
           <label class="form-label" style="color:var(--acid);font-size:0.75rem;letter-spacing:2px">FRASES DEL TORNEO — dejar vacío para usar el texto por defecto</label>
@@ -564,8 +589,8 @@
       <div class="form-card" style="max-width:760px;margin-bottom:2px">
         <div class="admin-subtitle">Música de fondo</div>
         <p style="color:var(--muted);font-size:0.85rem;margin-bottom:20px">
-          Música que suena en la página pública. Subí el archivo MP3 al repo en la carpeta <code style="color:var(--acid)">music/</code> y pegá el nombre acá.
-          El reproductor aparece abajo a la izquierda.
+          Música de fondo que suena automáticamente en la página pública. Subí el MP3 a la carpeta <code style="color:var(--acid)">music/</code> del repo y pegá la ruta acá.
+          Los visitantes <strong style="color:#fff">no ven ningún control</strong> — todo se maneja desde acá.
         </p>
         <div class="form-row">
           <div class="form-group">
@@ -573,27 +598,30 @@
             <input type="text" class="form-input" id="cfgMusicaArchivo" placeholder="music/background.mp3">
           </div>
           <div class="form-group">
-            <label class="form-label">Título mostrado al visitante</label>
+            <label class="form-label">Nombre / título de la pista (solo interno)</label>
             <input type="text" class="form-input" id="cfgMusicaTitulo" placeholder="FINAL BOSS">
           </div>
         </div>
         <div class="form-row" style="align-items:center">
           <div class="form-group" style="margin-bottom:0">
-            <label class="form-label">Volumen inicial (0–100)</label>
+            <label class="form-label">Volumen inicial (0–100) &nbsp;<span id="cfgMusicaVolVal" style="color:var(--acid)">30%</span></label>
             <input type="range" id="cfgMusicaVolumen" min="0" max="100" value="30"
               style="width:100%;accent-color:var(--acid);cursor:pointer"
               oninput="document.getElementById('cfgMusicaVolVal').textContent=this.value+'%'">
-            <span id="cfgMusicaVolVal" style="font-size:0.8rem;color:var(--acid)">30%</span>
           </div>
-          <div class="form-group" style="margin-bottom:0">
+          <div class="form-group" style="margin-bottom:0;display:flex;flex-direction:column;gap:10px">
             <label class="cfg-toggle" style="margin-bottom:0">
               <input type="checkbox" id="cfgMusicaActiva" checked>
-              <span>Música activa en la página</span>
+              <span>🎵 Música activa (se reproduce al entrar)</span>
+            </label>
+            <label class="cfg-toggle" style="margin-bottom:0">
+              <input type="checkbox" id="cfgMusicaLoop" checked>
+              <span>🔁 Reproducción en loop</span>
             </label>
           </div>
         </div>
         <div class="form-actions" style="margin-top:16px">
-          <button class="btn-admin-primary" onclick="saveMusica()">Guardar música</button>
+          <button class="btn-admin-primary" onclick="saveMusica()">Guardar configuración de música</button>
         </div>
       </div>
 
