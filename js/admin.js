@@ -1614,7 +1614,51 @@ window.generarFlyerTorneo = async function(torneoId) {
   if (!snap.exists()) { showToast('Torneo no encontrado', true); return; }
   const t = { id: snap.id, ...snap.data() };
 
-  const W = 1200, H = 630;
+  // ── SELECTOR DE FORMATO ──────────────────────────────────────
+  const FORMATOS = [
+    { id: 'ig_post',   label: 'Instagram Post',     sub: '1080 x 1080', W: 1080, H: 1080 },
+    { id: 'ig_story',  label: 'Instagram Historia', sub: '1080 x 1920', W: 1080, H: 1920 },
+    { id: 'fb_post',   label: 'Facebook Post',      sub: '1200 x 630',  W: 1200, H: 630  },
+    { id: 'wa_status', label: 'Estado de WhatsApp', sub: '1080 x 1920', W: 1080, H: 1920 },
+  ];
+
+  const formato = await new Promise(resolve => {
+    const overlay = document.createElement('div');
+    overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.85);z-index:9999;display:flex;align-items:center;justify-content:center;';
+    overlay.innerHTML = `
+      <div style="background:#111;border:1px solid rgba(200,255,0,0.2);padding:32px;max-width:480px;width:90%;font-family:'Barlow Condensed',sans-serif;">
+        <div style="font-size:0.7rem;letter-spacing:4px;color:#C8FF00;margin-bottom:8px">GENERAR FLYER</div>
+        <div style="font-size:1.4rem;font-weight:700;color:#fff;margin-bottom:24px">Elegí el formato</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:24px" id="flyerFormatGrid">
+          ${FORMATOS.map(f => `
+            <button data-fid="${f.id}" style="background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.12);padding:16px;cursor:pointer;text-align:left;color:#fff;font-family:inherit;">
+              <div style="font-size:1rem;font-weight:700;margin-bottom:4px">${f.label}</div>
+              <div style="font-size:0.8rem;color:rgba(255,255,255,0.4)">${f.sub}</div>
+            </button>`).join('')}
+        </div>
+        <button id="flyerCancelBtn" style="background:transparent;border:1px solid rgba(255,255,255,0.15);color:rgba(255,255,255,0.4);padding:8px 20px;cursor:pointer;font-family:inherit;font-size:0.85rem;">Cancelar</button>
+      </div>`;
+
+    overlay.querySelectorAll('button[data-fid]').forEach(btn => {
+      btn.addEventListener('mouseover', () => { btn.style.borderColor='rgba(200,255,0,0.5)'; btn.style.background='rgba(200,255,0,0.06)'; });
+      btn.addEventListener('mouseout',  () => { btn.style.borderColor='rgba(255,255,255,0.12)'; btn.style.background='rgba(255,255,255,0.04)'; });
+      btn.addEventListener('click', () => {
+        const fmt = FORMATOS.find(f => f.id === btn.dataset.fid);
+        document.body.removeChild(overlay);
+        resolve(fmt);
+      });
+    });
+    overlay.querySelector('#flyerCancelBtn').addEventListener('click', () => {
+      document.body.removeChild(overlay);
+      resolve(null);
+    });
+    document.body.appendChild(overlay);
+  });
+
+  if (!formato) return;
+
+  const W = formato.W, H = formato.H;
+  const isVertical = H > W;
   const canvas = document.createElement('canvas');
   canvas.width = W; canvas.height = H;
   const ctx = canvas.getContext('2d');
@@ -1629,113 +1673,201 @@ window.generarFlyerTorneo = async function(torneoId) {
   for (let x = 0; x < W; x += 48) { ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, H); ctx.stroke(); }
   for (let y = 0; y < H; y += 48) { ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(W, y); ctx.stroke(); }
 
-  // Intentar cargar imagen del juego
+  // Layout según orientación
+  const PAD   = Math.round(W * 0.055);  // margen lateral
+  const scale = W / 1080;               // factor de escala base
+
   const drawContent = () => {
     // Franja ácida izquierda
     ctx.fillStyle = '#C8FF00';
-    ctx.fillRect(0, 0, 8, H);
+    ctx.fillRect(0, 0, Math.round(7 * scale), H);
 
-    // Degradado lateral derecho decorativo
-    const grad = ctx.createLinearGradient(W * 0.5, 0, W, 0);
-    grad.addColorStop(0, 'rgba(200,255,0,0)');
-    grad.addColorStop(1, 'rgba(200,255,0,0.06)');
-    ctx.fillStyle = grad;
-    ctx.fillRect(0, 0, W, H);
+    if (isVertical) {
+      // ── LAYOUT VERTICAL (Story / WhatsApp) ──────────────────
+      // Imagen ocupa la mitad superior
+      // (ya fue dibujada antes de llamar a drawContent)
 
-    // Badge INSCRIPCIÓN ABIERTA
-    if (t.estado === 'open') {
-      ctx.fillStyle = '#C8FF00';
-      ctx.fillRect(60, 48, 260, 34);
-      ctx.fillStyle = '#000';
-      ctx.font = 'bold 14px "Arial Narrow", Arial';
-      ctx.letterSpacing = '3px';
-      ctx.fillText('INSCRIPCIÓN ABIERTA', 76, 71);
-    }
+      // Degradado de abajo hacia arriba sobre la imagen
+      const fadeV = ctx.createLinearGradient(0, H * 0.35, 0, H * 0.7);
+      fadeV.addColorStop(0, 'rgba(10,10,10,0)');
+      fadeV.addColorStop(1, '#0a0a0a');
+      ctx.fillStyle = fadeV;
+      ctx.fillRect(0, H * 0.35, W, H * 0.35);
 
-    // Nombre del torneo
-    ctx.fillStyle = '#ffffff';
-    ctx.font = 'bold 88px "Arial Black", Arial';
-    const nombre = (t.nombre || 'TORNEO').toUpperCase();
-    // Wrap si es muy largo
-    if (ctx.measureText(nombre).width > 680) {
-      ctx.font = 'bold 64px "Arial Black", Arial';
-    }
-    ctx.fillText(nombre, 60, 220);
+      // Fondo sólido para texto abajo
+      ctx.fillStyle = '#0a0a0a';
+      ctx.fillRect(0, H * 0.7, W, H * 0.3);
 
-    // Línea ácida bajo el título
-    ctx.fillStyle = '#C8FF00';
-    ctx.fillRect(60, 238, Math.min(ctx.measureText(nombre).width, 680), 4);
+      let y = Math.round(H * 0.58);
 
-    // Fecha
-    const fechaStr = t.fecha?.toDate
-      ? t.fecha.toDate().toLocaleString('es-AR', { weekday:'long', day:'numeric', month:'long', hour:'2-digit', minute:'2-digit' })
-      : '';
-    ctx.fillStyle = 'rgba(200,255,0,0.85)';
-    ctx.font = '28px Arial';
-    ctx.fillText(fechaStr.toUpperCase(), 60, 296);
+      // Badge
+      if (t.estado === 'open') {
+        const badgeW = Math.round(280 * scale), badgeH = Math.round(34 * scale);
+        ctx.fillStyle = '#C8FF00';
+        ctx.fillRect(PAD, y, badgeW, badgeH);
+        ctx.fillStyle = '#000';
+        ctx.font = `bold ${Math.round(13 * scale)}px "Arial Narrow", Arial`;
+        ctx.fillText('INSCRIPCIÓN ABIERTA', PAD + Math.round(14 * scale), y + Math.round(23 * scale));
+        y += badgeH + Math.round(22 * scale);
+      }
 
-    // Metadata — plataforma, modalidad, entrada
-    const platMap = { mobile:'Mobile', console:'Consola', pc:'PC / Cross' };
-    const plat = platMap[t.plataforma] || t.plataforma || '';
-    const mod  = t.modalidad === 'presencial' ? 'Presencial' : 'Online';
-    const precio = (t.precio || 0) === 0 ? 'GRATIS' : '$' + (t.precio).toLocaleString('es-AR');
-
-    const tags = [plat, mod, precio].filter(Boolean);
-    let tagX = 60;
-    tags.forEach(tag => {
-      const tw = ctx.measureText(tag).width + 28;
-      ctx.fillStyle = 'rgba(255,255,255,0.08)';
-      ctx.fillRect(tagX, 330, tw, 36);
-      ctx.strokeStyle = 'rgba(255,255,255,0.15)';
-      ctx.lineWidth = 1;
-      ctx.strokeRect(tagX, 330, tw, 36);
+      // Nombre
       ctx.fillStyle = '#fff';
+      let fs = Math.round(96 * scale);
+      ctx.font = `bold ${fs}px "Arial Black", Arial`;
+      const nombre = (t.nombre || 'TORNEO').toUpperCase();
+      while (ctx.measureText(nombre).width > W - PAD * 2 && fs > 40) {
+        fs -= 4; ctx.font = `bold ${fs}px "Arial Black", Arial`;
+      }
+      ctx.fillText(nombre, PAD, y);
+      ctx.fillStyle = '#C8FF00';
+      ctx.fillRect(PAD, y + Math.round(8 * scale), Math.min(ctx.measureText(nombre).width, W - PAD * 2), Math.round(4 * scale));
+      y += Math.round(fs * 1.1) + Math.round(20 * scale);
+
+      // Fecha
+      const fechaStr = t.fecha?.toDate
+        ? t.fecha.toDate().toLocaleString('es-AR', { weekday:'long', day:'numeric', month:'long', hour:'2-digit', minute:'2-digit' })
+        : '';
+      ctx.fillStyle = 'rgba(200,255,0,0.9)';
+      ctx.font = `${Math.round(28 * scale)}px Arial`;
+      ctx.fillText(fechaStr.toUpperCase(), PAD, y);
+      y += Math.round(48 * scale);
+
+      // Tags
+      const platMap = { mobile:'Mobile', console:'Consola', pc:'PC / Cross' };
+      const tags = [platMap[t.plataforma] || t.plataforma, t.modalidad === 'presencial' ? 'Presencial' : 'Online', (t.precio||0)===0 ? 'GRATIS' : '$'+(t.precio).toLocaleString('es-AR')].filter(Boolean);
+      ctx.font = `bold ${Math.round(16 * scale)}px Arial`;
+      let tagX = PAD;
+      tags.forEach(tag => {
+        const tw = ctx.measureText(tag).width + Math.round(28 * scale);
+        const th = Math.round(36 * scale);
+        ctx.fillStyle = 'rgba(255,255,255,0.08)'; ctx.fillRect(tagX, y, tw, th);
+        ctx.strokeStyle = 'rgba(255,255,255,0.15)'; ctx.lineWidth = 1; ctx.strokeRect(tagX, y, tw, th);
+        ctx.fillStyle = '#fff'; ctx.fillText(tag, tagX + Math.round(14 * scale), y + Math.round(24 * scale));
+        tagX += tw + Math.round(8 * scale);
+      });
+      y += Math.round(56 * scale);
+
+      // Cupos
+      const libre = t.cupos_total - (t.cupos_ocupados || 0);
+      ctx.fillStyle = libre <= 3 ? '#ff1744' : '#C8FF00';
+      ctx.font = `bold ${Math.round(20 * scale)}px Arial`;
+      ctx.fillText(`${libre} CUPOS DISPONIBLES`, PAD, y);
+
+      // Branding abajo
+      const brandY = H - Math.round(50 * scale);
+      ctx.fillStyle = '#C8FF00';
+      ctx.font = `bold ${Math.round(48 * scale)}px "Arial Black", Arial`;
+      ctx.fillText('NEXUS', PAD, brandY);
+      ctx.fillStyle = '#fff';
+      ctx.fillText(' ARENA', PAD + ctx.measureText('NEXUS').width, brandY);
+      ctx.fillStyle = 'rgba(255,255,255,0.25)';
+      ctx.font = `${Math.round(15 * scale)}px Arial`;
+      ctx.fillText('nexusarena.series  |  lacajamisteriosoficial-cloud.github.io/nexus-arena', PAD, H - Math.round(20 * scale));
+
+    } else {
+      // ── LAYOUT HORIZONTAL (IG Post / Facebook) ──────────────
+      const grad = ctx.createLinearGradient(W * 0.5, 0, W, 0);
+      grad.addColorStop(0, 'rgba(200,255,0,0)');
+      grad.addColorStop(1, 'rgba(200,255,0,0.06)');
+      ctx.fillStyle = grad; ctx.fillRect(0, 0, W, H);
+
+      let y = 60;
+
+      // Badge
+      if (t.estado === 'open') {
+        ctx.fillStyle = '#C8FF00';
+        ctx.fillRect(PAD, y, 260, 34);
+        ctx.fillStyle = '#000';
+        ctx.font = 'bold 14px "Arial Narrow", Arial';
+        ctx.fillText('INSCRIPCIÓN ABIERTA', PAD + 16, y + 23);
+        y += 58;
+      } else { y += 20; }
+
+      // Nombre
+      const nombre = (t.nombre || 'TORNEO').toUpperCase();
+      const maxW = isVertical ? W - PAD * 2 : W * 0.56;
+      let fs = 88;
+      ctx.font = `bold ${fs}px "Arial Black", Arial`;
+      while (ctx.measureText(nombre).width > maxW && fs > 36) { fs -= 4; ctx.font = `bold ${fs}px "Arial Black", Arial`; }
+      ctx.fillStyle = '#fff';
+      ctx.fillText(nombre, PAD, y + fs);
+      ctx.fillStyle = '#C8FF00';
+      ctx.fillRect(PAD, y + fs + 8, Math.min(ctx.measureText(nombre).width, maxW), 4);
+      y += fs + 36;
+
+      // Fecha
+      const fechaStr = t.fecha?.toDate
+        ? t.fecha.toDate().toLocaleString('es-AR', { weekday:'long', day:'numeric', month:'long', hour:'2-digit', minute:'2-digit' })
+        : '';
+      ctx.fillStyle = 'rgba(200,255,0,0.85)';
+      ctx.font = '28px Arial';
+      ctx.fillText(fechaStr.toUpperCase(), PAD, y);
+      y += 50;
+
+      // Tags
+      const platMap = { mobile:'Mobile', console:'Consola', pc:'PC / Cross' };
+      const tags = [platMap[t.plataforma] || t.plataforma, t.modalidad === 'presencial' ? 'Presencial' : 'Online', (t.precio||0)===0 ? 'GRATIS' : '$'+(t.precio).toLocaleString('es-AR')].filter(Boolean);
       ctx.font = 'bold 16px Arial';
-      ctx.fillText(tag, tagX + 14, 354);
-      tagX += tw + 8;
-    });
+      let tagX = PAD;
+      tags.forEach(tag => {
+        const tw = ctx.measureText(tag).width + 28;
+        ctx.fillStyle = 'rgba(255,255,255,0.08)'; ctx.fillRect(tagX, y, tw, 36);
+        ctx.strokeStyle = 'rgba(255,255,255,0.15)'; ctx.lineWidth = 1; ctx.strokeRect(tagX, y, tw, 36);
+        ctx.fillStyle = '#fff'; ctx.fillText(tag, tagX + 14, y + 24);
+        tagX += tw + 8;
+      });
+      y += 56;
 
-    // Cupos
-    const libre = t.cupos_total - (t.cupos_ocupados || 0);
-    ctx.fillStyle = libre <= 3 ? '#ff1744' : '#C8FF00';
-    ctx.font = 'bold 20px Arial';
-    ctx.fillText(`${libre} CUPOS DISPONIBLES`, 60, 415);
+      // Cupos
+      const libre = t.cupos_total - (t.cupos_ocupados || 0);
+      ctx.fillStyle = libre <= 3 ? '#ff1744' : '#C8FF00';
+      ctx.font = 'bold 20px Arial';
+      ctx.fillText(`${libre} CUPOS DISPONIBLES`, PAD, y);
 
-    // NEXUS ARENA branding abajo
-    ctx.fillStyle = '#C8FF00';
-    ctx.font = 'bold 52px "Arial Black", Arial';
-    ctx.fillText('NEXUS', 60, 560);
-    ctx.fillStyle = '#ffffff';
-    ctx.fillText(' ARENA', 60 + ctx.measureText('NEXUS').width, 560);
+      // Branding abajo
+      ctx.fillStyle = '#C8FF00';
+      ctx.font = 'bold 52px "Arial Black", Arial';
+      ctx.fillText('NEXUS', PAD, H - 60);
+      ctx.fillStyle = '#fff';
+      ctx.fillText(' ARENA', PAD + ctx.measureText('NEXUS').width, H - 60);
+      ctx.fillStyle = 'rgba(255,255,255,0.25)';
+      ctx.font = '16px Arial';
+      ctx.fillText('nexusarena.series  |  lacajamisteriosoficial-cloud.github.io/nexus-arena', PAD, H - 28);
+    }
 
-    ctx.fillStyle = 'rgba(255,255,255,0.25)';
-    ctx.font = '16px Arial';
-    ctx.fillText('lacajamisteriosoficial-cloud.github.io/nexus-arena', 60, 592);
-
-    // Botón de descarga
+    // ── DESCARGA ─────────────────────────────────────────────
+    const fname = `nexus-${formato.id}-${(t.nombre||'torneo').toLowerCase().replace(/[^a-z0-9]/g,'-')}.png`;
     canvas.toBlob(blob => {
       const url = URL.createObjectURL(blob);
-      const a   = document.createElement('a');
-      a.href     = url;
-      a.download = `nexus-arena-${(t.nombre || 'torneo').toLowerCase().replace(/[^a-z0-9]/g,'-')}.png`;
-      a.click();
+      const a = document.createElement('a');
+      a.href = url; a.download = fname; a.click();
       URL.revokeObjectURL(url);
-      showToast('Flyer descargado ✓ Subilo a Imgur y pegá la URL como imagen del torneo');
+      showToast(`Flyer ${formato.label} descargado ✓`);
     }, 'image/png');
   };
 
-  // Si hay imagen del juego, dibujarla a la derecha
+  // Si hay imagen del juego, dibujarla primero
   if (t.imagen) {
     const img = new Image();
     img.crossOrigin = 'anonymous';
     img.onload = () => {
-      // Imagen a la derecha, con degradado encima
-      ctx.drawImage(img, W * 0.48, 0, W * 0.52, H);
-      const fadeGrad = ctx.createLinearGradient(W * 0.48, 0, W * 0.75, 0);
-      fadeGrad.addColorStop(0, '#0a0a0a');
-      fadeGrad.addColorStop(1, 'rgba(10,10,10,0)');
-      ctx.fillStyle = fadeGrad;
-      ctx.fillRect(W * 0.48, 0, W * 0.27, H);
+      if (isVertical) {
+        // Imagen en la mitad superior centrada
+        const imgH = H * 0.65;
+        const ratio = img.naturalWidth / img.naturalHeight;
+        const drawW = Math.max(W, imgH * ratio);
+        const drawX = (W - drawW) / 2;
+        ctx.drawImage(img, drawX, 0, drawW, imgH);
+      } else {
+        // Imagen a la derecha
+        ctx.drawImage(img, W * 0.48, 0, W * 0.52, H);
+        const fadeGrad = ctx.createLinearGradient(W * 0.48, 0, W * 0.75, 0);
+        fadeGrad.addColorStop(0, '#0a0a0a');
+        fadeGrad.addColorStop(1, 'rgba(10,10,10,0)');
+        ctx.fillStyle = fadeGrad;
+        ctx.fillRect(W * 0.48, 0, W * 0.27, H);
+      }
       drawContent();
     };
     img.onerror = () => drawContent();
