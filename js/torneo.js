@@ -360,9 +360,9 @@ window.abrirInscripcion = function() {
   const jpe = t.jugadores_por_equipo || 1;
   const equipoSection = document.getElementById('equipoSectionTitle');
   const equipoBlock   = document.getElementById('equipoBlock');
-  // Mostrar siempre la sección de equipo — cualquier jugador puede tener o no equipo
-  if (equipoSection) equipoSection.style.display = 'block';
-  if (equipoBlock)   equipoBlock.style.display   = 'block';
+  // Solo mostrar sección equipo si el torneo es grupal (duo, trio, etc.)
+  if (equipoSection) equipoSection.style.display = jpe > 1 ? 'block' : 'none';
+  if (equipoBlock)   equipoBlock.style.display   = jpe > 1 ? 'block' : 'none';
 
   ['inputNombre','inputGamertag','inputWhatsapp','inputMail','inputEquipo'].forEach(id => {
     const el = document.getElementById(id);
