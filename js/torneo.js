@@ -93,7 +93,14 @@ function renderInfo() {
 
   // Descripcion
   if (t.descripcion) {
-    document.getElementById('torneoDesc').textContent = t.descripcion;
+    // Preservar saltos de línea del admin
+    const descEl = document.getElementById('torneoDesc');
+    descEl.innerHTML = t.descripcion
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/
+/g, '<br>');
   } else {
     document.getElementById('infoCard').style.display = 'none';
   }
@@ -360,9 +367,9 @@ window.abrirInscripcion = function() {
   const jpe = t.jugadores_por_equipo || 1;
   const equipoSection = document.getElementById('equipoSectionTitle');
   const equipoBlock   = document.getElementById('equipoBlock');
-  // Solo mostrar sección equipo si el torneo es grupal (duo, trio, etc.)
-  if (equipoSection) equipoSection.style.display = jpe > 1 ? 'block' : 'none';
-  if (equipoBlock)   equipoBlock.style.display   = jpe > 1 ? 'block' : 'none';
+  // Mostrar siempre la sección de equipo — cualquier jugador puede tener o no equipo
+  if (equipoSection) equipoSection.style.display = 'block';
+  if (equipoBlock)   equipoBlock.style.display   = 'block';
 
   ['inputNombre','inputGamertag','inputWhatsapp','inputMail','inputEquipo'].forEach(id => {
     const el = document.getElementById(id);

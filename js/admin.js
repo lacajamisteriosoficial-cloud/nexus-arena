@@ -1663,217 +1663,286 @@ window.generarFlyerTorneo = async function(torneoId) {
   canvas.width = W; canvas.height = H;
   const ctx = canvas.getContext('2d');
 
-  // Fondo negro
-  ctx.fillStyle = '#0a0a0a';
-  ctx.fillRect(0, 0, W, H);
+  // ── HELPERS ─────────────────────────────────────────────────
+  const PAD = Math.round(W * 0.072);
 
-  // Grid decorativo
-  ctx.strokeStyle = 'rgba(200,255,0,0.04)';
-  ctx.lineWidth = 1;
-  for (let x = 0; x < W; x += 48) { ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, H); ctx.stroke(); }
-  for (let y = 0; y < H; y += 48) { ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(W, y); ctx.stroke(); }
+  function drawBackground(imgEl) {
+    // Fondo base
+    ctx.fillStyle = '#0a0a0a';
+    ctx.fillRect(0, 0, W, H);
 
-  // Layout según orientación
-  const PAD   = Math.round(W * 0.055);  // margen lateral
-  const scale = W / 1080;               // factor de escala base
+    if (imgEl) {
+      if (isVertical) {
+        // Imagen cubre el 55% superior, escalada para llenar sin distorsión
+        const zone = H * 0.55;
+        const r    = imgEl.naturalWidth / imgEl.naturalHeight;
+        const dw   = r >= 1 ? W : zone * r;
+        const dh   = r >= 1 ? W / r : zone;
+        const dx   = (W - dw) / 2;
+        ctx.drawImage(imgEl, dx, 0, dw, dh);
+        // Fade de la imagen hacia abajo
+        const fade = ctx.createLinearGradient(0, zone * 0.5, 0, zone + 20);
+        fade.addColorStop(0, 'rgba(10,10,10,0)');
+        fade.addColorStop(1, '#0a0a0a');
+        ctx.fillStyle = fade;
+        ctx.fillRect(0, 0, W, zone + 20);
+      } else {
+        // Imagen ocupa el 50% derecho, escalada sin distorsión (cover)
+        const zone = W * 0.5;
+        const r    = imgEl.naturalWidth / imgEl.naturalHeight;
+        const dh   = H;
+        const dw   = dh * r;
+        const dy   = 0;
+        const dx   = dw >= zone ? W - dw + (dw - zone) / 2 : W - zone;
+        ctx.save();
+        ctx.beginPath();
+        ctx.rect(W * 0.5, 0, W * 0.5, H);
+        ctx.clip();
+        ctx.drawImage(imgEl, W * 0.5 + (zone - dw) / 2, dy, dw, dh);
+        ctx.restore();
+        // Fade de derecha a izquierda
+        const fade = ctx.createLinearGradient(W * 0.5, 0, W * 0.78, 0);
+        fade.addColorStop(0, '#0a0a0a');
+        fade.addColorStop(1, 'rgba(10,10,10,0)');
+        ctx.fillStyle = fade;
+        ctx.fillRect(W * 0.5, 0, W * 0.28, H);
+      }
+    }
 
-  const drawContent = () => {
-    // Franja ácida izquierda
+    // Grid decorativo sutil
+    ctx.strokeStyle = 'rgba(200,255,0,0.03)';
+    ctx.lineWidth = 1;
+    for (let x = 0; x < W; x += 60) { ctx.beginPath(); ctx.moveTo(x,0); ctx.lineTo(x,H); ctx.stroke(); }
+    for (let y = 0; y < H; y += 60) { ctx.beginPath(); ctx.moveTo(0,y); ctx.lineTo(W,y); ctx.stroke(); }
+
+    // Franja verde borde izquierdo
     ctx.fillStyle = '#C8FF00';
-    ctx.fillRect(0, 0, Math.round(7 * scale), H);
+    ctx.fillRect(0, 0, 6, H);
+  }
+
+  function wrapText(text, maxW) {
+    const words = text.split(' ');
+    const lines = [];
+    let line = '';
+    for (const w of words) {
+      const test = line ? line + ' ' + w : w;
+      if (ctx.measureText(test).width > maxW && line) {
+        lines.push(line);
+        line = w;
+      } else {
+        line = test;
+      }
+    }
+    if (line) lines.push(line);
+    return lines;
+  }
+
+  const drawContent = (imgEl) => {
+    drawBackground(imgEl);
+
+    // Datos del torneo
+    const platMap   = { mobile:'Mobile', console:'Consola', pc:'PC / Cross' };
+    const nombre    = (t.nombre || 'TORNEO').toUpperCase();
+    const fechaStr  = t.fecha?.toDate
+      ? t.fecha.toDate().toLocaleString('es-AR', { weekday:'long', day:'numeric', month:'long', hour:'2-digit', minute:'2-digit' })
+      : '';
+    const plat      = platMap[t.plataforma] || t.plataforma || '';
+    const mod       = t.modalidad === 'presencial' ? 'Presencial' : 'Online';
+    const precioStr = (t.precio||0) === 0 ? 'GRATIS' : '$' + (t.precio).toLocaleString('es-AR');
+    const libre     = t.cupos_total - (t.cupos_ocupados || 0);
 
     if (isVertical) {
-      // ── LAYOUT VERTICAL (Story / WhatsApp) ──────────────────
-      // Imagen ocupa la mitad superior
-      // (ya fue dibujada antes de llamar a drawContent)
+      // ── VERTICAL (Story / WA Status) ── 1080×1920
+      // Zona de texto: empieza en 57% de la altura
+      let y = Math.round(H * 0.57);
+      const maxTxtW = W - PAD * 2;
 
-      // Degradado de abajo hacia arriba sobre la imagen
-      const fadeV = ctx.createLinearGradient(0, H * 0.35, 0, H * 0.7);
-      fadeV.addColorStop(0, 'rgba(10,10,10,0)');
-      fadeV.addColorStop(1, '#0a0a0a');
-      ctx.fillStyle = fadeV;
-      ctx.fillRect(0, H * 0.35, W, H * 0.35);
-
-      // Fondo sólido para texto abajo
-      ctx.fillStyle = '#0a0a0a';
-      ctx.fillRect(0, H * 0.7, W, H * 0.3);
-
-      let y = Math.round(H * 0.58);
-
-      // Badge
+      // Badge estado
       if (t.estado === 'open') {
-        const badgeW = Math.round(280 * scale), badgeH = Math.round(34 * scale);
+        const bh = 38, bw = 290;
         ctx.fillStyle = '#C8FF00';
-        ctx.fillRect(PAD, y, badgeW, badgeH);
+        ctx.fillRect(PAD, y, bw, bh);
         ctx.fillStyle = '#000';
-        ctx.font = `bold ${Math.round(13 * scale)}px "Arial Narrow", Arial`;
-        ctx.fillText('INSCRIPCIÓN ABIERTA', PAD + Math.round(14 * scale), y + Math.round(23 * scale));
-        y += badgeH + Math.round(22 * scale);
+        ctx.font = 'bold 15px Arial';
+        ctx.fillText('INSCRIPCIÓN ABIERTA', PAD + 16, y + 25);
+        y += bh + 28;
       }
 
-      // Nombre
-      ctx.fillStyle = '#fff';
-      let fs = Math.round(96 * scale);
-      ctx.font = `bold ${fs}px "Arial Black", Arial`;
-      const nombre = (t.nombre || 'TORNEO').toUpperCase();
-      while (ctx.measureText(nombre).width > W - PAD * 2 && fs > 40) {
-        fs -= 4; ctx.font = `bold ${fs}px "Arial Black", Arial`;
+      // Nombre — tamaño adaptativo
+      let fs = 110;
+      ctx.font = `bold ${fs}px Arial`;
+      const lines = wrapText(nombre, maxTxtW);
+      while (fs > 48) {
+        ctx.font = `bold ${fs}px Arial`;
+        if (lines.every(l => ctx.measureText(l).width <= maxTxtW)) break;
+        fs -= 4;
       }
-      ctx.fillText(nombre, PAD, y);
+      ctx.fillStyle = '#fff';
+      for (const line of lines) {
+        ctx.fillText(line, PAD, y);
+        y += Math.round(fs * 1.1);
+      }
+      // Línea ácida
       ctx.fillStyle = '#C8FF00';
-      ctx.fillRect(PAD, y + Math.round(8 * scale), Math.min(ctx.measureText(nombre).width, W - PAD * 2), Math.round(4 * scale));
-      y += Math.round(fs * 1.1) + Math.round(20 * scale);
+      ctx.fillRect(PAD, y, Math.min(ctx.measureText(lines[0]).width, maxTxtW), 5);
+      y += 28;
 
       // Fecha
-      const fechaStr = t.fecha?.toDate
-        ? t.fecha.toDate().toLocaleString('es-AR', { weekday:'long', day:'numeric', month:'long', hour:'2-digit', minute:'2-digit' })
-        : '';
-      ctx.fillStyle = 'rgba(200,255,0,0.9)';
-      ctx.font = `${Math.round(28 * scale)}px Arial`;
-      ctx.fillText(fechaStr.toUpperCase(), PAD, y);
-      y += Math.round(48 * scale);
+      if (fechaStr) {
+        ctx.fillStyle = 'rgba(200,255,0,0.9)';
+        ctx.font = '32px Arial';
+        ctx.fillText(fechaStr.toUpperCase(), PAD, y);
+        y += 50;
+      }
 
-      // Tags
-      const platMap = { mobile:'Mobile', console:'Consola', pc:'PC / Cross' };
-      const tags = [platMap[t.plataforma] || t.plataforma, t.modalidad === 'presencial' ? 'Presencial' : 'Online', (t.precio||0)===0 ? 'GRATIS' : '$'+(t.precio).toLocaleString('es-AR')].filter(Boolean);
-      ctx.font = `bold ${Math.round(16 * scale)}px Arial`;
+      // Tags con fondo
+      ctx.font = 'bold 22px Arial';
       let tagX = PAD;
-      tags.forEach(tag => {
-        const tw = ctx.measureText(tag).width + Math.round(28 * scale);
-        const th = Math.round(36 * scale);
-        ctx.fillStyle = 'rgba(255,255,255,0.08)'; ctx.fillRect(tagX, y, tw, th);
-        ctx.strokeStyle = 'rgba(255,255,255,0.15)'; ctx.lineWidth = 1; ctx.strokeRect(tagX, y, tw, th);
-        ctx.fillStyle = '#fff'; ctx.fillText(tag, tagX + Math.round(14 * scale), y + Math.round(24 * scale));
-        tagX += tw + Math.round(8 * scale);
+      const tagH = 44;
+      [plat, mod, precioStr].filter(Boolean).forEach(tag => {
+        const tw = ctx.measureText(tag).width + 32;
+        if (tagX + tw > W - PAD) { tagX = PAD; y += tagH + 10; }
+        ctx.fillStyle = 'rgba(255,255,255,0.07)';
+        ctx.fillRect(tagX, y, tw, tagH);
+        ctx.strokeStyle = 'rgba(255,255,255,0.18)';
+        ctx.lineWidth = 1;
+        ctx.strokeRect(tagX, y, tw, tagH);
+        ctx.fillStyle = '#fff';
+        ctx.fillText(tag, tagX + 16, y + 30);
+        tagX += tw + 10;
       });
-      y += Math.round(56 * scale);
+      y += tagH + 28;
 
       // Cupos
-      const libre = t.cupos_total - (t.cupos_ocupados || 0);
       ctx.fillStyle = libre <= 3 ? '#ff1744' : '#C8FF00';
-      ctx.font = `bold ${Math.round(20 * scale)}px Arial`;
+      ctx.font = 'bold 26px Arial';
       ctx.fillText(`${libre} CUPOS DISPONIBLES`, PAD, y);
+      y += 44;
 
-      // Branding abajo
-      const brandY = H - Math.round(50 * scale);
+      // Branding — anclado al fondo
+      const brandY = H - 80;
       ctx.fillStyle = '#C8FF00';
-      ctx.font = `bold ${Math.round(48 * scale)}px "Arial Black", Arial`;
+      ctx.font = 'bold 72px Arial';
+      const nw = ctx.measureText('NEXUS').width;
       ctx.fillText('NEXUS', PAD, brandY);
       ctx.fillStyle = '#fff';
-      ctx.fillText(' ARENA', PAD + ctx.measureText('NEXUS').width, brandY);
-      ctx.fillStyle = 'rgba(255,255,255,0.25)';
-      ctx.font = `${Math.round(15 * scale)}px Arial`;
-      ctx.fillText('nexusarena.series  |  lacajamisteriosoficial-cloud.github.io/nexus-arena', PAD, H - Math.round(20 * scale));
+      ctx.fillText(' ARENA', PAD + nw, brandY);
+      ctx.fillStyle = 'rgba(255,255,255,0.3)';
+      ctx.font = '18px Arial';
+      ctx.fillText('@nexusarena.series', PAD, H - 36);
 
     } else {
-      // ── LAYOUT HORIZONTAL (IG Post / Facebook) ──────────────
-      const grad = ctx.createLinearGradient(W * 0.5, 0, W, 0);
-      grad.addColorStop(0, 'rgba(200,255,0,0)');
-      grad.addColorStop(1, 'rgba(200,255,0,0.06)');
-      ctx.fillStyle = grad; ctx.fillRect(0, 0, W, H);
+      // ── HORIZONTAL (IG Post 1080×1080 / FB 1200×630) ──
+      // Zona de texto: columna izquierda, máximo 52% del ancho
+      const maxTxtW = imgEl ? W * 0.50 - PAD : W - PAD * 2;
+      let y;
 
-      let y = 60;
+      if (W === H) {
+        // IG Post cuadrado — centrar verticalmente
+        y = Math.round(H * 0.18);
+      } else {
+        // Facebook horizontal
+        y = 52;
+      }
 
-      // Badge
+      // Badge estado
       if (t.estado === 'open') {
+        const bh = 34, bw = Math.round(maxTxtW * 0.6);
         ctx.fillStyle = '#C8FF00';
-        ctx.fillRect(PAD, y, 260, 34);
+        ctx.fillRect(PAD, y, bw, bh);
         ctx.fillStyle = '#000';
-        ctx.font = 'bold 14px "Arial Narrow", Arial';
-        ctx.fillText('INSCRIPCIÓN ABIERTA', PAD + 16, y + 23);
-        y += 58;
-      } else { y += 20; }
+        ctx.font = 'bold 13px Arial';
+        ctx.fillText('INSCRIPCIÓN ABIERTA', PAD + 14, y + 23);
+        y += bh + 24;
+      }
 
       // Nombre
-      const nombre = (t.nombre || 'TORNEO').toUpperCase();
-      const maxW = isVertical ? W - PAD * 2 : W * 0.56;
-      let fs = 88;
-      ctx.font = `bold ${fs}px "Arial Black", Arial`;
-      while (ctx.measureText(nombre).width > maxW && fs > 36) { fs -= 4; ctx.font = `bold ${fs}px "Arial Black", Arial`; }
+      let fs = W === H ? 96 : 80;
+      ctx.font = `bold ${fs}px Arial`;
+      let nameLines = wrapText(nombre, maxTxtW);
+      while (fs > 36) {
+        ctx.font = `bold ${fs}px Arial`;
+        nameLines = wrapText(nombre, maxTxtW);
+        if (nameLines.length <= 2) break;
+        fs -= 4;
+      }
       ctx.fillStyle = '#fff';
-      ctx.fillText(nombre, PAD, y + fs);
+      for (const line of nameLines) {
+        ctx.fillText(line, PAD, y);
+        y += Math.round(fs * 1.08);
+      }
+      // Línea ácida
       ctx.fillStyle = '#C8FF00';
-      ctx.fillRect(PAD, y + fs + 8, Math.min(ctx.measureText(nombre).width, maxW), 4);
-      y += fs + 36;
+      ctx.fillRect(PAD, y, Math.min(ctx.measureText(nameLines[0]).width, maxTxtW), 4);
+      y += 24;
 
       // Fecha
-      const fechaStr = t.fecha?.toDate
-        ? t.fecha.toDate().toLocaleString('es-AR', { weekday:'long', day:'numeric', month:'long', hour:'2-digit', minute:'2-digit' })
-        : '';
-      ctx.fillStyle = 'rgba(200,255,0,0.85)';
-      ctx.font = '28px Arial';
-      ctx.fillText(fechaStr.toUpperCase(), PAD, y);
-      y += 50;
+      if (fechaStr) {
+        const ffs = W === H ? 24 : 22;
+        ctx.fillStyle = 'rgba(200,255,0,0.9)';
+        ctx.font = `${ffs}px Arial`;
+        ctx.fillText(fechaStr.toUpperCase(), PAD, y);
+        y += ffs + 20;
+      }
 
       // Tags
-      const platMap = { mobile:'Mobile', console:'Consola', pc:'PC / Cross' };
-      const tags = [platMap[t.plataforma] || t.plataforma, t.modalidad === 'presencial' ? 'Presencial' : 'Online', (t.precio||0)===0 ? 'GRATIS' : '$'+(t.precio).toLocaleString('es-AR')].filter(Boolean);
-      ctx.font = 'bold 16px Arial';
+      const tagFs = W === H ? 18 : 16;
+      ctx.font = `bold ${tagFs}px Arial`;
       let tagX = PAD;
-      tags.forEach(tag => {
+      const tagH = W === H ? 40 : 36;
+      [plat, mod, precioStr].filter(Boolean).forEach(tag => {
         const tw = ctx.measureText(tag).width + 28;
-        ctx.fillStyle = 'rgba(255,255,255,0.08)'; ctx.fillRect(tagX, y, tw, 36);
-        ctx.strokeStyle = 'rgba(255,255,255,0.15)'; ctx.lineWidth = 1; ctx.strokeRect(tagX, y, tw, 36);
-        ctx.fillStyle = '#fff'; ctx.fillText(tag, tagX + 14, y + 24);
+        if (tagX + tw > PAD + maxTxtW) return;
+        ctx.fillStyle = 'rgba(255,255,255,0.07)';
+        ctx.fillRect(tagX, y, tw, tagH);
+        ctx.strokeStyle = 'rgba(255,255,255,0.18)';
+        ctx.lineWidth = 1;
+        ctx.strokeRect(tagX, y, tw, tagH);
+        ctx.fillStyle = '#fff';
+        ctx.fillText(tag, tagX + 14, y + Math.round(tagH * 0.62));
         tagX += tw + 8;
       });
-      y += 56;
+      y += tagH + 20;
 
       // Cupos
-      const libre = t.cupos_total - (t.cupos_ocupados || 0);
       ctx.fillStyle = libre <= 3 ? '#ff1744' : '#C8FF00';
-      ctx.font = 'bold 20px Arial';
+      ctx.font = `bold ${W === H ? 22 : 18}px Arial`;
       ctx.fillText(`${libre} CUPOS DISPONIBLES`, PAD, y);
 
-      // Branding abajo
+      // Branding — anclado al fondo
+      const bfs   = W === H ? 60 : 50;
+      const brandY = H - (W === H ? 56 : 50);
       ctx.fillStyle = '#C8FF00';
-      ctx.font = 'bold 52px "Arial Black", Arial';
-      ctx.fillText('NEXUS', PAD, H - 60);
+      ctx.font = `bold ${bfs}px Arial`;
+      const nw = ctx.measureText('NEXUS').width;
+      ctx.fillText('NEXUS', PAD, brandY);
       ctx.fillStyle = '#fff';
-      ctx.fillText(' ARENA', PAD + ctx.measureText('NEXUS').width, H - 60);
-      ctx.fillStyle = 'rgba(255,255,255,0.25)';
-      ctx.font = '16px Arial';
-      ctx.fillText('nexusarena.series  |  lacajamisteriosoficial-cloud.github.io/nexus-arena', PAD, H - 28);
+      ctx.fillText(' ARENA', PAD + nw, brandY);
+      ctx.fillStyle = 'rgba(255,255,255,0.3)';
+      ctx.font = `${W === H ? 17 : 15}px Arial`;
+      ctx.fillText('@nexusarena.series  |  lacajamisteriosoficial-cloud.github.io/nexus-arena', PAD, H - (W === H ? 24 : 20));
     }
 
     // ── DESCARGA ─────────────────────────────────────────────
     const fname = `nexus-${formato.id}-${(t.nombre||'torneo').toLowerCase().replace(/[^a-z0-9]/g,'-')}.png`;
     canvas.toBlob(blob => {
       const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
+      const a   = document.createElement('a');
       a.href = url; a.download = fname; a.click();
       URL.revokeObjectURL(url);
       showToast(`Flyer ${formato.label} descargado ✓`);
     }, 'image/png');
   };
 
-  // Si hay imagen del juego, dibujarla primero
+  // Cargar imagen del juego si existe, luego dibujar
   if (t.imagen) {
     const img = new Image();
     img.crossOrigin = 'anonymous';
-    img.onload = () => {
-      if (isVertical) {
-        // Imagen en la mitad superior centrada
-        const imgH = H * 0.65;
-        const ratio = img.naturalWidth / img.naturalHeight;
-        const drawW = Math.max(W, imgH * ratio);
-        const drawX = (W - drawW) / 2;
-        ctx.drawImage(img, drawX, 0, drawW, imgH);
-      } else {
-        // Imagen a la derecha
-        ctx.drawImage(img, W * 0.48, 0, W * 0.52, H);
-        const fadeGrad = ctx.createLinearGradient(W * 0.48, 0, W * 0.75, 0);
-        fadeGrad.addColorStop(0, '#0a0a0a');
-        fadeGrad.addColorStop(1, 'rgba(10,10,10,0)');
-        ctx.fillStyle = fadeGrad;
-        ctx.fillRect(W * 0.48, 0, W * 0.27, H);
-      }
-      drawContent();
-    };
-    img.onerror = () => drawContent();
+    img.onload  = () => drawContent(img);
+    img.onerror = () => drawContent(null);
     img.src = t.imagen;
   } else {
-    drawContent();
+    drawContent(null);
   }
 };
 
