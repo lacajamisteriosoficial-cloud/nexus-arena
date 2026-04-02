@@ -85,6 +85,7 @@ function setupSidebarNav() {
 // "patches" con _origShowSection que se pisaban en cadena y podían romper con
 // imports en ciertos browsers.
 window.showSection = function(name) {
+  if (name === 'scoreboard') sbInit();
   document.querySelectorAll('.admin-section').forEach(s => s.classList.remove('active'));
   document.querySelectorAll('.sidebar-link').forEach(l => l.classList.remove('active'));
 
@@ -330,6 +331,14 @@ async function saveTorneo() {
   const fraseCompetirTitulo = document.getElementById('tFraseCompetirTitulo')?.value.trim() || '';
   const fraseCompetirDesc   = document.getElementById('tFraseCompetirDesc')?.value.trim() || '';
 
+  const modoEl   = document.querySelector('input[name="torneoModo"]:checked');
+  const modo     = modoEl?.value || 'bracket';
+  const pts1     = parseInt(document.getElementById('tPts1')?.value) || 15;
+  const pts2     = parseInt(document.getElementById('tPts2')?.value) || 10;
+  const pts3     = parseInt(document.getElementById('tPts3')?.value) || 7;
+  const ptsKill  = parseInt(document.getElementById('tPtsKill')?.value) || 1;
+  const partidas = parseInt(document.getElementById('tPartidas')?.value) || 3;
+
   const data = {
     nombre, subtitulo, plataforma, modalidad, categoria,
     cupos_total: cupos, precio, emoji, estado,
@@ -337,6 +346,8 @@ async function saveTorneo() {
     fecha: new Date(fechaVal),
     alias_mp:             aliasMP,
     premio:               precio === 0 ? 0 : (premio || Math.round(cupos * precio * 0.8)),
+    modo,
+    puntuacion: modo === 'puntos' ? { p1: pts1, p2: pts2, p3: pts3, kill: ptsKill, partidas } : null,
     jugadores_por_equipo: jpe,
     foto_equipo:          fotoEquipo,
     frase_pago_titulo:      frasePagoTitulo,
@@ -392,6 +403,18 @@ window.editTorneo = async function(id) {
     if (premioEl) premioEl.value = t.premio || '';
     const jpeEl = document.getElementById('tJugadoresPorEquipo');
     if (jpeEl) jpeEl.value = t.jugadores_por_equipo || 1;
+    // Modo bracket/puntos
+    const modoVal = t.modo || 'bracket';
+    const modoRadio = document.querySelector(`input[name="torneoModo"][value="${modoVal}"]`);
+    if (modoRadio) { modoRadio.checked = true; onModoChange(); }
+    if (modoVal === 'puntos' && t.puntuacion) {
+      const p = t.puntuacion;
+      const el1 = document.getElementById('tPts1'); if (el1) el1.value = p.p1 ?? 15;
+      const el2 = document.getElementById('tPts2'); if (el2) el2.value = p.p2 ?? 10;
+      const el3 = document.getElementById('tPts3'); if (el3) el3.value = p.p3 ?? 7;
+      const elk = document.getElementById('tPtsKill'); if (elk) elk.value = p.kill ?? 1;
+      const elp = document.getElementById('tPartidas'); if (elp) elp.value = p.partidas ?? 3;
+    }
     const fotoEquipoEl = document.getElementById('tFotoEquipo');
     if (fotoEquipoEl) { fotoEquipoEl.value = t.foto_equipo || ''; previewFotoEquipo(t.foto_equipo || ''); }
     const fpt  = document.getElementById('tFrasePagoTitulo');
@@ -444,6 +467,12 @@ window.resetTorneoForm = function() {
   if (premioReset) premioReset.value = '';
   const jpeReset = document.getElementById('tJugadoresPorEquipo');
   if (jpeReset) jpeReset.value = '1';
+  const modoReset = document.getElementById('modoBracket');
+  if (modoReset) { modoReset.checked = true; onModoChange(); }
+  ['tPts1','tPts2','tPts3','tPtsKill','tPartidas'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.value = { tPts1:15, tPts2:10, tPts3:7, tPtsKill:1, tPartidas:3 }[id];
+  });
   const fotoEquipoReset = document.getElementById('tFotoEquipo');
   if (fotoEquipoReset) { fotoEquipoReset.value = ''; previewFotoEquipo(''); }
   ['tFrasePagoTitulo','tFrasePagoDesc','tFraseCompetirTitulo','tFraseCompetirDesc'].forEach(id => {
@@ -1614,335 +1643,134 @@ window.generarFlyerTorneo = async function(torneoId) {
   if (!snap.exists()) { showToast('Torneo no encontrado', true); return; }
   const t = { id: snap.id, ...snap.data() };
 
-  // ── SELECTOR DE FORMATO ──────────────────────────────────────
-  const FORMATOS = [
-    { id: 'ig_post',   label: 'Instagram Post',     sub: '1080 x 1080', W: 1080, H: 1080 },
-    { id: 'ig_story',  label: 'Instagram Historia', sub: '1080 x 1920', W: 1080, H: 1920 },
-    { id: 'fb_post',   label: 'Facebook Post',      sub: '1200 x 630',  W: 1200, H: 630  },
-    { id: 'wa_status', label: 'Estado de WhatsApp', sub: '1080 x 1920', W: 1080, H: 1920 },
-  ];
-
-  const formato = await new Promise(resolve => {
-    const overlay = document.createElement('div');
-    overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.85);z-index:9999;display:flex;align-items:center;justify-content:center;';
-    overlay.innerHTML = `
-      <div style="background:#111;border:1px solid rgba(200,255,0,0.2);padding:32px;max-width:480px;width:90%;font-family:'Barlow Condensed',sans-serif;">
-        <div style="font-size:0.7rem;letter-spacing:4px;color:#C8FF00;margin-bottom:8px">GENERAR FLYER</div>
-        <div style="font-size:1.4rem;font-weight:700;color:#fff;margin-bottom:24px">Elegí el formato</div>
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:24px" id="flyerFormatGrid">
-          ${FORMATOS.map(f => `
-            <button data-fid="${f.id}" style="background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.12);padding:16px;cursor:pointer;text-align:left;color:#fff;font-family:inherit;">
-              <div style="font-size:1rem;font-weight:700;margin-bottom:4px">${f.label}</div>
-              <div style="font-size:0.8rem;color:rgba(255,255,255,0.4)">${f.sub}</div>
-            </button>`).join('')}
-        </div>
-        <button id="flyerCancelBtn" style="background:transparent;border:1px solid rgba(255,255,255,0.15);color:rgba(255,255,255,0.4);padding:8px 20px;cursor:pointer;font-family:inherit;font-size:0.85rem;">Cancelar</button>
-      </div>`;
-
-    overlay.querySelectorAll('button[data-fid]').forEach(btn => {
-      btn.addEventListener('mouseover', () => { btn.style.borderColor='rgba(200,255,0,0.5)'; btn.style.background='rgba(200,255,0,0.06)'; });
-      btn.addEventListener('mouseout',  () => { btn.style.borderColor='rgba(255,255,255,0.12)'; btn.style.background='rgba(255,255,255,0.04)'; });
-      btn.addEventListener('click', () => {
-        const fmt = FORMATOS.find(f => f.id === btn.dataset.fid);
-        document.body.removeChild(overlay);
-        resolve(fmt);
-      });
-    });
-    overlay.querySelector('#flyerCancelBtn').addEventListener('click', () => {
-      document.body.removeChild(overlay);
-      resolve(null);
-    });
-    document.body.appendChild(overlay);
-  });
-
-  if (!formato) return;
-
-  const W = formato.W, H = formato.H;
-  const isVertical = H > W;
+  const W = 1200, H = 630;
   const canvas = document.createElement('canvas');
   canvas.width = W; canvas.height = H;
   const ctx = canvas.getContext('2d');
 
-  // ── HELPERS ─────────────────────────────────────────────────
-  const PAD = Math.round(W * 0.072);
+  // Fondo negro
+  ctx.fillStyle = '#0a0a0a';
+  ctx.fillRect(0, 0, W, H);
 
-  function drawBackground(imgEl) {
-    // Fondo base
-    ctx.fillStyle = '#0a0a0a';
+  // Grid decorativo
+  ctx.strokeStyle = 'rgba(200,255,0,0.04)';
+  ctx.lineWidth = 1;
+  for (let x = 0; x < W; x += 48) { ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, H); ctx.stroke(); }
+  for (let y = 0; y < H; y += 48) { ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(W, y); ctx.stroke(); }
+
+  // Intentar cargar imagen del juego
+  const drawContent = () => {
+    // Franja ácida izquierda
+    ctx.fillStyle = '#C8FF00';
+    ctx.fillRect(0, 0, 8, H);
+
+    // Degradado lateral derecho decorativo
+    const grad = ctx.createLinearGradient(W * 0.5, 0, W, 0);
+    grad.addColorStop(0, 'rgba(200,255,0,0)');
+    grad.addColorStop(1, 'rgba(200,255,0,0.06)');
+    ctx.fillStyle = grad;
     ctx.fillRect(0, 0, W, H);
 
-    if (imgEl) {
-      if (isVertical) {
-        // Imagen cubre el 55% superior, escalada para llenar sin distorsión
-        const zone = H * 0.55;
-        const r    = imgEl.naturalWidth / imgEl.naturalHeight;
-        const dw   = r >= 1 ? W : zone * r;
-        const dh   = r >= 1 ? W / r : zone;
-        const dx   = (W - dw) / 2;
-        ctx.drawImage(imgEl, dx, 0, dw, dh);
-        // Fade de la imagen hacia abajo
-        const fade = ctx.createLinearGradient(0, zone * 0.5, 0, zone + 20);
-        fade.addColorStop(0, 'rgba(10,10,10,0)');
-        fade.addColorStop(1, '#0a0a0a');
-        ctx.fillStyle = fade;
-        ctx.fillRect(0, 0, W, zone + 20);
-      } else {
-        // Imagen ocupa el 50% derecho, escalada sin distorsión (cover)
-        const zone = W * 0.5;
-        const r    = imgEl.naturalWidth / imgEl.naturalHeight;
-        const dh   = H;
-        const dw   = dh * r;
-        const dy   = 0;
-        const dx   = dw >= zone ? W - dw + (dw - zone) / 2 : W - zone;
-        ctx.save();
-        ctx.beginPath();
-        ctx.rect(W * 0.5, 0, W * 0.5, H);
-        ctx.clip();
-        ctx.drawImage(imgEl, W * 0.5 + (zone - dw) / 2, dy, dw, dh);
-        ctx.restore();
-        // Fade de derecha a izquierda
-        const fade = ctx.createLinearGradient(W * 0.5, 0, W * 0.78, 0);
-        fade.addColorStop(0, '#0a0a0a');
-        fade.addColorStop(1, 'rgba(10,10,10,0)');
-        ctx.fillStyle = fade;
-        ctx.fillRect(W * 0.5, 0, W * 0.28, H);
-      }
+    // Badge INSCRIPCIÓN ABIERTA
+    if (t.estado === 'open') {
+      ctx.fillStyle = '#C8FF00';
+      ctx.fillRect(60, 48, 260, 34);
+      ctx.fillStyle = '#000';
+      ctx.font = 'bold 14px "Arial Narrow", Arial';
+      ctx.letterSpacing = '3px';
+      ctx.fillText('INSCRIPCIÓN ABIERTA', 76, 71);
     }
 
-    // Grid decorativo sutil
-    ctx.strokeStyle = 'rgba(200,255,0,0.03)';
-    ctx.lineWidth = 1;
-    for (let x = 0; x < W; x += 60) { ctx.beginPath(); ctx.moveTo(x,0); ctx.lineTo(x,H); ctx.stroke(); }
-    for (let y = 0; y < H; y += 60) { ctx.beginPath(); ctx.moveTo(0,y); ctx.lineTo(W,y); ctx.stroke(); }
+    // Nombre del torneo
+    ctx.fillStyle = '#ffffff';
+    ctx.font = 'bold 88px "Arial Black", Arial';
+    const nombre = (t.nombre || 'TORNEO').toUpperCase();
+    // Wrap si es muy largo
+    if (ctx.measureText(nombre).width > 680) {
+      ctx.font = 'bold 64px "Arial Black", Arial';
+    }
+    ctx.fillText(nombre, 60, 220);
 
-    // Franja verde borde izquierdo
+    // Línea ácida bajo el título
     ctx.fillStyle = '#C8FF00';
-    ctx.fillRect(0, 0, 6, H);
-  }
+    ctx.fillRect(60, 238, Math.min(ctx.measureText(nombre).width, 680), 4);
 
-  function wrapText(text, maxW) {
-    const words = text.split(' ');
-    const lines = [];
-    let line = '';
-    for (const w of words) {
-      const test = line ? line + ' ' + w : w;
-      if (ctx.measureText(test).width > maxW && line) {
-        lines.push(line);
-        line = w;
-      } else {
-        line = test;
-      }
-    }
-    if (line) lines.push(line);
-    return lines;
-  }
-
-  const drawContent = (imgEl) => {
-    drawBackground(imgEl);
-
-    // Datos del torneo
-    const platMap   = { mobile:'Mobile', console:'Consola', pc:'PC / Cross' };
-    const nombre    = (t.nombre || 'TORNEO').toUpperCase();
-    const fechaStr  = t.fecha?.toDate
+    // Fecha
+    const fechaStr = t.fecha?.toDate
       ? t.fecha.toDate().toLocaleString('es-AR', { weekday:'long', day:'numeric', month:'long', hour:'2-digit', minute:'2-digit' })
       : '';
-    const plat      = platMap[t.plataforma] || t.plataforma || '';
-    const mod       = t.modalidad === 'presencial' ? 'Presencial' : 'Online';
-    const precioStr = (t.precio||0) === 0 ? 'GRATIS' : '$' + (t.precio).toLocaleString('es-AR');
-    const libre     = t.cupos_total - (t.cupos_ocupados || 0);
+    ctx.fillStyle = 'rgba(200,255,0,0.85)';
+    ctx.font = '28px Arial';
+    ctx.fillText(fechaStr.toUpperCase(), 60, 296);
 
-    if (isVertical) {
-      // ── VERTICAL (Story / WA Status) ── 1080×1920
-      // Zona de texto: empieza en 57% de la altura
-      let y = Math.round(H * 0.57);
-      const maxTxtW = W - PAD * 2;
+    // Metadata — plataforma, modalidad, entrada
+    const platMap = { mobile:'Mobile', console:'Consola', pc:'PC / Cross' };
+    const plat = platMap[t.plataforma] || t.plataforma || '';
+    const mod  = t.modalidad === 'presencial' ? 'Presencial' : 'Online';
+    const precio = (t.precio || 0) === 0 ? 'GRATIS' : '$' + (t.precio).toLocaleString('es-AR');
 
-      // Badge estado
-      if (t.estado === 'open') {
-        const bh = 38, bw = 290;
-        ctx.fillStyle = '#C8FF00';
-        ctx.fillRect(PAD, y, bw, bh);
-        ctx.fillStyle = '#000';
-        ctx.font = 'bold 15px Arial';
-        ctx.fillText('INSCRIPCIÓN ABIERTA', PAD + 16, y + 25);
-        y += bh + 28;
-      }
-
-      // Nombre — tamaño adaptativo
-      let fs = 110;
-      ctx.font = `bold ${fs}px Arial`;
-      const lines = wrapText(nombre, maxTxtW);
-      while (fs > 48) {
-        ctx.font = `bold ${fs}px Arial`;
-        if (lines.every(l => ctx.measureText(l).width <= maxTxtW)) break;
-        fs -= 4;
-      }
+    const tags = [plat, mod, precio].filter(Boolean);
+    let tagX = 60;
+    tags.forEach(tag => {
+      const tw = ctx.measureText(tag).width + 28;
+      ctx.fillStyle = 'rgba(255,255,255,0.08)';
+      ctx.fillRect(tagX, 330, tw, 36);
+      ctx.strokeStyle = 'rgba(255,255,255,0.15)';
+      ctx.lineWidth = 1;
+      ctx.strokeRect(tagX, 330, tw, 36);
       ctx.fillStyle = '#fff';
-      for (const line of lines) {
-        ctx.fillText(line, PAD, y);
-        y += Math.round(fs * 1.1);
-      }
-      // Línea ácida
-      ctx.fillStyle = '#C8FF00';
-      ctx.fillRect(PAD, y, Math.min(ctx.measureText(lines[0]).width, maxTxtW), 5);
-      y += 28;
+      ctx.font = 'bold 16px Arial';
+      ctx.fillText(tag, tagX + 14, 354);
+      tagX += tw + 8;
+    });
 
-      // Fecha
-      if (fechaStr) {
-        ctx.fillStyle = 'rgba(200,255,0,0.9)';
-        ctx.font = '32px Arial';
-        ctx.fillText(fechaStr.toUpperCase(), PAD, y);
-        y += 50;
-      }
+    // Cupos
+    const libre = t.cupos_total - (t.cupos_ocupados || 0);
+    ctx.fillStyle = libre <= 3 ? '#ff1744' : '#C8FF00';
+    ctx.font = 'bold 20px Arial';
+    ctx.fillText(`${libre} CUPOS DISPONIBLES`, 60, 415);
 
-      // Tags con fondo
-      ctx.font = 'bold 22px Arial';
-      let tagX = PAD;
-      const tagH = 44;
-      [plat, mod, precioStr].filter(Boolean).forEach(tag => {
-        const tw = ctx.measureText(tag).width + 32;
-        if (tagX + tw > W - PAD) { tagX = PAD; y += tagH + 10; }
-        ctx.fillStyle = 'rgba(255,255,255,0.07)';
-        ctx.fillRect(tagX, y, tw, tagH);
-        ctx.strokeStyle = 'rgba(255,255,255,0.18)';
-        ctx.lineWidth = 1;
-        ctx.strokeRect(tagX, y, tw, tagH);
-        ctx.fillStyle = '#fff';
-        ctx.fillText(tag, tagX + 16, y + 30);
-        tagX += tw + 10;
-      });
-      y += tagH + 28;
+    // NEXUS ARENA branding abajo
+    ctx.fillStyle = '#C8FF00';
+    ctx.font = 'bold 52px "Arial Black", Arial';
+    ctx.fillText('NEXUS', 60, 560);
+    ctx.fillStyle = '#ffffff';
+    ctx.fillText(' ARENA', 60 + ctx.measureText('NEXUS').width, 560);
 
-      // Cupos
-      ctx.fillStyle = libre <= 3 ? '#ff1744' : '#C8FF00';
-      ctx.font = 'bold 26px Arial';
-      ctx.fillText(`${libre} CUPOS DISPONIBLES`, PAD, y);
-      y += 44;
+    ctx.fillStyle = 'rgba(255,255,255,0.25)';
+    ctx.font = '16px Arial';
+    ctx.fillText('lacajamisteriosoficial-cloud.github.io/nexus-arena', 60, 592);
 
-      // Branding — anclado al fondo
-      const brandY = H - 80;
-      ctx.fillStyle = '#C8FF00';
-      ctx.font = 'bold 72px Arial';
-      const nw = ctx.measureText('NEXUS').width;
-      ctx.fillText('NEXUS', PAD, brandY);
-      ctx.fillStyle = '#fff';
-      ctx.fillText(' ARENA', PAD + nw, brandY);
-      ctx.fillStyle = 'rgba(255,255,255,0.3)';
-      ctx.font = '18px Arial';
-      ctx.fillText('@nexusarena.series', PAD, H - 36);
-
-    } else {
-      // ── HORIZONTAL (IG Post 1080×1080 / FB 1200×630) ──
-      // Zona de texto: columna izquierda, máximo 52% del ancho
-      const maxTxtW = imgEl ? W * 0.50 - PAD : W - PAD * 2;
-      let y;
-
-      if (W === H) {
-        // IG Post cuadrado — centrar verticalmente
-        y = Math.round(H * 0.18);
-      } else {
-        // Facebook horizontal
-        y = 52;
-      }
-
-      // Badge estado
-      if (t.estado === 'open') {
-        const bh = 34, bw = Math.round(maxTxtW * 0.6);
-        ctx.fillStyle = '#C8FF00';
-        ctx.fillRect(PAD, y, bw, bh);
-        ctx.fillStyle = '#000';
-        ctx.font = 'bold 13px Arial';
-        ctx.fillText('INSCRIPCIÓN ABIERTA', PAD + 14, y + 23);
-        y += bh + 24;
-      }
-
-      // Nombre
-      let fs = W === H ? 96 : 80;
-      ctx.font = `bold ${fs}px Arial`;
-      let nameLines = wrapText(nombre, maxTxtW);
-      while (fs > 36) {
-        ctx.font = `bold ${fs}px Arial`;
-        nameLines = wrapText(nombre, maxTxtW);
-        if (nameLines.length <= 2) break;
-        fs -= 4;
-      }
-      ctx.fillStyle = '#fff';
-      for (const line of nameLines) {
-        ctx.fillText(line, PAD, y);
-        y += Math.round(fs * 1.08);
-      }
-      // Línea ácida
-      ctx.fillStyle = '#C8FF00';
-      ctx.fillRect(PAD, y, Math.min(ctx.measureText(nameLines[0]).width, maxTxtW), 4);
-      y += 24;
-
-      // Fecha
-      if (fechaStr) {
-        const ffs = W === H ? 24 : 22;
-        ctx.fillStyle = 'rgba(200,255,0,0.9)';
-        ctx.font = `${ffs}px Arial`;
-        ctx.fillText(fechaStr.toUpperCase(), PAD, y);
-        y += ffs + 20;
-      }
-
-      // Tags
-      const tagFs = W === H ? 18 : 16;
-      ctx.font = `bold ${tagFs}px Arial`;
-      let tagX = PAD;
-      const tagH = W === H ? 40 : 36;
-      [plat, mod, precioStr].filter(Boolean).forEach(tag => {
-        const tw = ctx.measureText(tag).width + 28;
-        if (tagX + tw > PAD + maxTxtW) return;
-        ctx.fillStyle = 'rgba(255,255,255,0.07)';
-        ctx.fillRect(tagX, y, tw, tagH);
-        ctx.strokeStyle = 'rgba(255,255,255,0.18)';
-        ctx.lineWidth = 1;
-        ctx.strokeRect(tagX, y, tw, tagH);
-        ctx.fillStyle = '#fff';
-        ctx.fillText(tag, tagX + 14, y + Math.round(tagH * 0.62));
-        tagX += tw + 8;
-      });
-      y += tagH + 20;
-
-      // Cupos
-      ctx.fillStyle = libre <= 3 ? '#ff1744' : '#C8FF00';
-      ctx.font = `bold ${W === H ? 22 : 18}px Arial`;
-      ctx.fillText(`${libre} CUPOS DISPONIBLES`, PAD, y);
-
-      // Branding — anclado al fondo
-      const bfs   = W === H ? 60 : 50;
-      const brandY = H - (W === H ? 56 : 50);
-      ctx.fillStyle = '#C8FF00';
-      ctx.font = `bold ${bfs}px Arial`;
-      const nw = ctx.measureText('NEXUS').width;
-      ctx.fillText('NEXUS', PAD, brandY);
-      ctx.fillStyle = '#fff';
-      ctx.fillText(' ARENA', PAD + nw, brandY);
-      ctx.fillStyle = 'rgba(255,255,255,0.3)';
-      ctx.font = `${W === H ? 17 : 15}px Arial`;
-      ctx.fillText('@nexusarena.series  |  lacajamisteriosoficial-cloud.github.io/nexus-arena', PAD, H - (W === H ? 24 : 20));
-    }
-
-    // ── DESCARGA ─────────────────────────────────────────────
-    const fname = `nexus-${formato.id}-${(t.nombre||'torneo').toLowerCase().replace(/[^a-z0-9]/g,'-')}.png`;
+    // Botón de descarga
     canvas.toBlob(blob => {
       const url = URL.createObjectURL(blob);
       const a   = document.createElement('a');
-      a.href = url; a.download = fname; a.click();
+      a.href     = url;
+      a.download = `nexus-arena-${(t.nombre || 'torneo').toLowerCase().replace(/[^a-z0-9]/g,'-')}.png`;
+      a.click();
       URL.revokeObjectURL(url);
-      showToast(`Flyer ${formato.label} descargado ✓`);
+      showToast('Flyer descargado ✓ Subilo a Imgur y pegá la URL como imagen del torneo');
     }, 'image/png');
   };
 
-  // Cargar imagen del juego si existe, luego dibujar
+  // Si hay imagen del juego, dibujarla a la derecha
   if (t.imagen) {
     const img = new Image();
     img.crossOrigin = 'anonymous';
-    img.onload  = () => drawContent(img);
-    img.onerror = () => drawContent(null);
+    img.onload = () => {
+      // Imagen a la derecha, con degradado encima
+      ctx.drawImage(img, W * 0.48, 0, W * 0.52, H);
+      const fadeGrad = ctx.createLinearGradient(W * 0.48, 0, W * 0.75, 0);
+      fadeGrad.addColorStop(0, '#0a0a0a');
+      fadeGrad.addColorStop(1, 'rgba(10,10,10,0)');
+      ctx.fillStyle = fadeGrad;
+      ctx.fillRect(W * 0.48, 0, W * 0.27, H);
+      drawContent();
+    };
+    img.onerror = () => drawContent();
     img.src = t.imagen;
   } else {
-    drawContent(null);
+    drawContent();
   }
 };
 
@@ -2164,3 +1992,155 @@ window.mpMarcarCampeon=async function(ge,fe){if(!MP.torneoId)return;const g=deco
 window.mpSimularAleatorio=async function(){if(!MP.torneoId||MP.bots.length===0){showToast('Primero creá el torneo',true);return;}mpLog('Simulando...');try{const gs={},gf=[];for(let i=0;i<MP.bots.length;i+=2){if(MP.bots[i]&&MP.bots[i+1]){const k='match_'+Math.floor(i/2);const w=Math.random()>0.5?MP.bots[i].gamertag:MP.bots[i+1].gamertag;gs[k]=w;gf.push(w);}}const camp=gf[Math.floor(Math.random()*gf.length)];const fs=gf.slice(0,2);await updateDoc(doc(db,'torneos',MP.torneoId),{'bracket.ganadores':gs,'bracket.finalistas':fs,'bracket.ganador_final':camp});MP.campeon=camp;MP.finalistas=fs;await mpRenderBracket();mpLog(`Campeón: ${camp} ✓`);showToast('Simulado ✓');}catch(err){mpLog('Error: '+err.message,false);}};
 window.mpFinalizarTorneo=async function(){if(!MP.torneoId){showToast('Primero creá el torneo',true);return;}const sn=await getDoc(doc(db,'torneos',MP.torneoId));const br=sn.data()?.bracket||{};const camp=br.ganador_final||MP.campeon;if(!camp){showToast('Marcá un campeón',true);return;}const fs=br.finalistas||[];mpLog('Asignando puntos...');try{const P={campeon:100,finalista:50,participante:10};const js=await getDocs(collection(db,'jugadores'));const ups=js.docs.map(d=>({id:d.id,...d.data()})).filter(j=>j.test_mode).map(j=>{const gt=j.gamertag||'';const pts=gt===camp?P.campeon:fs.includes(gt)?P.finalista:P.participante;const vic=gt===camp?1:0;return updateDoc(doc(db,'jugadores',j.id),{ranking_points:(j.ranking_points||0)+pts,victorias:(j.victorias||0)+vic,torneos_jugados:(j.torneos_jugados||0)+1});});await Promise.all(ups);await updateDoc(doc(db,'torneos',MP.torneoId),{estado:'finished'});const gRef=await addDoc(collection(db,'galardones'),{gamertag:camp,torneo_nombre:sn.data()?.nombre||'TEST',fecha:serverTimestamp(),emoji:'🤖',foto:'',test_mode:true});MP.galardonId=gRef.id;mpLog(`✓ Campeón: ${camp} | Galardón creado | Puntos asignados`);const js2=await getDocs(collection(db,'jugadores'));const bots=js2.docs.map(d=>({id:d.id,...d.data()})).filter(j=>j.test_mode).sort((a,b)=>(b.ranking_points||0)-(a.ranking_points||0));const rc=document.getElementById('mpResultadosCard');const rco=document.getElementById('mpResultadosContent');if(rc&&rco){rc.style.display='block';rco.innerHTML=`<div style="padding:16px;background:rgba(200,255,0,0.05);border:1px solid rgba(200,255,0,0.15)"><strong style="color:var(--acid)">★ Campeón: ${camp}</strong> — todo funcionó correctamente.<br><span style="color:var(--muted);font-size:0.82rem">Verificá ranking, Hall of Fame y perfil de jugadores. Luego limpiá.</span></div><div style="margin-top:12px;border:1px solid var(--gray)">`+bots.slice(0,6).map((j,i)=>`<div style="display:flex;align-items:center;gap:12px;padding:8px 14px;border-bottom:1px solid rgba(42,42,42,0.5)"><span style="font-size:1rem;font-weight:700;min-width:20px;color:${i===0?'#FFD700':i===1?'#C0C0C0':i===2?'#CD7F32':'var(--muted)'}">${i+1}</span><span style="flex:1;font-family:'Barlow Condensed',sans-serif;color:#fff">${j.gamertag}</span><span style="color:var(--acid);font-weight:700">${j.ranking_points||0} pts</span><a href="jugador.html?id=${j.id}" target="_blank" class="btn-tbl" style="font-size:0.65rem;text-decoration:none">Ver perfil</a></div>`).join('')+'</div>';}mpLog('===== COMPLETADO =====');}catch(err){mpLog('Error: '+err.message,false);}};
 window.mpLimpiar=async function(){if(!confirm('¿Borrar todos los datos test_mode:true?'))return;const logEl=document.getElementById('mpLimpiezaLog');if(logEl)logEl.textContent='Borrando...';try{let total=0;for(const col of['torneos','inscripciones','jugadores','galardones']){const s=await getDocs(collection(db,col));for(const d of s.docs.filter(d=>d.data().test_mode===true)){await deleteDoc(doc(db,col,d.id));total++;}}if(logEl)logEl.innerHTML=`<span style="color:var(--acid)">✓ ${total} documentos eliminados.</span>`;showToast(`Limpieza: ${total} docs ✓`);mpReset();const log=document.getElementById('mpLog');if(log)log.innerHTML='<span style="color:var(--muted)">Limpiado. Podés hacer otra prueba.</span>';}catch(err){if(logEl)logEl.innerHTML=`<span style="color:var(--red)">Error: ${err.message}</span>`;showToast('Error: '+err.message,true);}};
+
+
+// ── MODO TORNEO — toggle UI ───────────────────────────────────
+window.onModoChange = function() {
+  const modo = document.querySelector('input[name="torneoModo"]:checked')?.value || 'bracket';
+  const blk  = document.getElementById('configPuntosBlock');
+  const boxB = document.getElementById('modoBracketBox');
+  const boxP = document.getElementById('modoPuntosBox');
+  if (blk)  blk.style.display  = modo === 'puntos' ? 'block' : 'none';
+  if (boxB) boxB.style.borderColor = modo === 'bracket' ? 'rgba(200,255,0,0.6)' : 'rgba(255,255,255,0.12)';
+  if (boxP) boxP.style.borderColor = modo === 'puntos'  ? 'rgba(200,255,0,0.6)' : 'rgba(255,255,255,0.12)';
+};
+
+// ── SCOREBOARD ADMIN ─────────────────────────────────────────
+let _sbTorneos = [];
+
+async function sbInit() {
+  try {
+    const snap = await getDocs(collection(db, 'torneos'));
+    _sbTorneos = snap.docs.map(d => ({ id: d.id, ...d.data() }))
+      .filter(t => t.modo === 'puntos')
+      .sort((a,b) => (b.fecha?.toDate?.()?.getTime()||0) - (a.fecha?.toDate?.()?.getTime()||0));
+    const sel = document.getElementById('sbTorneoSelect');
+    if (!sel) return;
+    _sbTorneos.forEach(t => {
+      const opt = document.createElement('option');
+      opt.value = t.id;
+      opt.textContent = t.nombre + (t.estado === 'open' ? ' 🟢' : '');
+      sel.appendChild(opt);
+    });
+  } catch(e) { console.error(e); }
+}
+
+window.sbCargarTorneo = async function() {
+  const torneoId = document.getElementById('sbTorneoSelect')?.value;
+  if (!torneoId) return;
+  const t = _sbTorneos.find(x => x.id === torneoId);
+  if (!t) return;
+
+  const p = t.puntuacion || { p1:15, p2:10, p3:7, kill:1, partidas:3 };
+  document.getElementById('sbInfo').style.display = 'block';
+  document.getElementById('sbInfo').innerHTML =
+    `<strong style="color:var(--acid)">${t.nombre}</strong> &nbsp;·&nbsp; ` +
+    `${p.partidas} partidas &nbsp;·&nbsp; ` +
+    `1°: ${p.p1}pts &nbsp; 2°: ${p.p2}pts &nbsp; 3°: ${p.p3}pts &nbsp; Kill: ${p.kill}pt`;
+
+  // Cargar reportes
+  try {
+    const [repSnap] = await Promise.all([
+      getDocs(collection(db, 'resultados'))
+    ]);
+    const reportes = repSnap.docs.map(d => ({ id: d.id, ...d.data() }))
+      .filter(r => r.torneo_id === torneoId)
+      .sort((a,b) => (b.timestamp?.toDate?.()?.getTime()||0) - (a.timestamp?.toDate?.()?.getTime()||0));
+
+    const pendientes = reportes.filter(r => !r.confirmado);
+    const confirmados = reportes.filter(r => r.confirmado);
+
+    // Panel pendientes
+    const pendDiv = document.getElementById('sbPendientes');
+    if (pendientes.length === 0) {
+      pendDiv.innerHTML = '<p style="color:var(--muted);font-size:0.85rem">Sin reportes pendientes.</p>';
+    } else {
+      pendDiv.innerHTML = pendientes.map(r => `
+        <div style="background:var(--dark3);border:1px solid var(--gray);padding:14px;margin-bottom:8px">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+            <strong style="color:#fff">${r.gamertag}</strong>
+            <span style="font-size:0.75rem;color:var(--muted)">Partida ${r.partida}</span>
+          </div>
+          <div style="font-size:0.85rem;color:var(--muted);margin-bottom:8px">
+            Posición: <strong style="color:#fff">${r.posicion}°</strong> &nbsp;·&nbsp;
+            Kills: <strong style="color:#fff">${r.kills}</strong> &nbsp;·&nbsp;
+            Puntos: <strong style="color:var(--acid)">${sbCalcPts(r, p)}</strong>
+          </div>
+          ${r.foto_url ? `<a href="${r.foto_url}" target="_blank" style="color:var(--acid);font-size:0.8rem;display:block;margin-bottom:10px">📸 Ver captura →</a>` : '<p style="font-size:0.78rem;color:var(--muted);margin-bottom:8px">Sin captura</p>'}
+          <div style="display:flex;gap:8px">
+            <button class="btn-admin-primary" style="font-size:0.78rem;padding:6px 14px" onclick="sbConfirmar('${r.id}','${torneoId}')">✓ Confirmar</button>
+            <button class="btn-admin-secondary" style="font-size:0.78rem;padding:6px 14px" onclick="sbRechazar('${r.id}')">✕ Rechazar</button>
+          </div>
+        </div>`).join('');
+    }
+
+    // Tabla de posiciones
+    sbRenderTabla(confirmados, p);
+
+  } catch(e) { console.error(e); }
+};
+
+function sbCalcPts(r, p) {
+  let pts = r.kills * (p.kill || 1);
+  if (r.posicion === 1) pts += p.p1 || 15;
+  else if (r.posicion === 2) pts += p.p2 || 10;
+  else if (r.posicion === 3) pts += p.p3 || 7;
+  return pts;
+}
+
+function sbRenderTabla(reportes, p) {
+  const tabla = document.getElementById('sbTabla');
+  if (reportes.length === 0) {
+    tabla.innerHTML = '<p style="color:var(--muted);font-size:0.85rem">Sin resultados confirmados aún.</p>';
+    return;
+  }
+  // Agrupar por gamertag
+  const jugadores = {};
+  reportes.forEach(r => {
+    if (!jugadores[r.gamertag]) jugadores[r.gamertag] = { gamertag: r.gamertag, pts: 0, kills: 0, partidas: 0 };
+    jugadores[r.gamertag].pts     += sbCalcPts(r, p);
+    jugadores[r.gamertag].kills   += r.kills;
+    jugadores[r.gamertag].partidas++;
+  });
+  const ranking = Object.values(jugadores).sort((a,b) => b.pts - a.pts);
+  tabla.innerHTML = `
+    <table style="width:100%;border-collapse:collapse;font-size:0.85rem">
+      <thead>
+        <tr style="border-bottom:1px solid rgba(200,255,0,0.2)">
+          <th style="text-align:left;padding:8px 6px;color:var(--acid);font-size:0.7rem;letter-spacing:2px">#</th>
+          <th style="text-align:left;padding:8px 6px;color:var(--acid);font-size:0.7rem;letter-spacing:2px">JUGADOR</th>
+          <th style="text-align:center;padding:8px 6px;color:var(--acid);font-size:0.7rem;letter-spacing:2px">PTS</th>
+          <th style="text-align:center;padding:8px 6px;color:var(--acid);font-size:0.7rem;letter-spacing:2px">KILLS</th>
+          <th style="text-align:center;padding:8px 6px;color:var(--acid);font-size:0.7rem;letter-spacing:2px">PARTIDAS</th>
+        </tr>
+      </thead>
+      <tbody>
+        ${ranking.map((j,i) => `
+          <tr style="border-bottom:1px solid rgba(255,255,255,0.05);${i===0?'background:rgba(200,255,0,0.04)':''}">
+            <td style="padding:10px 6px;color:${i===0?'var(--acid)':'var(--muted)'};font-weight:700">${i+1}</td>
+            <td style="padding:10px 6px;color:#fff;font-weight:${i===0?'700':'400'}">${j.gamertag}</td>
+            <td style="padding:10px 6px;text-align:center;color:${i===0?'var(--acid)':'#fff'};font-weight:700">${j.pts}</td>
+            <td style="padding:10px 6px;text-align:center;color:var(--muted)">${j.kills}</td>
+            <td style="padding:10px 6px;text-align:center;color:var(--muted)">${j.partidas}</td>
+          </tr>`).join('')}
+      </tbody>
+    </table>`;
+}
+
+window.sbConfirmar = async function(reporteId, torneoId) {
+  try {
+    await updateDoc(doc(db, 'resultados', reporteId), { confirmado: true, confirmado_at: new Date() });
+    showToast('Resultado confirmado ✓');
+    sbCargarTorneo();
+  } catch(e) { showToast('Error al confirmar', true); }
+};
+
+window.sbRechazar = async function(reporteId) {
+  if (!confirm('¿Rechazar este reporte? Se eliminará.')) return;
+  try {
+    const { deleteDoc } = await import("https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js");
+    await deleteDoc(doc(db, 'resultados', reporteId));
+    showToast('Reporte eliminado');
+    sbCargarTorneo();
+  } catch(e) { showToast('Error', true); }
+};

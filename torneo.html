@@ -407,6 +407,19 @@
       <div class="torneo-card" id="infoCard">
         <div class="torneo-card-title">Descripción</div>
         <p id="torneoDesc" style="color:var(--muted);font-size:0.9rem;line-height:1.6">—</p>
+
+        <!-- AVISO CAPTURA + BOTÓN REPORTAR (modo puntos) -->
+        <div id="avisoCapturaBlock" style="display:none;margin-top:20px;padding:16px 18px;background:rgba(200,255,0,0.05);border:1px solid rgba(200,255,0,0.2);border-left:4px solid var(--acid)">
+          <div style="font-family:'Barlow Condensed',sans-serif;font-size:0.72rem;letter-spacing:3px;color:var(--acid);margin-bottom:8px">📸 ACORDATE DE LA CAPTURA</div>
+          <p style="font-size:0.85rem;color:var(--muted);line-height:1.6;margin:0 0 14px">
+            Al terminar <strong style="color:#fff">cada partida</strong>, sacá una captura de la pantalla de resultados antes de salir.
+            En PS5: botón <strong style="color:#fff">Create</strong> → <strong style="color:#fff">Tomar captura</strong>.
+            La vas a necesitar para reportar tu resultado.
+          </p>
+          <a id="btnReportarResultado" href="#" style="display:none;align-items:center;gap:8px;background:var(--acid);color:#000;font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:0.9rem;letter-spacing:2px;padding:12px 24px;clip-path:polygon(7px 0%,100% 0%,calc(100% - 7px) 100%,0% 100%);text-decoration:none">
+            REPORTAR MI RESULTADO →
+          </a>
+        </div>
       </div>
 
       <!-- CUPOS BAR -->

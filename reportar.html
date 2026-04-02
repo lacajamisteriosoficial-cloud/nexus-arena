@@ -1,0 +1,413 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>NEXUS ARENA — Reportar Resultado</title>
+<link rel="icon" type="image/x-icon" href="favicon.ico">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Barlow+Condensed:wght@400;600;700&family=Barlow:wght@300;400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/styles.css?v=20">
+<link rel="stylesheet" href="css/public.css?v=20">
+<style>
+.rep-hero {
+  min-height: 180px;
+  display: flex;
+  align-items: flex-end;
+  padding: 90px 6vw 32px;
+  background: var(--dark2);
+  border-bottom: 2px solid var(--acid);
+  position: relative;
+  overflow: hidden;
+}
+.rep-hero::before {
+  content: '';
+  position: absolute; inset: 0;
+  background: radial-gradient(ellipse 50% 80% at 20% 50%, rgba(200,255,0,0.05), transparent 70%);
+}
+.rep-hero-content { position: relative; z-index: 2; }
+.rep-label { font-family: 'Barlow Condensed', sans-serif; font-size: 0.72rem; letter-spacing: 4px; color: var(--acid); margin-bottom: 8px; }
+.rep-hero h1 { font-family: 'Bebas Neue', sans-serif; font-size: clamp(2.5rem, 7vw, 4rem); letter-spacing: 3px; color: #fff; line-height: 1; }
+.rep-hero h1 span { color: var(--acid); }
+
+.rep-page { max-width: 600px; margin: 0 auto; padding: 48px 6vw 80px; }
+
+/* Aviso captura */
+.aviso-captura {
+  background: rgba(200,255,0,0.06);
+  border: 1px solid rgba(200,255,0,0.25);
+  border-left: 4px solid var(--acid);
+  padding: 18px 20px;
+  margin-bottom: 32px;
+}
+.aviso-captura-title {
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: 0.75rem; letter-spacing: 3px;
+  color: var(--acid); margin-bottom: 8px;
+}
+.aviso-captura p {
+  font-size: 0.88rem; color: var(--muted); line-height: 1.6; margin: 0;
+}
+.aviso-captura strong { color: #fff; }
+
+/* Form */
+.rep-form { display: flex; flex-direction: column; gap: 20px; }
+.rep-section-title {
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: 0.72rem; letter-spacing: 3px;
+  color: var(--acid); margin-bottom: 14px;
+  border-bottom: 1px solid rgba(200,255,0,0.15);
+  padding-bottom: 8px;
+}
+
+/* Upload zona */
+.upload-zone {
+  border: 1.5px dashed rgba(200,255,0,0.3);
+  padding: 32px 20px;
+  text-align: center;
+  cursor: pointer;
+  transition: border-color 0.2s, background 0.2s;
+  background: rgba(200,255,0,0.02);
+  position: relative;
+}
+.upload-zone:hover { border-color: rgba(200,255,0,0.6); background: rgba(200,255,0,0.05); }
+.upload-zone.has-file { border-color: var(--acid); border-style: solid; }
+.upload-zone input[type="file"] { position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%; }
+.upload-icon { font-size: 2rem; margin-bottom: 10px; }
+.upload-text { font-family: 'Barlow Condensed', sans-serif; font-size: 1rem; font-weight: 700; color: #fff; margin-bottom: 4px; }
+.upload-sub { font-size: 0.78rem; color: var(--muted); }
+.upload-preview { margin-top: 16px; display: none; }
+.upload-preview img { max-width: 100%; max-height: 200px; object-fit: contain; border: 1px solid rgba(200,255,0,0.2); }
+
+/* Posicion selector */
+.pos-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; }
+.pos-btn {
+  background: rgba(255,255,255,0.04);
+  border: 1px solid rgba(255,255,255,0.12);
+  color: var(--muted);
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: 1.1rem; font-weight: 700;
+  padding: 14px 8px;
+  cursor: pointer;
+  transition: all 0.15s;
+  text-align: center;
+}
+.pos-btn:hover { border-color: rgba(200,255,0,0.4); color: #fff; }
+.pos-btn.selected { border-color: var(--acid); background: rgba(200,255,0,0.1); color: var(--acid); }
+
+/* Estados */
+.rep-success {
+  text-align: center; padding: 60px 20px;
+  display: none;
+}
+.rep-success-icon { font-size: 3.5rem; margin-bottom: 16px; }
+.rep-success h2 { font-family: 'Bebas Neue', sans-serif; font-size: 2.5rem; color: var(--acid); margin-bottom: 8px; }
+.rep-success p { color: var(--muted); font-size: 0.9rem; }
+
+.rep-error-box {
+  background: rgba(255,23,68,0.08);
+  border: 1px solid rgba(255,23,68,0.3);
+  color: #ff5252;
+  padding: 12px 16px;
+  font-size: 0.85rem;
+  display: none;
+}
+
+.spinner-sm { width:18px;height:18px;border:2px solid rgba(0,0,0,0.2);border-top-color:#000;border-radius:50%;animation:spin 0.7s linear infinite;display:inline-block;vertical-align:middle;margin-right:8px; }
+@keyframes spin { to { transform: rotate(360deg); } }
+
+.torneo-loading { text-align:center;padding:60px 20px;color:var(--muted);font-size:0.9rem; }
+.torneo-error   { text-align:center;padding:60px 20px;color:#ff5252;font-size:0.9rem; }
+</style>
+</head>
+<body>
+
+<nav class="nav" id="nav">
+  <a href="index.html" class="logo"><img src="logo.png" alt="Nexus Arena" class="logo-img"></a>
+  <ul class="nav-links">
+    <li><a href="index.html#torneos">Torneos</a></li>
+  </ul>
+  <button class="nav-cta" onclick="window.location='index.html#torneos'">Ver torneos</button>
+</nav>
+
+<div class="rep-hero">
+  <div class="rep-hero-content">
+    <div class="rep-label">Nexus Arena</div>
+    <h1>REPORTAR <span>RESULTADO</span></h1>
+  </div>
+</div>
+
+<div class="rep-page">
+
+  <div id="repLoading" class="torneo-loading">
+    <div class="spinner" style="margin:0 auto 16px"></div>
+    Cargando torneo...
+  </div>
+
+  <div id="repError" class="torneo-error" style="display:none">
+    Torneo no encontrado o no disponible.<br>
+    <a href="index.html" style="color:var(--acid);margin-top:12px;display:inline-block">← Volver al inicio</a>
+  </div>
+
+  <div id="repContent" style="display:none">
+
+    <!-- Aviso captura -->
+    <div class="aviso-captura">
+      <div class="aviso-captura-title">📸 ACORDATE DE LA CAPTURA</div>
+      <p>
+        <strong>Al terminar cada partida</strong>, sacá una captura de pantalla de la pantalla de resultados
+        antes de salir. Ahí se ve tu posición y kills. Vas a necesitarla para reportar tu resultado.
+        <br><br>
+        En PS5: presioná el botón <strong>Create</strong> → <strong>Tomar captura</strong>.
+      </p>
+    </div>
+
+    <!-- Info torneo -->
+    <div id="repTorneoInfo" style="margin-bottom:28px;padding:14px 16px;border-left:3px solid var(--acid);background:rgba(200,255,0,0.03)">
+      <div id="repTorneoNombre" style="font-family:'Bebas Neue',sans-serif;font-size:1.6rem;color:#fff;letter-spacing:2px"></div>
+      <div id="repTorneoPuntuacion" style="font-size:0.82rem;color:var(--muted);margin-top:4px"></div>
+    </div>
+
+    <div id="repFormWrap" class="rep-form">
+      <div>
+        <div class="rep-section-title">TUS DATOS</div>
+        <div class="form-group" style="margin-bottom:14px">
+          <label class="form-label">Gamertag / ID en el juego *</label>
+          <input type="text" class="form-input" id="repGamertag" placeholder="El nombre que usás en el juego">
+        </div>
+      </div>
+
+      <div>
+        <div class="rep-section-title">PARTIDA</div>
+        <div style="margin-bottom:14px">
+          <label class="form-label" style="margin-bottom:10px">Número de partida *</label>
+          <div id="partidaGrid" style="display:flex;gap:8px;flex-wrap:wrap"></div>
+        </div>
+      </div>
+
+      <div>
+        <div class="rep-section-title">RESULTADO</div>
+        <div style="margin-bottom:16px">
+          <label class="form-label" style="margin-bottom:10px">Tu posición final *</label>
+          <div class="pos-grid" id="posGrid"></div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Kills en esta partida *</label>
+          <input type="number" class="form-input" id="repKills" placeholder="0" min="0" max="99" style="max-width:160px">
+        </div>
+      </div>
+
+      <div>
+        <div class="rep-section-title">CAPTURA DE PANTALLA *</div>
+        <div class="upload-zone" id="uploadZone">
+          <input type="file" id="repFoto" accept="image/*" onchange="onFileSelected(this)">
+          <div class="upload-icon">📷</div>
+          <div class="upload-text">Subí tu captura</div>
+          <div class="upload-sub">Tocá acá para seleccionar la foto desde tu dispositivo</div>
+          <div class="upload-preview" id="uploadPreview">
+            <img id="uploadPreviewImg" src="" alt="preview">
+          </div>
+        </div>
+        <p style="font-size:0.75rem;color:var(--muted);margin-top:8px">La captura es obligatoria. Se usa para verificar el resultado.</p>
+      </div>
+
+      <div id="repErrorBox" class="rep-error-box"></div>
+
+      <button class="btn-inscribir available" id="repSubmitBtn" onclick="submitReporte()" style="clip-path:polygon(7px 0%,100% 0%,calc(100% - 7px) 100%,0% 100%);padding:16px;font-size:1rem;width:100%">
+        ENVIAR RESULTADO →
+      </button>
+    </div>
+
+    <!-- Éxito -->
+    <div class="rep-success" id="repSuccess">
+      <div class="rep-success-icon">✅</div>
+      <h2>RESULTADO ENVIADO</h2>
+      <p>Tu resultado fue enviado correctamente.<br>
+      El admin lo revisará y confirmará en breve.<br>
+      Podés ver el scoreboard actualizado en la página del torneo.</p>
+      <a href="index.html#torneos" style="display:inline-block;margin-top:24px;color:var(--acid);font-family:'Barlow Condensed',sans-serif;letter-spacing:2px;font-size:0.85rem">← VER TORNEOS</a>
+    </div>
+
+  </div>
+</div>
+
+<script type="module">
+import { db } from './js/firebase.js';
+import {
+  doc, getDoc, addDoc, collection, serverTimestamp, query, where, getDocs
+} from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+
+const CLOUDINARY_CLOUD  = 'dbqtc3jrn';
+const CLOUDINARY_PRESET = 'fgyym6aq';
+
+const params   = new URLSearchParams(window.location.search);
+const torneoId = params.get('id');
+
+let torneoData    = null;
+let posSelected   = null;
+let partidaSelected = null;
+let fileToUpload  = null;
+
+window.addEventListener('scroll', () => {
+  document.getElementById('nav')?.classList.toggle('scrolled', window.scrollY > 50);
+});
+
+// ── CARGAR TORNEO ─────────────────────────────────────────────
+async function init() {
+  if (!torneoId) { mostrarError(); return; }
+  try {
+    const snap = await getDoc(doc(db, 'torneos', torneoId));
+    if (!snap.exists() || snap.data().modo !== 'puntos') { mostrarError(); return; }
+    torneoData = { id: snap.id, ...snap.data() };
+
+    const p = torneoData.puntuacion || { p1:15, p2:10, p3:7, kill:1, partidas:3 };
+
+    document.getElementById('repTorneoNombre').textContent = torneoData.nombre;
+    document.getElementById('repTorneoPuntuacion').textContent =
+      `1°: ${p.p1}pts · 2°: ${p.p2}pts · 3°: ${p.p3}pts · Kill: ${p.kill}pt · ${p.partidas} partidas`;
+
+    // Botones de partida
+    const pgrid = document.getElementById('partidaGrid');
+    for (let i = 1; i <= p.partidas; i++) {
+      const btn = document.createElement('button');
+      btn.className = 'pos-btn';
+      btn.textContent = `Partida ${i}`;
+      btn.style.flex = '1';
+      btn.style.minWidth = '100px';
+      btn.dataset.val = i;
+      btn.onclick = () => {
+        document.querySelectorAll('#partidaGrid .pos-btn').forEach(b => b.classList.remove('selected'));
+        btn.classList.add('selected');
+        partidaSelected = i;
+      };
+      pgrid.appendChild(btn);
+    }
+
+    // Botones de posición (top 10 + más)
+    const posGrid = document.getElementById('posGrid');
+    for (let i = 1; i <= 16; i++) {
+      const btn = document.createElement('button');
+      btn.className = 'pos-btn';
+      btn.textContent = i + '°';
+      btn.dataset.pos = i;
+      btn.onclick = () => {
+        document.querySelectorAll('#posGrid .pos-btn').forEach(b => b.classList.remove('selected'));
+        btn.classList.add('selected');
+        posSelected = i;
+      };
+      posGrid.appendChild(btn);
+    }
+
+    document.getElementById('repLoading').style.display = 'none';
+    document.getElementById('repContent').style.display = 'block';
+
+  } catch(e) {
+    console.error(e);
+    mostrarError();
+  }
+}
+
+function mostrarError() {
+  document.getElementById('repLoading').style.display = 'none';
+  document.getElementById('repError').style.display   = 'block';
+}
+
+// ── ARCHIVO SELECCIONADO ──────────────────────────────────────
+window.onFileSelected = function(input) {
+  const file = input.files[0];
+  if (!file) return;
+  fileToUpload = file;
+  const zone = document.getElementById('uploadZone');
+  zone.classList.add('has-file');
+  const prev = document.getElementById('uploadPreview');
+  const img  = document.getElementById('uploadPreviewImg');
+  prev.style.display = 'block';
+  img.src = URL.createObjectURL(file);
+};
+
+// ── UPLOAD A CLOUDINARY ───────────────────────────────────────
+async function uploadToCloudinary(file) {
+  const fd = new FormData();
+  fd.append('file', file);
+  fd.append('upload_preset', CLOUDINARY_PRESET);
+  fd.append('folder', `nexus-arena/resultados/${torneoId}`);
+  const res  = await fetch(`https://api.cloudinary.com/v1_1/${CLOUDINARY_CLOUD}/image/upload`, { method:'POST', body:fd });
+  const data = await res.json();
+  if (!data.secure_url) throw new Error('Upload falló');
+  return data.secure_url;
+}
+
+// ── SUBMIT ────────────────────────────────────────────────────
+window.submitReporte = async function() {
+  const errBox  = document.getElementById('repErrorBox');
+  const btn     = document.getElementById('repSubmitBtn');
+  const gamertag = document.getElementById('repGamertag').value.trim();
+  const kills    = parseInt(document.getElementById('repKills').value);
+
+  errBox.style.display = 'none';
+
+  if (!gamertag)          return showErr('Completá tu gamertag.');
+  if (!partidaSelected)   return showErr('Seleccioná el número de partida.');
+  if (!posSelected)       return showErr('Seleccioná tu posición final.');
+  if (isNaN(kills) || kills < 0) return showErr('Ingresá las kills (puede ser 0).');
+  if (!fileToUpload)      return showErr('Subí la captura de pantalla. Es obligatoria.');
+
+  // Verificar que no reportó esta partida ya
+  try {
+    const q = query(
+      collection(db, 'resultados'),
+      where('torneo_id', '==', torneoId),
+      where('gamertag', '==', gamertag),
+      where('partida', '==', partidaSelected)
+    );
+    const existing = await getDocs(q);
+    if (!existing.empty) return showErr(`Ya reportaste la partida ${partidaSelected} con este gamertag.`);
+  } catch(e) {}
+
+  btn.disabled = true;
+  btn.innerHTML = '<span class="spinner-sm"></span> Subiendo captura...';
+
+  try {
+    const foto_url = await uploadToCloudinary(fileToUpload);
+
+    btn.innerHTML = '<span class="spinner-sm"></span> Guardando resultado...';
+
+    await addDoc(collection(db, 'resultados'), {
+      torneo_id:  torneoId,
+      gamertag,
+      partida:    partidaSelected,
+      posicion:   posSelected,
+      kills,
+      foto_url,
+      confirmado: false,
+      timestamp:  serverTimestamp(),
+    });
+
+    document.getElementById('repFormWrap').style.display = 'none';
+    document.getElementById('repSuccess').style.display  = 'block';
+
+  } catch(e) {
+    console.error(e);
+    btn.disabled = false;
+    btn.textContent = 'ENVIAR RESULTADO →';
+    showErr('Error al enviar. Intentá de nuevo.');
+  }
+};
+
+function showErr(msg) {
+  const b = document.getElementById('repErrorBox');
+  b.textContent = msg;
+  b.style.display = 'block';
+  b.scrollIntoView({ behavior:'smooth', block:'center' });
+}
+
+init();
+</script>
+
+<script>
+function toggleMobileNav() {
+  document.getElementById('navMobile')?.classList.toggle('open');
+}
+</script>
+</body>
+</html>

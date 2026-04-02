@@ -104,6 +104,20 @@ function renderInfo() {
   document.getElementById('cuposLibres').textContent  = `${libre} libres`;
   document.getElementById('cuposBarFill').style.width = `${pct}%`;
 
+  // Aviso captura y link reportar (solo en modo puntos)
+  const avisoBlock  = document.getElementById('avisoCapturaBlock');
+  const reportarBtn = document.getElementById('btnReportarResultado');
+  if (t.modo === 'puntos') {
+    if (avisoBlock)  avisoBlock.style.display  = 'block';
+    if (reportarBtn) {
+      reportarBtn.style.display = 'inline-flex';
+      reportarBtn.href = `reportar.html?id=${t.id}`;
+    }
+  } else {
+    if (avisoBlock)  avisoBlock.style.display  = 'none';
+    if (reportarBtn) reportarBtn.style.display = 'none';
+  }
+
   // Btn inscribir
   const btn = document.getElementById('btnInscribirPage');
   if (t.estado !== 'open' || libre <= 0) {

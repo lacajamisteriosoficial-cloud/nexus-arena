@@ -52,6 +52,7 @@
       <a href="#" class="sidebar-link" data-section="temporadas">Temporadas</a>
       <a href="#" class="sidebar-link" data-section="config">Configuracion</a>
       <a href="#" class="sidebar-link" data-section="chat">Chat</a>
+      <a href="#" class="sidebar-link" data-section="scoreboard">&#128202; Scoreboard</a>
       <a href="#" class="sidebar-link" data-section="modo-prueba" style="color:var(--orange);border:1px solid rgba(255,109,0,0.2);margin-top:8px">&#9881; Modo Prueba</a>
     </nav>
     <div class="sidebar-footer">
@@ -272,6 +273,43 @@
           <textarea class="form-input form-textarea" id="tDescripcion" placeholder="Información adicional sobre el torneo..."></textarea>
         </div>
 
+        <!-- MODO DEL TORNEO -->
+        <div style="margin-top:4px;padding:16px;background:rgba(200,255,0,0.03);border:1px solid rgba(200,255,0,0.15);border-radius:4px">
+          <label class="form-label" style="color:var(--acid);letter-spacing:2px;font-size:0.72rem">MODO DEL TORNEO</label>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:12px">
+            <label style="cursor:pointer">
+              <input type="radio" name="torneoModo" id="modoBracket" value="bracket" checked onchange="onModoChange()">
+              <span style="display:block;padding:14px;border:1px solid rgba(255,255,255,0.12);background:rgba(255,255,255,0.03);margin-top:6px;transition:border-color 0.2s" id="modoBracketBox">
+                <span style="font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:1rem;color:#fff;display:block;margin-bottom:4px">⚔️ Eliminación directa</span>
+                <span style="font-size:0.78rem;color:var(--muted)">Bracket tradicional. El que pierde, sale.</span>
+              </span>
+            </label>
+            <label style="cursor:pointer">
+              <input type="radio" name="torneoModo" id="modoPuntos" value="puntos" onchange="onModoChange()">
+              <span style="display:block;padding:14px;border:1px solid rgba(255,255,255,0.12);background:rgba(255,255,255,0.03);margin-top:6px;transition:border-color 0.2s" id="modoPuntosBox">
+                <span style="font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:1rem;color:#fff;display:block;margin-bottom:4px">🏆 Puntos acumulados</span>
+                <span style="font-size:0.78rem;color:var(--muted)">Scoreboard. Gana quien más puntos sume.</span>
+              </span>
+            </label>
+          </div>
+          <!-- Config puntos (visible solo en modo puntos) -->
+          <div id="configPuntosBlock" style="display:none;margin-top:16px;padding-top:16px;border-top:1px solid rgba(255,255,255,0.06)">
+            <label class="form-label" style="margin-bottom:10px">Puntuación por posición</label>
+            <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:12px">
+              <div><label class="form-label" style="font-size:0.7rem">1° puesto</label><input type="number" class="form-input" id="tPts1" value="15" min="0" style="padding:8px"></div>
+              <div><label class="form-label" style="font-size:0.7rem">2° puesto</label><input type="number" class="form-input" id="tPts2" value="10" min="0" style="padding:8px"></div>
+              <div><label class="form-label" style="font-size:0.7rem">3° puesto</label><input type="number" class="form-input" id="tPts3" value="7"  min="0" style="padding:8px"></div>
+              <div><label class="form-label" style="font-size:0.7rem">Por kill</label><input type="number" class="form-input" id="tPtsKill" value="1" min="0" style="padding:8px"></div>
+            </div>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+              <div><label class="form-label" style="font-size:0.7rem">Cantidad de partidas</label><input type="number" class="form-input" id="tPartidas" value="3" min="1" max="10" style="padding:8px"></div>
+              <div style="display:flex;align-items:flex-end;padding-bottom:2px">
+                <span style="font-size:0.78rem;color:var(--muted)">Los jugadores reportan resultado + captura al finalizar cada partida.</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
         <!-- NUEVOS CAMPOS v2 -->
         <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;margin-top:4px">
           <div class="form-group" style="margin-bottom:0">
@@ -285,11 +323,11 @@
           <div class="form-group" style="margin-bottom:0">
             <label class="form-label">Jugadores por equipo</label>
             <select class="form-input form-select" id="tJugadoresPorEquipo">
-              <option value="1" selected>1 — Individual (Solo)</option>
+              <option value="1">1 — Individual</option>
               <option value="2">2 — Dúo</option>
               <option value="3">3 — Trío</option>
               <option value="4">4 — Cuarteto</option>
-              <option value="5">5 — Quinteto (5v5)</option>
+              <option value="5" selected>5 — Quinteto (5v5)</option>
               <option value="6">6 — Sexteto</option>
             </select>
           </div>
@@ -354,6 +392,31 @@
     </section>
 
 
+
+    <!-- SCOREBOARD ADMIN -->
+    <section class="admin-section" id="section-scoreboard">
+      <div class="admin-header">
+        <h1 class="admin-title">Scoreboard</h1>
+      </div>
+      <p style="color:var(--muted);font-size:0.85rem;margin-bottom:20px">Resultados reportados por los jugadores. Confirmá cada uno para que sume puntos al scoreboard público.</p>
+      <div style="margin-bottom:16px">
+        <label class="form-label">Seleccioná el torneo</label>
+        <select class="form-input form-select" id="sbTorneoSelect" onchange="sbCargarTorneo()" style="max-width:400px">
+          <option value="">— Elegí un torneo —</option>
+        </select>
+      </div>
+      <div id="sbInfo" style="display:none;margin-bottom:20px;padding:14px 16px;background:rgba(200,255,0,0.04);border:1px solid rgba(200,255,0,0.12);font-size:0.85rem;color:var(--muted)"></div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px">
+        <div>
+          <div class="form-label" style="margin-bottom:12px;color:var(--acid)">REPORTES PENDIENTES</div>
+          <div id="sbPendientes"><p style="color:var(--muted);font-size:0.85rem">Seleccioná un torneo.</p></div>
+        </div>
+        <div>
+          <div class="form-label" style="margin-bottom:12px">TABLA DE POSICIONES</div>
+          <div id="sbTabla"><p style="color:var(--muted);font-size:0.85rem">Seleccioná un torneo.</p></div>
+        </div>
+      </div>
+    </section>
 
     <!-- CATÁLOGO DE JUEGOS -->
     <section class="admin-section" id="section-catalogo">
