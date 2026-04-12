@@ -331,6 +331,7 @@ async function saveTorneo() {
   const fraseCompetirTitulo = document.getElementById('tFraseCompetirTitulo')?.value.trim() || '';
   const fraseCompetirDesc   = document.getElementById('tFraseCompetirDesc')?.value.trim() || '';
 
+  const requiereCaptura = document.getElementById('tRequiereCaptura')?.checked || false;
   const modoEl   = document.querySelector('input[name="torneoModo"]:checked');
   const modo     = modoEl?.value || 'bracket';
   const pts1     = parseInt(document.getElementById('tPts1')?.value) || 15;
@@ -347,6 +348,7 @@ async function saveTorneo() {
     alias_mp:             aliasMP,
     premio:               precio === 0 ? 0 : (premio || Math.round(cupos * precio * 0.8)),
     modo,
+    requiere_captura: requiereCaptura,
     puntuacion: modo === 'puntos' ? { p1: pts1, p2: pts2, p3: pts3, kill: ptsKill, partidas } : null,
     jugadores_por_equipo: jpe,
     foto_equipo:          fotoEquipo,
@@ -404,6 +406,8 @@ window.editTorneo = async function(id) {
     const jpeEl = document.getElementById('tJugadoresPorEquipo');
     if (jpeEl) jpeEl.value = t.jugadores_por_equipo || 1;
     // Modo bracket/puntos
+    const reqCapEl = document.getElementById('tRequiereCaptura');
+    if (reqCapEl) reqCapEl.checked = t.requiere_captura || false;
     const modoVal = t.modo || 'bracket';
     const modoRadio = document.querySelector(`input[name="torneoModo"][value="${modoVal}"]`);
     if (modoRadio) { modoRadio.checked = true; onModoChange(); }

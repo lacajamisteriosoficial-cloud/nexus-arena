@@ -1,0 +1,410 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>NEXUS ARENA — Subir Captura</title>
+<link rel="icon" type="image/x-icon" href="favicon.ico">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Barlow+Condensed:wght@400;600;700&family=Barlow:wght@300;400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/styles.css?v=20">
+<link rel="stylesheet" href="css/public.css?v=20">
+<style>
+.sr-hero {
+  min-height: 180px;
+  display: flex;
+  align-items: flex-end;
+  padding: 90px 6vw 32px;
+  background: var(--dark2);
+  border-bottom: 2px solid var(--acid);
+  position: relative;
+  overflow: hidden;
+}
+.sr-hero::before {
+  content: '';
+  position: absolute; inset: 0;
+  background: radial-gradient(ellipse 50% 80% at 20% 50%, rgba(200,255,0,0.05), transparent 70%);
+}
+.sr-hero-content { position: relative; z-index: 2; }
+.sr-label { font-family: 'Barlow Condensed', sans-serif; font-size: 0.72rem; letter-spacing: 4px; color: var(--acid); margin-bottom: 8px; }
+.sr-hero h1 { font-family: 'Bebas Neue', sans-serif; font-size: clamp(2.5rem, 7vw, 4rem); letter-spacing: 3px; color: #fff; line-height: 1; }
+.sr-hero h1 span { color: var(--acid); }
+
+.sr-page { max-width: 600px; margin: 0 auto; padding: 48px 6vw 80px; }
+
+.sr-torneo-info {
+  margin-bottom: 28px;
+  padding: 14px 16px;
+  border-left: 3px solid var(--acid);
+  background: rgba(200,255,0,0.03);
+}
+.sr-torneo-nombre { font-family: 'Bebas Neue', sans-serif; font-size: 1.6rem; color: #fff; letter-spacing: 2px; }
+.sr-torneo-sub { font-size: 0.82rem; color: var(--muted); margin-top: 4px; }
+
+.sr-aviso {
+  background: rgba(200,255,0,0.06);
+  border: 1px solid rgba(200,255,0,0.25);
+  border-left: 4px solid var(--acid);
+  padding: 18px 20px;
+  margin-bottom: 32px;
+}
+.sr-aviso-title {
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: 0.75rem; letter-spacing: 3px;
+  color: var(--acid); margin-bottom: 8px;
+}
+.sr-aviso p { font-size: 0.88rem; color: var(--muted); line-height: 1.6; margin: 0; }
+.sr-aviso strong { color: #fff; }
+
+.sr-form { display: flex; flex-direction: column; gap: 20px; }
+
+.sr-section-title {
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: 0.72rem; letter-spacing: 3px;
+  color: var(--acid); margin-bottom: 14px;
+  border-bottom: 1px solid rgba(200,255,0,0.15);
+  padding-bottom: 8px;
+}
+
+/* Upload zone */
+.upload-zone {
+  border: 1.5px dashed rgba(200,255,0,0.3);
+  padding: 32px 20px;
+  text-align: center;
+  cursor: pointer;
+  transition: border-color 0.2s, background 0.2s;
+  background: rgba(200,255,0,0.02);
+  position: relative;
+}
+.upload-zone:hover { border-color: rgba(200,255,0,0.6); background: rgba(200,255,0,0.05); }
+.upload-zone.has-file { border-color: var(--acid); border-style: solid; }
+.upload-zone input[type="file"] { position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%; }
+.upload-icon { font-size: 2.2rem; margin-bottom: 10px; }
+.upload-text { font-family: 'Barlow Condensed', sans-serif; font-size: 1rem; font-weight: 700; color: #fff; margin-bottom: 4px; }
+.upload-sub { font-size: 0.78rem; color: var(--muted); }
+.upload-preview { margin-top: 16px; display: none; }
+.upload-preview img { max-width: 100%; max-height: 220px; object-fit: contain; border: 1px solid rgba(200,255,0,0.2); }
+
+/* Progress bar */
+.upload-progress {
+  display: none;
+  margin-top: 12px;
+  background: rgba(255,255,255,0.06);
+  height: 4px;
+  border-radius: 2px;
+  overflow: hidden;
+}
+.upload-progress-fill {
+  height: 100%;
+  background: var(--acid);
+  width: 0%;
+  transition: width 0.3s ease;
+}
+
+/* Error box */
+.sr-error-box {
+  background: rgba(255,23,68,0.08);
+  border: 1px solid rgba(255,23,68,0.3);
+  color: #ff5252;
+  padding: 12px 16px;
+  font-size: 0.85rem;
+  display: none;
+}
+
+/* Success */
+.sr-success {
+  text-align: center; padding: 60px 20px;
+  display: none;
+}
+.sr-success-icon { font-size: 3.5rem; margin-bottom: 16px; }
+.sr-success h2 { font-family: 'Bebas Neue', sans-serif; font-size: 2.5rem; color: var(--acid); margin-bottom: 8px; }
+.sr-success p { color: var(--muted); font-size: 0.9rem; line-height: 1.6; }
+.sr-success a { color: var(--acid); text-decoration: none; font-family: 'Barlow Condensed', sans-serif; letter-spacing: 2px; font-size: 0.85rem; }
+
+.torneo-loading { text-align:center;padding:60px 20px;color:var(--muted);font-size:0.9rem; }
+.torneo-error   { text-align:center;padding:60px 20px;color:#ff5252;font-size:0.9rem; }
+
+.spinner-sm { width:18px;height:18px;border:2px solid rgba(0,0,0,0.2);border-top-color:#000;border-radius:50%;animation:spin 0.7s linear infinite;display:inline-block;vertical-align:middle;margin-right:8px; }
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* Instrucciones capturas por plataforma */
+.plataformas-info {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: 10px;
+  margin-top: 12px;
+}
+.plataforma-item {
+  padding: 10px 12px;
+  background: rgba(255,255,255,0.03);
+  border: 1px solid rgba(255,255,255,0.08);
+  font-size: 0.78rem;
+  color: var(--muted);
+  line-height: 1.5;
+}
+.plataforma-item strong { color: #fff; display: block; margin-bottom: 3px; font-family: 'Barlow Condensed', sans-serif; font-size: 0.85rem; letter-spacing: 1px; }
+</style>
+</head>
+<body>
+
+<nav class="nav" id="nav">
+  <a href="index.html" class="logo"><img src="logo.png" alt="Nexus Arena" class="logo-img"></a>
+  <ul class="nav-links">
+    <li><a href="index.html#torneos">Torneos</a></li>
+  </ul>
+  <button class="nav-cta" onclick="window.location='index.html#torneos'">Ver torneos</button>
+</nav>
+
+<div class="sr-hero">
+  <div class="sr-hero-content">
+    <div class="sr-label">Nexus Arena</div>
+    <h1>SUBIR <span>CAPTURA</span></h1>
+  </div>
+</div>
+
+<div class="sr-page">
+
+  <div id="srLoading" class="torneo-loading">
+    <div class="spinner" style="margin:0 auto 16px"></div>
+    Cargando torneo...
+  </div>
+
+  <div id="srError" class="torneo-error" style="display:none">
+    Torneo no encontrado o no requiere captura.<br>
+    <a href="index.html" style="color:var(--acid);margin-top:12px;display:inline-block">← Volver al inicio</a>
+  </div>
+
+  <div id="srContent" style="display:none">
+
+    <!-- Info torneo -->
+    <div class="sr-torneo-info">
+      <div class="sr-torneo-nombre" id="srTorneoNombre"></div>
+      <div class="sr-torneo-sub" id="srTorneoSub"></div>
+    </div>
+
+    <!-- Aviso cómo sacar captura -->
+    <div class="sr-aviso">
+      <div class="sr-aviso-title">📸 CÓMO SACAR LA CAPTURA</div>
+      <p><strong>Al terminar la partida</strong>, sacá una captura de la pantalla de resultados antes de salir. Tiene que verse claramente tu gamertag, posición y kills.</p>
+      <div class="plataformas-info" style="margin-top:12px">
+        <div class="plataforma-item"><strong>📱 Mobile (Android)</strong>Botón de volumen ↓ + encendido al mismo tiempo</div>
+        <div class="plataforma-item"><strong>🍎 Mobile (iPhone)</strong>Botón lateral + volumen ↑ al mismo tiempo</div>
+        <div class="plataforma-item"><strong>🎮 PS4 / PS5</strong>Botón <strong>Share / Create</strong> → Tomar captura</div>
+        <div class="plataforma-item"><strong>🎮 Xbox</strong>Botón <strong>Xbox</strong> + Y al mismo tiempo</div>
+        <div class="plataforma-item"><strong>💻 PC</strong>Tecla <strong>Print Screen</strong> o Win + Shift + S</div>
+      </div>
+    </div>
+
+    <div id="srFormWrap" class="sr-form">
+
+      <!-- Datos -->
+      <div>
+        <div class="sr-section-title">TUS DATOS</div>
+        <div class="form-row-2">
+          <div class="form-group">
+            <label class="form-label">Gamertag / ID en el juego *</label>
+            <input type="text" class="form-input" id="srGamertag" placeholder="El nombre que usás en el juego">
+          </div>
+          <div class="form-group">
+            <label class="form-label">WhatsApp (opcional)</label>
+            <input type="tel" class="form-input" id="srWa" placeholder="11 1234-5678">
+          </div>
+        </div>
+      </div>
+
+      <!-- Notas -->
+      <div class="form-group">
+        <label class="form-label">Notas adicionales (opcional)</label>
+        <textarea class="form-input form-textarea" id="srNotas" rows="2" placeholder="Ej: partida 2 de 3, equipo Los Pibes..."></textarea>
+      </div>
+
+      <!-- Upload -->
+      <div>
+        <div class="sr-section-title">CAPTURA DE PANTALLA *</div>
+        <div class="upload-zone" id="srUploadZone">
+          <input type="file" id="srFoto" accept="image/*" onchange="onSrFileSelected(this)">
+          <div class="upload-icon">📷</div>
+          <div class="upload-text">Tocá acá para adjuntar tu captura</div>
+          <div class="upload-sub">JPG, PNG, WEBP — máx. 10 MB</div>
+          <div class="upload-preview" id="srUploadPreview">
+            <img id="srUploadPreviewImg" src="" alt="preview">
+          </div>
+        </div>
+        <div class="upload-progress" id="srUploadProgress">
+          <div class="upload-progress-fill" id="srUploadProgressFill"></div>
+        </div>
+        <p style="font-size:0.75rem;color:var(--muted);margin-top:8px">La captura es obligatoria y se usará para verificar el resultado. Máx. 1 captura por envío.</p>
+      </div>
+
+      <div id="srErrorBox" class="sr-error-box"></div>
+
+      <button class="btn-inscribir available" id="srSubmitBtn" onclick="submitCaptura()"
+        style="clip-path:polygon(7px 0%,100% 0%,calc(100% - 7px) 100%,0% 100%);padding:16px;font-size:1rem;width:100%">
+        ENVIAR CAPTURA →
+      </button>
+
+    </div>
+
+    <!-- Éxito -->
+    <div class="sr-success" id="srSuccess">
+      <div class="sr-success-icon">✅</div>
+      <h2>CAPTURA ENVIADA</h2>
+      <p>Tu captura fue recibida correctamente.<br>
+      El admin la revisará y confirmará tu resultado.<br><br>
+      Si tenés dudas, contactanos por WhatsApp.</p>
+      <a href="index.html#torneos" style="display:inline-block;margin-top:24px">← VER TORNEOS</a>
+    </div>
+
+  </div>
+</div>
+
+<script type="module">
+import { db } from './js/firebase.js';
+import {
+  doc, getDoc, addDoc, collection, serverTimestamp
+} from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+
+const CLOUDINARY_CLOUD  = 'dbqtc3jrn';
+const CLOUDINARY_PRESET = 'fgyym6aq';
+
+const params   = new URLSearchParams(window.location.search);
+const torneoId = params.get('id');
+
+let torneoData  = null;
+let fileToUpload = null;
+
+window.addEventListener('scroll', () => {
+  document.getElementById('nav')?.classList.toggle('scrolled', window.scrollY > 50);
+});
+
+// ── CARGAR TORNEO ─────────────────────────────────────────────
+async function init() {
+  if (!torneoId) { mostrarError(); return; }
+  try {
+    const snap = await getDoc(doc(db, 'torneos', torneoId));
+    if (!snap.exists() || !snap.data().requiere_captura) { mostrarError(); return; }
+    torneoData = { id: snap.id, ...snap.data() };
+
+    document.getElementById('srTorneoNombre').textContent = torneoData.nombre;
+    document.getElementById('srTorneoSub').textContent    =
+      torneoData.subtitulo || (torneoData.fecha?.toDate ? torneoData.fecha.toDate().toLocaleDateString('es-AR', { day:'numeric', month:'long', year:'numeric' }) : '');
+
+    document.getElementById('srLoading').style.display  = 'none';
+    document.getElementById('srContent').style.display  = 'block';
+  } catch(e) {
+    console.error(e);
+    mostrarError();
+  }
+}
+
+function mostrarError() {
+  document.getElementById('srLoading').style.display = 'none';
+  document.getElementById('srError').style.display   = 'block';
+}
+
+// ── ARCHIVO SELECCIONADO ──────────────────────────────────────
+window.onSrFileSelected = function(input) {
+  const file = input.files[0];
+  if (!file) return;
+
+  if (file.size > 10 * 1024 * 1024) {
+    showErr('El archivo es demasiado grande. Máximo 10 MB.');
+    input.value = '';
+    return;
+  }
+
+  fileToUpload = file;
+  const zone = document.getElementById('srUploadZone');
+  zone.classList.add('has-file');
+  const prev = document.getElementById('srUploadPreview');
+  const img  = document.getElementById('srUploadPreviewImg');
+  prev.style.display = 'block';
+  img.src = URL.createObjectURL(file);
+};
+
+// ── UPLOAD A CLOUDINARY ───────────────────────────────────────
+async function uploadToCloudinary(file) {
+  const progressBar  = document.getElementById('srUploadProgress');
+  const progressFill = document.getElementById('srUploadProgressFill');
+  progressBar.style.display = 'block';
+
+  return new Promise((resolve, reject) => {
+    const fd = new FormData();
+    fd.append('file', file);
+    fd.append('upload_preset', CLOUDINARY_PRESET);
+    fd.append('folder', `nexus-arena/capturas/${torneoId}`);
+
+    const xhr = new XMLHttpRequest();
+    xhr.open('POST', `https://api.cloudinary.com/v1_1/${CLOUDINARY_CLOUD}/image/upload`);
+
+    xhr.upload.onprogress = (e) => {
+      if (e.lengthComputable) {
+        const pct = Math.round((e.loaded / e.total) * 100);
+        progressFill.style.width = pct + '%';
+      }
+    };
+
+    xhr.onload = () => {
+      const data = JSON.parse(xhr.responseText);
+      if (data.secure_url) resolve(data.secure_url);
+      else reject(new Error('Upload falló'));
+    };
+
+    xhr.onerror = () => reject(new Error('Error de red al subir la imagen'));
+    xhr.send(fd);
+  });
+}
+
+// ── SUBMIT ────────────────────────────────────────────────────
+window.submitCaptura = async function() {
+  const errBox   = document.getElementById('srErrorBox');
+  const btn      = document.getElementById('srSubmitBtn');
+  const gamertag = document.getElementById('srGamertag').value.trim();
+  const wa       = document.getElementById('srWa').value.trim();
+  const notas    = document.getElementById('srNotas').value.trim();
+
+  errBox.style.display = 'none';
+
+  if (!gamertag)    return showErr('Completá tu gamertag.');
+  if (!fileToUpload) return showErr('Adjuntá tu captura de pantalla. Es obligatoria.');
+
+  btn.disabled = true;
+  btn.innerHTML = '<span class="spinner-sm"></span>Subiendo...';
+
+  try {
+    const fotoUrl = await uploadToCloudinary(fileToUpload);
+
+    await addDoc(collection(db, 'capturas'), {
+      torneo_id:  torneoId,
+      torneo_nombre: torneoData.nombre,
+      gamertag,
+      whatsapp:   wa || null,
+      notas:      notas || null,
+      foto_url:   fotoUrl,
+      estado:     'pendiente',   // admin puede marcar como 'verificado' o 'rechazado'
+      timestamp:  serverTimestamp(),
+    });
+
+    // Mostrar éxito
+    document.getElementById('srFormWrap').style.display = 'none';
+    document.getElementById('srSuccess').style.display  = 'block';
+
+  } catch (err) {
+    console.error(err);
+    showErr('Hubo un error al enviar. Intentá de nuevo.');
+    btn.disabled = false;
+    btn.textContent = 'ENVIAR CAPTURA →';
+  }
+};
+
+function showErr(msg) {
+  const errBox = document.getElementById('srErrorBox');
+  errBox.textContent   = msg;
+  errBox.style.display = 'block';
+  errBox.scrollIntoView({ behavior: 'smooth', block: 'center' });
+}
+
+init();
+</script>
+</body>
+</html>

@@ -118,6 +118,17 @@ function renderInfo() {
     if (reportarBtn) reportarBtn.style.display = 'none';
   }
 
+  // Botón "Subir captura" para torneos con requiere_captura: true
+  const subirCapBtn = document.getElementById('btnSubirCaptura');
+  if (subirCapBtn) {
+    if (t.requiere_captura) {
+      subirCapBtn.style.display = 'inline-flex';
+      subirCapBtn.href = `subir-resultado.html?id=${t.id}`;
+    } else {
+      subirCapBtn.style.display = 'none';
+    }
+  }
+
   // Btn inscribir
   const btn = document.getElementById('btnInscribirPage');
   if (t.estado !== 'open' || libre <= 0) {
