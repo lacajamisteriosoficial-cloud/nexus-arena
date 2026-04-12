@@ -1199,10 +1199,20 @@ async function initMusic() {
     audio.loop   = cfg.loop !== false; // por defecto loop activado
     if (cfg.archivo && srcEl) { srcEl.src = cfg.archivo; audio.load(); }
 
+    // Mostrar el player flotante
+    const player = document.getElementById('musicPlayer');
+    if (player) player.style.display = 'flex';
+
     // Intentar autoplay al primer gesto del usuario
     const tryPlay = () => {
       if (_musicPlaying) return;
-      audio.play().then(() => { _musicPlaying = true; }).catch(() => {});
+      audio.play().then(() => {
+        _musicPlaying = true;
+        const playIcon  = document.getElementById('musicIconPlay');
+        const pauseIcon = document.getElementById('musicIconPause');
+        if (playIcon)  playIcon.style.display  = 'none';
+        if (pauseIcon) pauseIcon.style.display = 'block';
+      }).catch(() => {});
     };
     document.addEventListener('click',  tryPlay, { once: true });
     document.addEventListener('scroll', tryPlay, { once: true });
@@ -1210,3 +1220,35 @@ async function initMusic() {
 
   } catch (e) { /* música es opcional */ }
 }
+
+// ── Controles globales del reproductor de música ──────────────
+window.toggleMusic = function() {
+  const audio     = document.getElementById('bgMusic');
+  const playIcon  = document.getElementById('musicIconPlay');
+  const pauseIcon = document.getElementById('musicIconPause');
+  if (!audio) return;
+  if (audio.paused) {
+    audio.play().then(() => {
+      _musicPlaying = true;
+      if (playIcon)  playIcon.style.display  = 'none';
+      if (pauseIcon) pauseIcon.style.display = 'block';
+    }).catch(() => {});
+  } else {
+    audio.pause();
+    _musicPlaying = false;
+    if (playIcon)  playIcon.style.display  = 'block';
+    if (pauseIcon) pauseIcon.style.display = 'none';
+  }
+};
+
+window.setMusicVolume = function(val) {
+  const audio = document.getElementById('bgMusic');
+  if (audio) audio.volume = val / 100;
+};
+
+window.closeMusicPlayer = function() {
+  const audio  = document.getElementById('bgMusic');
+  const player = document.getElementById('musicPlayer');
+  if (audio)  { audio.pause(); _musicPlaying = false; }
+  if (player) player.style.display = 'none';
+};
