@@ -187,13 +187,15 @@
 
       <div>
         <div class="rep-section-title">RESULTADO</div>
-        <div style="margin-bottom:16px">
-          <label class="form-label" style="margin-bottom:10px">Tu posición final *</label>
-          <div class="pos-grid" id="posGrid"></div>
-        </div>
-        <div class="form-group">
-          <label class="form-label">Kills en esta partida *</label>
-          <input type="number" class="form-input" id="repKills" placeholder="0" min="0" max="99" style="max-width:160px">
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px">
+          <div class="form-group" style="margin-bottom:0">
+            <label class="form-label">Tu posición final *</label>
+            <input type="number" class="form-input" id="repPosicion" placeholder="Ej: 3" min="1" max="100" style="font-size:1.2rem;font-weight:700">
+          </div>
+          <div class="form-group" style="margin-bottom:0">
+            <label class="form-label">Kills en esta partida *</label>
+            <input type="number" class="form-input" id="repKills" placeholder="0" min="0" max="99" style="font-size:1.2rem;font-weight:700">
+          </div>
         </div>
       </div>
 
@@ -244,7 +246,6 @@ const params   = new URLSearchParams(window.location.search);
 const torneoId = params.get('id');
 
 let torneoData    = null;
-let posSelected   = null;
 let partidaSelected = null;
 let fileToUpload  = null;
 
@@ -281,21 +282,6 @@ async function init() {
         partidaSelected = i;
       };
       pgrid.appendChild(btn);
-    }
-
-    // Botones de posición (top 10 + más)
-    const posGrid = document.getElementById('posGrid');
-    for (let i = 1; i <= 16; i++) {
-      const btn = document.createElement('button');
-      btn.className = 'pos-btn';
-      btn.textContent = i + '°';
-      btn.dataset.pos = i;
-      btn.onclick = () => {
-        document.querySelectorAll('#posGrid .pos-btn').forEach(b => b.classList.remove('selected'));
-        btn.classList.add('selected');
-        posSelected = i;
-      };
-      posGrid.appendChild(btn);
     }
 
     document.getElementById('repLoading').style.display = 'none';
@@ -342,13 +328,14 @@ window.submitReporte = async function() {
   const errBox  = document.getElementById('repErrorBox');
   const btn     = document.getElementById('repSubmitBtn');
   const gamertag = document.getElementById('repGamertag').value.trim();
+  const posicion = parseInt(document.getElementById('repPosicion').value);
   const kills    = parseInt(document.getElementById('repKills').value);
 
   errBox.style.display = 'none';
 
   if (!gamertag)          return showErr('Completá tu gamertag.');
   if (!partidaSelected)   return showErr('Seleccioná el número de partida.');
-  if (!posSelected)       return showErr('Seleccioná tu posición final.');
+  if (isNaN(posicion) || posicion < 1 || posicion > 100) return showErr('Ingresá tu posición final (1–100).');
   if (isNaN(kills) || kills < 0) return showErr('Ingresá las kills (puede ser 0).');
   if (!fileToUpload)      return showErr('Subí la captura de pantalla. Es obligatoria.');
 
@@ -376,7 +363,7 @@ window.submitReporte = async function() {
       torneo_id:  torneoId,
       gamertag,
       partida:    partidaSelected,
-      posicion:   posSelected,
+      posicion:   posicion,
       kills,
       foto_url,
       confirmado: false,
